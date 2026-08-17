@@ -24,6 +24,17 @@ export {
 } from "./financial-caveats.js";
 
 export {
+  issueClaim,
+  issueGrant,
+  issueRelationship,
+  issueRepresentsEdge,
+  issueRevocation,
+  type IssueClaimOptions,
+  type IssueGrantOptions,
+  type IssueRelationshipOptions,
+  type IssueRevocationOptions
+} from "./issue.js";
+export {
   assertGrant,
   GrantValidationError,
   validateGrant,

@@ -1,6 +1,7 @@
 packages:
   - packages/a2a
   - packages/crypto
+  - packages/discovery-client
   - packages/protocol
   - packages/trust
   - packages/verify

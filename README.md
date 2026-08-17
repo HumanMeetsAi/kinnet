@@ -250,17 +250,23 @@ public issue.
 
 ## Packages
 
-| Package                                   | What it is                                                                                             |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| [`@kinnet/protocol`](./packages/protocol) | Record types and Zod schemas: identities, key-event logs, claims, relationships, grants, revocations   |
-| [`@kinnet/crypto`](./packages/crypto)     | Ed25519, JCS canonicalization, participant-ID derivation, key logs with pre-rotation, RFC 9421 signing |
-| [`@kinnet/trust`](./packages/trust)       | The resolver: represents chains, claims, and UCAN-aligned grant chains, verifiable offline             |
-| [`@kinnet/verify`](./packages/verify)     | Inbound-request verification for services receiving agent traffic (Node/Express and edge runtimes)     |
-| [`@kinnet/a2a`](./packages/a2a)           | Bridge between Kinnet participant records and A2A agent cards                                          |
+| Package                                                   | What it is                                                                                             |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [`@kinnet/protocol`](./packages/protocol)                 | Record types and Zod schemas: identities, key-event logs, claims, relationships, grants, revocations   |
+| [`@kinnet/crypto`](./packages/crypto)                     | Ed25519, JCS canonicalization, participant-ID derivation, key logs with pre-rotation, RFC 9421 signing |
+| [`@kinnet/trust`](./packages/trust)                       | Issue and verify: represents chains, claims, and UCAN-aligned grant chains, verifiable offline         |
+| [`@kinnet/discovery-client`](./packages/discovery-client) | Publish records to a discovery service as doubly-signed writes, and read the public directory back     |
+| [`@kinnet/verify`](./packages/verify)                     | Inbound-request verification for services receiving agent traffic (Node/Express and edge runtimes)     |
+| [`@kinnet/a2a`](./packages/a2a)                           | Bridge between Kinnet participant records and A2A agent cards                                          |
 
-All five are on npm — `npm install @kinnet/verify` (or `crypto`, `trust`, `protocol`, `a2a`) —
-as `0.x` early-adopter releases: the wire freezes at 1.0, not before, so record shapes may still
-change between minors. Track the spec, and pin versions.
+All six are on npm — `npm install @kinnet/verify` (or `crypto`, `trust`, `discovery-client`,
+`protocol`, `a2a`) — as `0.x` early-adopter releases: the wire freezes at 1.0, not before, so
+record shapes may still change between minors. Track the spec, and pin versions.
+
+**For issuers**, the two jobs are two packages: `@kinnet/trust` mints and signs the record
+(`issueGrant`, `issueRelationship`, `issueClaim`, `issueRevocation`), and
+`@kinnet/discovery-client` publishes it — so code that only signs never has to reach for a
+network client, and code that only reads the directory never pulls in the resolver.
 
 ## Specs and interoperability
 
@@ -356,29 +362,22 @@ pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip
 is a signature or a digest computed locally over the bytes fetched.
 
 **4. Mint your own.** Self-custodial — the keys never leave your machine. Save this as `me.mts`
-(in a checkout, at the repository root; or anywhere after `npm install @kinnet/crypto`) and run
-`npx tsx me.mts`:
+(in a checkout, at the repository root; or anywhere after
+`npm install @kinnet/crypto @kinnet/discovery-client`) and run `npx tsx me.mts`:
 
 ```ts
-import { createIdentity, signRequest } from "@kinnet/crypto";
+import { createIdentity } from "@kinnet/crypto";
+import { createDiscoveryClient } from "@kinnet/discovery-client";
 
 const me = createIdentity();
-const url = `https://discovery.kinnet.humanmeetsai.com/participants/${me.id}/key-log`;
-const body = JSON.stringify(me.log);
-const headers = signRequest({
-  method: "PUT",
-  url,
-  body,
-  keyId: me.id,
-  secretKey: me.currentKeys[0].secretKey
-});
-const response = await fetch(url, {
-  method: "PUT",
-  headers: { "content-type": "application/json", ...headers },
-  body
-});
-console.log(response.status, me.id);
+const discoveryUrl = "https://discovery.kinnet.humanmeetsai.com";
+const state = await createDiscoveryClient({ discoveryUrl }).publishKeyLog(me);
+console.log(state.id);
 ```
+
+The client signs the write for you: an RFC 9421 signature over the exact body octets, which is
+what the service authenticates you by. It throws `DiscoveryClientError` if the write is refused,
+so reaching the last line means your key log is published.
 
 Then `npx @kinnet/verify <your id>` — and keep the secret key if you want the identity to stay
 yours: rotation, recovery, and everything else in the specs works from it.

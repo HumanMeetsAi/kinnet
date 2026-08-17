@@ -4,6 +4,67 @@ Verify claims, `represents` relationships, and UCAN-aligned grant chains (specs 
 offline from committed bytes: key logs are replayed locally, so discovery is a directory and
 never a trusted party.
 
+## Issue records
+
+The issuers live beside the verifiers, so one module mints what the other decides. Each signs
+at the issuer's **current** keys — the set a verifier resolves from its key log (spec 003) —
+and returns a record that this package's own verifiers accept.
+
+```ts
+import { issueClaim, issueGrant, issueRelationship, issueRepresentsEdge } from "@kinnet/trust";
+
+// "agent represents org", the edge every representation consumer looks up.
+const edge = issueRepresentsEdge(org, agent.id);
+
+// The general form, for any predicate.
+const member = issueRelationship(org, {
+  id: "member-of-1",
+  subjectId: person.id,
+  predicate: "member-of",
+  objectId: org.id
+});
+
+const role = issueClaim(org, {
+  id: "role-1",
+  subjectId: person.id,
+  claimType: "role",
+  value: "operator"
+});
+
+// A self-issued root grant (spec 009): a BEARER record the holder presents. Nothing is
+// published — verifiers read it off the request, never out of discovery.
+const grant = issueGrant(org, agent.id, ["quotes/read", "orders/create"], {
+  expiresAt: "2027-01-01T00:00:00Z",
+  caveats: { aud: verifierId }
+});
+```
+
+`issueGrant` **validates after signing** and throws `GrantValidationError` rather than handing
+back a grant no verifier will accept: `grantSchema`'s cross-field rules (a key audience needs
+`expiresAt`, an `e2ee` credential link needs empty caveats, a key-audience non-credential needs
+`caveats.aud`) are otherwise checked nowhere on the mint path, and the first party to learn a
+grant is malformed would be the far-end verifier, which can name neither the field nor the party
+that got it wrong.
+
+`issueRevocation(issuer, digest)` withdraws any signed record by the multihash digest of its
+complete signed form (spec 008). It has no `id` — a revocation's identity is the pair (issuer,
+revoked digest) — and it is permanent.
+
+```ts
+import { canonicalDigest } from "@kinnet/crypto";
+import { issueRevocation } from "@kinnet/trust";
+
+const revocation = issueRevocation(org, canonicalDigest(grant), { reason: "engagement ended" });
+```
+
+`issuedAt` (and `revokedAt`) default to now; pass them explicitly for a reproducible record —
+Ed25519 signing here is deterministic, so the same fields re-sign to the same bytes and the same
+digest.
+
+Publishing is a separate concern: claims, relationships and revocations go to a discovery
+service through [`@kinnet/discovery-client`](../discovery-client), which this package does not
+depend on.
+
 ## Financial caveats
 
 A grant's `caveats` map bounds what its holder may do. The resolver evaluates exactly one

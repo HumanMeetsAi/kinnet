@@ -1,7 +1,7 @@
 {
-  "name": "@kinnet/verify",
-  "version": "0.9.1",
-  "description": "Inbound-request verification for services receiving agent traffic: verify an RFC 9421 HTTP Message Signature and the caller's represents chain in ~5 lines (Node/Express + edge runtimes).",
+  "name": "@kinnet/discovery-client",
+  "version": "0.1.0",
+  "description": "Client for a Kinnet discovery service: build the two self-records, publish key logs, profiles, nodes, claims, relationships and revocations as doubly-signed writes (spec 004), and read the public directory back.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,17 +11,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./express": {
-      "types": "./dist/express.d.ts",
-      "default": "./dist/express.js"
-    },
     "./package.json": "./package.json"
   },
-  "bin": {
-    "kinnet-verify": "./bin/kinnet-verify.js"
-  },
   "files": [
-    "bin",
     "dist",
     "!dist/**/*.map",
     "LICENSE"
@@ -29,16 +21,16 @@
   "sideEffects": false,
   "keywords": [
     "kinnet",
-    "agent-verification",
-    "middleware",
-    "express",
-    "rfc9421"
+    "discovery",
+    "rfc9421",
+    "publish",
+    "directory"
   ],
   "homepage": "https://github.com/HumanMeetsAi/kinnet#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HumanMeetsAi/kinnet.git",
-    "directory": "packages/verify"
+    "directory": "packages/discovery-client"
   },
   "bugs": {
     "url": "https://github.com/HumanMeetsAi/kinnet/issues"
@@ -55,7 +47,6 @@
   },
   "dependencies": {
     "@kinnet/crypto": "workspace:^",
-    "@kinnet/protocol": "workspace:^",
-    "@kinnet/trust": "workspace:^"
+    "@kinnet/protocol": "workspace:^"
   }
 }

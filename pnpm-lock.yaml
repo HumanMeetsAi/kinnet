@@ -14,6 +14,9 @@ importers:
       '@kinnet/crypto':
         specifier: workspace:*
         version: link:packages/crypto
+      '@kinnet/discovery-client':
+        specifier: workspace:*
+        version: link:packages/discovery-client
       '@kinnet/protocol':
         specifier: workspace:*
         version: link:packages/protocol
@@ -70,6 +73,15 @@ importers:
       '@scure/base':
         specifier: ^2.2.0
         version: 2.3.0
+
+  packages/discovery-client:
+    dependencies:
+      '@kinnet/crypto':
+        specifier: workspace:^
+        version: link:../crypto
+      '@kinnet/protocol':
+        specifier: workspace:^
+        version: link:../protocol
 
   packages/protocol:
     dependencies:

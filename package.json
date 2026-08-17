@@ -13,6 +13,7 @@
   "dependencies": {
     "@kinnet/a2a": "workspace:*",
     "@kinnet/crypto": "workspace:*",
+    "@kinnet/discovery-client": "workspace:*",
     "@kinnet/protocol": "workspace:*",
     "@kinnet/trust": "workspace:*",
     "@kinnet/verify": "workspace:*"
