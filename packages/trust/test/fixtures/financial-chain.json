@@ -1,0 +1,103 @@
+{
+  "description": "Trust-resolver conformance fixture (spec 009 fail-closed caveats): a two-link payment chain whose leaf carries the financial caveat vocabulary — maxAmount, currency and a two-entry beneficiary allow-list. Verifiable from these bytes alone: valid for the conforming action, 'grant_caveat_rejected' for an action one minor unit over the cap, 'grant_caveat_rejected' with no evaluator supplied at all, and 'grant_signature_invalid' when the cap digit is raised in place — the caveats are signed, so a self-service raise is a forgery.",
+  "verifyAt": "2026-08-05T12:00:00.000Z",
+  "treasuryLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MksPykuQeYh4zgthFRFBExrgo1dwFWWenY2TEJ9SvT9jn1"],
+      "threshold": "1",
+      "next": "zQmZuMNH2LrG2Geycnu2x9Y1A4n3S3c1R9Sk4JKCx1Y9Z8E",
+      "id": "pk_zQmczJYrWDXDaKujCjzhDZE2hYNUmpMru5LuxF1CqFCogBa",
+      "prior": null,
+      "signature": [
+        "zaPyLX6GpY39XeWx3Q5M4WrGskC6e3n6kJAzRnfgCtDtAiKiEkJHcHcVZGRU7RFMFHUA24gcyFsbDNoJgZAMjq2R"
+      ]
+    }
+  ],
+  "opsLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkmghdggH9iwAwmMypZmN9EsfPGwsbvmum2HkFWXVzrAeE"],
+      "threshold": "1",
+      "next": "zQmSoKb5CA97StYG5fsDatP5ZTFYRd5LaLP5PaDZfzAGBap",
+      "id": "pk_zQmVyXCU21DoH1dkvFdFkqGBo4ztp69CrAz4S4MSqvbTktT",
+      "prior": null,
+      "signature": [
+        "z5RZEcuLF8gYUdfFGeRaFJcHqPzYr3frg1gCJPCFLq3UrvGBege7rATpC5ejeLFbs4unJK16QSRtCB1jNSpKBdpjp"
+      ]
+    }
+  ],
+  "agentLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MktsLs7ByDkjGWBmDQMgZin2gPpd2H4i8PWmz1qVua7dmq"],
+      "threshold": "1",
+      "next": "zQmRuBULtAmJ7oDTJdqBUNcmp4wudNz9D5v3Uh3yudfeZji",
+      "id": "pk_zQmYPEznXuTAPd9CmRX69Qrxxc3FpoPL3MCbyPxQmrapdGZ",
+      "prior": null,
+      "signature": [
+        "z4eiYQxYY27bCMQfe1tnw3JZozXjcBFJ8jYBvQVF2pzaaqewtTKZ8ZNvAMtSvDXMiTxs3xUSEzXEVCiTVkEAvht9W"
+      ]
+    }
+  ],
+  "grants": [
+    {
+      "subjectId": "pk_zQmczJYrWDXDaKujCjzhDZE2hYNUmpMru5LuxF1CqFCogBa",
+      "issuerId": "pk_zQmVyXCU21DoH1dkvFdFkqGBo4ztp69CrAz4S4MSqvbTktT",
+      "audienceId": "pk_zQmYPEznXuTAPd9CmRX69Qrxxc3FpoPL3MCbyPxQmrapdGZ",
+      "abilities": ["payments/transfer"],
+      "caveats": {
+        "maxAmount": "1000.00",
+        "currency": "USD",
+        "beneficiary": ["acct:vendor-7", "acct:vendor-9"]
+      },
+      "proof": "zQmNMCC51LWiAcUsTNS7USFhp9fnyAhpR4HkqV5DkXX7Vqr",
+      "issuedAt": "2026-08-01T00:00:00.000Z",
+      "signature": [
+        "z4twh6DHcJAngdF34FTRqHTiV2W6BZRnzm67vZQEokpHQku8vW11ZcqdsKkmHyNxDeFd8gEG8nAALk7XxNrNMbX2a"
+      ]
+    },
+    {
+      "subjectId": "pk_zQmczJYrWDXDaKujCjzhDZE2hYNUmpMru5LuxF1CqFCogBa",
+      "issuerId": "pk_zQmczJYrWDXDaKujCjzhDZE2hYNUmpMru5LuxF1CqFCogBa",
+      "audienceId": "pk_zQmVyXCU21DoH1dkvFdFkqGBo4ztp69CrAz4S4MSqvbTktT",
+      "abilities": ["payments"],
+      "caveats": {},
+      "proof": null,
+      "issuedAt": "2026-08-01T00:00:00.000Z",
+      "signature": [
+        "z2zfyBjQLLyqByfAiDcVFCePHWmfTkm1XRz6HXfHpsYfzixLNgssBBeVXewLT97BN4tMXgV7zPdomeRpocnp3cExC"
+      ]
+    }
+  ],
+  "conformingAction": {
+    "amount": "250.75",
+    "currency": "USD",
+    "beneficiary": "acct:vendor-7"
+  },
+  "overAmountAction": {
+    "amount": "1000.01",
+    "currency": "USD",
+    "beneficiary": "acct:vendor-7"
+  },
+  "expect": {
+    "treasuryId": "pk_zQmczJYrWDXDaKujCjzhDZE2hYNUmpMru5LuxF1CqFCogBa",
+    "opsId": "pk_zQmVyXCU21DoH1dkvFdFkqGBo4ztp69CrAz4S4MSqvbTktT",
+    "agentId": "pk_zQmYPEznXuTAPd9CmRX69Qrxxc3FpoPL3MCbyPxQmrapdGZ",
+    "rootGrantDigest": "zQmNMCC51LWiAcUsTNS7USFhp9fnyAhpR4HkqV5DkXX7Vqr",
+    "leafGrantDigest": "zQmVixkoB5ZZVVybjTG8vgddcRsy7XGRsFbinuRuZiiKqF3",
+    "caveats": {
+      "maxAmount": "1000.00",
+      "currency": "USD",
+      "beneficiary": ["acct:vendor-7", "acct:vendor-9"]
+    },
+    "valid": true,
+    "abilities": ["payments/transfer"],
+    "overAmountReason": "grant_caveat_rejected",
+    "noEvaluatorReason": "grant_caveat_rejected",
+    "raisedCapReason": "grant_signature_invalid"
+  }
+}

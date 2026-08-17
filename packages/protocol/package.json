@@ -1,0 +1,52 @@
+{
+  "name": "@kinnet/protocol",
+  "version": "0.6.0",
+  "private": true,
+  "description": "Shared protocol types and Zod schemas for the Kinnet participant network: records, key-event logs, claims, relationships, grants, and revocations.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "kinnet",
+    "protocol",
+    "participant-network",
+    "agents",
+    "identity"
+  ],
+  "homepage": "https://github.com/HumanMeetsAi/kinnet#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HumanMeetsAi/kinnet.git",
+    "directory": "packages/protocol"
+  },
+  "bugs": {
+    "url": "https://github.com/HumanMeetsAi/kinnet/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.typecheck.json"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

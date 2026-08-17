@@ -1,0 +1,383 @@
+{
+  "note": "Conformance vectors for the chain access token of the OAuth chain-access-token profile — one self-issued, audience-bound, attenuated grant link presented as a bearer credential: `\"pnc1.\" + base64url( UTF8( JSON.stringify(chain) ) )`, where `chain` is a leaf-first array of spec-009/011 Grant records. The token IS the credential — a resource server reads it without asking the issuer anything — so every implementation must agree from the bytes alone on which tokens are readable, and must refuse the rest in the same order. `token` is the exact string presented and is the only input a conforming implementation reads. For an accepted token, `payloadJson` is the exact UTF-8 the base64url payload decodes to, `chain` is the decode's result (leaf first, unreordered), and `signerKeys[i]` is the multibase key ref whose Ed25519 signature covers link i's spec-001 signing input — so the whole vector is checkable with a base64url decoder, a JSON parser and an Ed25519 verifier. Each link's `proof` is the spec-003 digest of the NEXT element, which is what makes the leaf-first order load-bearing. For a refused token, `rejection` is the normative class (see `codes`); `error` is the reference implementation's exact throw, recorded so this repo's test can assert it byte for byte and NOT as a wire contract another implementation must reproduce — conform to `rejection`, not to the English — and it is null where the refusal comes from the Grant schema rather than from this codec, in which case `invalidElementIndex` names the first element the schema refuses. The guard ORDER is itself pinned: the link cap is checked on the decoded array length BEFORE any element is parsed, so `refused — five links, none of them shape-valid` records a length refusal even though every element is also invalid. The payload after the prefix is byte-identical to the PN-Grants header's payload after its `1:` prefix — the same encoding and the same guards — while the prefixes stay distinct, which the first refusal vector states by presenting the header form of an accepted chain. Regenerate with packages/crypto/scripts/generate-chain-token-fixtures.ts.",
+  "prefix": "pnc1.",
+  "maxChainLinks": 4,
+  "codes": {
+    "unsupported_prefix": "The token does not begin with `pnc1.`. The prefix names the encoding, so a missing, differently-cased or future prefix is refused outright rather than guessed at — including the PN-Grants header's `1:`, which carries a byte-identical payload behind a different delivery and must not be interchangeable with a bearer token.",
+    "payload_not_base64url": "The bytes after the prefix are not base64url without padding. Padding characters and the standard-base64 alphabet are outside this profile, so a token that merely looks decodable is still refused.",
+    "payload_not_utf8_json": "The payload does not decode to well-formed UTF-8 carrying strict JSON. Strict means spec 015 S6.1: a duplicate object key at any depth is refused rather than resolved, because last-wins and first-wins are both defensible and a Grant's digest is what its child's `proof` names and what spec 008 keys its revocation by.",
+    "payload_not_nonempty_array": "The payload parses but is not a JSON array with at least one element. A bare grant object is not a one-link chain, and an empty chain authorizes nothing while looking like a token.",
+    "chain_too_long": "The array carries more than MAX_GRANT_CHAIN_LINKS links. Checked on the DECODED LENGTH before any element is parsed: verifying a chain replays the issuer's key log per link, so the depth is work the presenter chooses, and it is chosen before anything has been proven.",
+    "element_not_a_grant": "The chain is the right shape but an element is not a shape-valid Grant per spec 011's closed schema — an undefined key, or a key-audience link without `expiresAt`. Every element is parsed, not just the leaf."
+  },
+  "vectors": [
+    {
+      "name": "accepted — the one-link chain consent mints",
+      "why": "The profile's token, end to end: the participant self-issues one grant at the moment of consent, audience the resource participant, abilities exactly the ticked scopes, aud-bound to the resource, expiring. This is the token an RP receives from `/token` and presents as a bearer credential, and it is the vector that pins the wire form the other vectors deviate from.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "accept": true,
+      "payloadJson": "[{\"subjectId\":\"pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t\",\"issuerId\":\"pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\",\"photos/write\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":null,\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zMqjR8SPB6T5EXhRgzAGkyi7ZceU88Fext66FTBquFuk9NSYSHhP3oDaBtXinuW2Em9sR2BEC4yswK2po1AjtJR1\"]}]",
+      "chain": [
+        {
+          "subjectId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+          "issuerId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+          "audienceId": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
+          "abilities": ["photos/read", "photos/write"],
+          "caveats": {
+            "aud": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"
+          },
+          "proof": null,
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "zMqjR8SPB6T5EXhRgzAGkyi7ZceU88Fext66FTBquFuk9NSYSHhP3oDaBtXinuW2Em9sR2BEC4yswK2po1AjtJR1"
+          ]
+        }
+      ],
+      "signerKeys": ["z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX"],
+      "rejection": null,
+      "error": null,
+      "invalidElementIndex": null
+    },
+    {
+      "name": "accepted — a two-link org-rooted chain, leaf first",
+      "why": "Order is part of the encoding: the array is LEAF FIRST, so element 0 is the link the resource is asked to honour and each element's `proof` names the NEXT one by its spec-003 digest. A decoder that sorted, reversed or deduplicated the array would still produce two valid Grants, so a one-link fixture could not catch it; here the recorded `proof` values only line up in one order.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbVdQeE5SSnltamt4VGc1MTlXVHpWbzY2Y1NFUVZSdnF3bWJMZUpKUDhuYnU1IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOiJ6UW1lQzQyVUJCWVBNcXhjbmFoMWVkQzh4NXhac3J3ZDJRR2hoQVhnTURhZ0VuSCIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpDOXhiOGJVWG9STm1CeVNRcEdWcWk0YURZVzd6RzVaYnp1UGRNcVBFazE4Sjh3b0dHNlczZHNXTHVKRmJMdENMM2Q0SEVRaThBdEdiQnNhWURHdVM1RzQiXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJhdWRpZW5jZUlkIjoicGtfelFtV1B4TlJKeW1qa3hUZzUxOVdUelZvNjZjU0VRVlJ2cXdtYkxlSkpQOG5idTUiLCJhYmlsaXRpZXMiOlsicGhvdG9zIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6bnVsbCwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejJtQUZVRjJtNmM2V3BxMkdSYlI1VThOOEpqNlBXZzZOaEJYUkNDc1RyRzhpS0czbU54TXlYWENUdEVLOWVXemo4aHdGald0S21vaGNIa3BTam1UMk1ncjUiXX1d",
+      "accept": true,
+      "payloadJson": "[{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":\"zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zC9xb8bUXoRNmBySQpGVqi4aDYW7zG5ZbzuPdMqPEk18J8woGG6W3dsWLuJFbLtCL3d4HEQi8AtGbBsaYDGuS5G4\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"audienceId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":null,\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5\"]}]",
+      "chain": [
+        {
+          "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "issuerId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+          "audienceId": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
+          "abilities": ["photos/read"],
+          "caveats": {
+            "aud": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"
+          },
+          "proof": "zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH",
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "zC9xb8bUXoRNmBySQpGVqi4aDYW7zG5ZbzuPdMqPEk18J8woGG6W3dsWLuJFbLtCL3d4HEQi8AtGbBsaYDGuS5G4"
+          ]
+        },
+        {
+          "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "issuerId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "audienceId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+          "abilities": ["photos"],
+          "caveats": {
+            "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
+          },
+          "proof": null,
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5"
+          ]
+        }
+      ],
+      "signerKeys": [
+        "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+        "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"
+      ],
+      "rejection": null,
+      "error": null,
+      "invalidElementIndex": null
+    },
+    {
+      "name": "accepted — four links, exactly at the spec 011 cap",
+      "why": "MAX_GRANT_CHAIN_LINKS is 4 and the cap is INCLUSIVE — a boundary a verdict alone cannot state, which is why this sits beside the five-link refusal below. Every link is genuinely signed by its issuer and names its parent, so a decoder cannot pass this one by truncating the chain to something it finds more comfortable.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbWFON3ByVHFHNzcyMm5iTEc1Mzlka1VDalZUTHE2a2tLU0tDUUo1UzNqWXhRIiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOiJ6UW1kU1NEVnVkeEtTbm5xbzczYVd3SE1MOXB4V3U2ZnhoNG9oTXRrTlNTZTZCMSIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInozcjJqMTN1eGVBUHBIQVRFV0t4dmZHY1FxZXNISnFLcUF5eUc1b1hiUDdYaThxa0tEOUNGa3FYa2Z0YTFyRnYzajI5aHJndFhoQTFodFNpUUxScURhcU5hIl19LHsic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbVlmTUdpR3NyNUpOdDRheEF5bm9kNUhUbUg1cExmTDZkMVhvN1Z0cVFuSEZGIiwiYXVkaWVuY2VJZCI6InBrX3pRbWFON3ByVHFHNzcyMm5iTEc1Mzlka1VDalZUTHE2a2tLU0tDUUo1UzNqWXhRIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6InpRbWFUN0RmQUVvZWh5S2FFcEZhemlCTDF0ZEhWdWQzVTNkeTlLSEZyVlNSb0pBIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejNUeTE1NHlOaDNLakszYUx1UjNrdmtndndUUERrOWtLQXZiS1FZODdia1FhSmNVV1AyV2h4dDFpQUFTZXdDeXRxTHdIR2dHR0FtcXhhYW1NV2twVm1QUzkiXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtV1B4TlJKeW1qa3hUZzUxOVdUelZvNjZjU0VRVlJ2cXdtYkxlSkpQOG5idTUiLCJhdWRpZW5jZUlkIjoicGtfelFtWWZNR2lHc3I1Sk50NGF4QXlub2Q1SFRtSDVwTGZMNmQxWG83VnRxUW5IRkYiLCJhYmlsaXRpZXMiOlsicGhvdG9zIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6InpRbWVDNDJVQkJZUE1xeGNuYWgxZWRDOHg1eFpzcndkMlFHaGhBWGdNRGFnRW5IIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsielBZMnFNeEdvYXJvYm1rWWhDWmd4QnAxbkNZb3hXUW5tWXJ4ZXNoSnM0dTNQRTJ1RmVHV3NwRmoyTkdhYTJCNFdQdXhkNGR2RktMcHFaeHVpWWNodjZlSCJdfSx7InN1YmplY3RJZCI6InBrX3pRbVdjY2MyWnpETVJHdXpzS01aRVJ4ZlRtZ3hmVE1GQk1LQXpLRHZNd3FHRFc3IiwiaXNzdWVySWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImF1ZGllbmNlSWQiOiJwa196UW1XUHhOUkp5bWpreFRnNTE5V1R6Vm82NmNTRVFWUnZxd21iTGVKSlA4bmJ1NSIsImFiaWxpdGllcyI6WyJwaG90b3MiXSwiY2F2ZWF0cyI6eyJhdWQiOlsicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiXX0sInByb29mIjpudWxsLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6Mm1BRlVGMm02YzZXcHEyR1JiUjVVOE44Smo2UFdnNk5oQlhSQ0NzVHJHOGlLRzNtTnhNeVhYQ1R0RUs5ZVd6ajhod0ZqV3RLbW9oY0hrcFNqbVQyTWdyNSJdfV0",
+      "accept": true,
+      "payloadJson": "[{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":\"zQmdSSDVudxKSnnqo73aWwHML9pxWu6fxh4ohMtkNSSe6B1\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z3r2j13uxeAPpHATEWKxvfGcQqesHJqKqAyyG5oXbP7Xi8qkKD9CFkqXkfta1rFv3j29hrgtXhA1htSiQLRqDaqNa\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF\",\"audienceId\":\"pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":\"zQmaT7DfAEoehyKaEpFaziBL1tdHVud3U3dy9KHFrVSRoJA\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z3Ty154yNh3KjK3aLuR3kvkgvwTPDk9kKAvbKQY87bkQaJcUWP2Whxt1iAASewCytqLwHGgGGAmqxaamMWkpVmPS9\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"audienceId\":\"pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":\"zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zPY2qMxGoarobmkYhCZgxBp1nCYoxWQnmYrxeshJs4u3PE2uFeGWspFj2NGaa2B4WPuxd4dvFKLpqZxuiYchv6eH\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"audienceId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":null,\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5\"]}]",
+      "chain": [
+        {
+          "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "issuerId": "pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ",
+          "audienceId": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
+          "abilities": ["photos/read"],
+          "caveats": {
+            "aud": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"
+          },
+          "proof": "zQmdSSDVudxKSnnqo73aWwHML9pxWu6fxh4ohMtkNSSe6B1",
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "z3r2j13uxeAPpHATEWKxvfGcQqesHJqKqAyyG5oXbP7Xi8qkKD9CFkqXkfta1rFv3j29hrgtXhA1htSiQLRqDaqNa"
+          ]
+        },
+        {
+          "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "issuerId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
+          "audienceId": "pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ",
+          "abilities": ["photos/read"],
+          "caveats": {
+            "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
+          },
+          "proof": "zQmaT7DfAEoehyKaEpFaziBL1tdHVud3U3dy9KHFrVSRoJA",
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "z3Ty154yNh3KjK3aLuR3kvkgvwTPDk9kKAvbKQY87bkQaJcUWP2Whxt1iAASewCytqLwHGgGGAmqxaamMWkpVmPS9"
+          ]
+        },
+        {
+          "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "issuerId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+          "audienceId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
+          "abilities": ["photos"],
+          "caveats": {
+            "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
+          },
+          "proof": "zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH",
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "zPY2qMxGoarobmkYhCZgxBp1nCYoxWQnmYrxeshJs4u3PE2uFeGWspFj2NGaa2B4WPuxd4dvFKLpqZxuiYchv6eH"
+          ]
+        },
+        {
+          "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "issuerId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+          "audienceId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+          "abilities": ["photos"],
+          "caveats": {
+            "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
+          },
+          "proof": null,
+          "issuedAt": "2026-08-14T09:00:00.000Z",
+          "expiresAt": "2026-08-14T10:00:00.000Z",
+          "signature": [
+            "z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5"
+          ]
+        }
+      ],
+      "signerKeys": [
+        "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+        "z6Mkg49NtQR2LyYRDCQFK4w1VVHqhypZSSRo7HsyuN7SV7v5",
+        "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+        "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"
+      ],
+      "rejection": null,
+      "error": null,
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — the PN-Grants header form of the same chain",
+      "why": "THE PAYLOAD IS BYTE-IDENTICAL to the first accepted vector's; only the prefix differs. The two deliveries deliberately share an encoding — one chain has one payload, whichever way it travels — and deliberately do not share a prefix, because a bearer token and a request header are handled by different code with different lifetimes. Accepting `1:` here would make a header value pasted into an `Authorization: Bearer` a valid token.",
+      "token": "1:W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "unsupported_prefix",
+      "error": {
+        "name": "Error",
+        "message": "unsupported chain access token encoding"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — the bare payload with no prefix",
+      "why": "An unversioned token. The prefix is what makes a future profile (chain-by-reference, a different payload encoding) additive rather than ambiguous, so a payload that declines to say which profile it is written in cannot be read under the current one by default.",
+      "token": "W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "unsupported_prefix",
+      "error": {
+        "name": "Error",
+        "message": "unsupported chain access token encoding"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a future version prefix",
+      "why": "`pnc2.` is not defined by any profile today. A decoder must refuse it rather than fall back to `pnc1.` parsing: a version prefix that is ignored when unrecognized is not a version prefix, and it would let a future format's payload be reinterpreted under today's rules.",
+      "token": "pnc2.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "unsupported_prefix",
+      "error": {
+        "name": "Error",
+        "message": "unsupported chain access token encoding"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — the prefix in upper case",
+      "why": "The prefix is compared exactly, not case-insensitively. Recorded because bearer tokens pass through case-normalizing plumbing often enough that a lenient comparison looks like a kindness, and a decoder that offers it accepts a token no encoder in this profile emits.",
+      "token": "PNC1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "unsupported_prefix",
+      "error": {
+        "name": "Error",
+        "message": "unsupported chain access token encoding"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a payload outside the base64url alphabet",
+      "why": "The charset guard runs before anything tries to make meaning of the bytes, so a token that cannot be decoded at all is refused as such rather than as malformed JSON.",
+      "token": "pnc1.!!!not-base64url!!!",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_base64url",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload is not valid base64url"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a padded base64 payload",
+      "why": "`=` is not in this profile's alphabet: the payload is base64url WITHOUT padding. A decoder that accepted padding would give one chain two token spellings, and a token is compared and cached as a string by everything that handles it.",
+      "token": "pnc1.e30=",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_base64url",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload is not valid base64url"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — well-formed base64url that is not JSON",
+      "why": "The decode succeeds and yields text; the text is not JSON. The control that keeps the JSON guard from being mistaken for the charset guard.",
+      "token": "pnc1.bm90IGpzb24gYXQgYWxs",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_utf8_json",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload is not valid UTF-8 JSON"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a payload that is not valid UTF-8",
+      "why": "Two bare `FF` octets, which no UTF-8 sequence contains. The decode is STRICT rather than lenient: a lenient decoder turns these into U+FFFD and hands the JSON parser text the presenter never sent, which is the same non-injectivity that makes a text-normalized content digest unsound.",
+      "token": "pnc1.__8",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_utf8_json",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload is not valid UTF-8 JSON"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a link carrying a duplicate object key (spec 015 S6.1)",
+      "why": "ONE delivered byte string, two logical chains: `JSON.parse` resolves this last-wins and a first-wins parser resolves it to the other `proof`, so two resource servers handed this exact token would digest two different Grants. A Grant's digest is what its child's `proof` names and what spec 008 keys its revocation by, so the ambiguity is a second identity for one credential — and a token is long-lived and widely copied, which is worse here than in a single request header. Both resolutions are defensible, so the delivery is refused rather than resolved.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsInByb29mIjoielFtRGlmZmVyZW50UGFyZW50RW50aXJlbHkiLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6TXFqUjhTUEI2VDVFWGhSZ3pBR2t5aTdaY2VVODhGZXh0NjZGVEJxdUZ1azlOU1lTSGhQM29EYUJ0WGludVcyRW05c1IyQkVDNHlzd0sycG8xQWp0SlIxIl19XQ",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_utf8_json",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload is not valid UTF-8 JSON"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a single grant that was not wrapped in an array",
+      "why": "A valid Grant object, presented as the whole payload. A one-link chain is an array of one; a decoder that coerced a lone object into one would accept a token no encoder produces.",
+      "token": "pnc1.eyJzdWJqZWN0SWQiOiJwa196UW1mRzN6ejFwTnlhYjNuM21KTm42R1lCS0pWQXc2TnQ0eHlNa2tSeWdodHc2dCIsImlzc3VlcklkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJhdWRpZW5jZUlkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiLCJhYmlsaXRpZXMiOlsicGhvdG9zL3JlYWQiLCJwaG90b3Mvd3JpdGUiXSwiY2F2ZWF0cyI6eyJhdWQiOiJwa196UW1RNXp1N0hwbVJINzRuWjFmUUVjVTRHb2s3NlI5aDRLaWZXdmtrTWk0WXFZSCJ9LCJwcm9vZiI6bnVsbCwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiek1xalI4U1BCNlQ1RVhoUmd6QUdreWk3WmNlVTg4RmV4dDY2RlRCcXVGdWs5TlNZU0hoUDNvRGFCdFhpbnVXMkVtOXNSMkJFQzR5c3dLMnBvMUFqdEpSMSJdfQ",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_nonempty_array",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload must be a non-empty JSON array"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — an empty array",
+      "why": "Syntactically a chain, semantically nothing: no leaf, no abilities, no subject. Refused at decode so no caller ever has to decide what an authority-free token authorizes.",
+      "token": "pnc1.W10",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "payload_not_nonempty_array",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token payload must be a non-empty JSON array"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — five links, none of them shape-valid",
+      "why": "Five elements against a cap of 4, and every element is an empty object — so the two possible orderings give two different refusals, and the recorded error says which one this profile takes. Length first: chain verification replays a key log per link, the depth is chosen by whoever presents the token, and a token is presented by anyone holding it. An implementation that parsed elements first would refuse this for the element and, on a five-link chain of VALID links, would spend the parses before noticing the length at all.",
+      "token": "pnc1.W3t9LHt9LHt9LHt9LHt9XQ",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "chain_too_long",
+      "error": {
+        "name": "Error",
+        "message": "Chain access token carries 5 links, more than the 4 allowed"
+      },
+      "invalidElementIndex": null
+    },
+    {
+      "name": "refused — a link carrying a key the schema does not define (spec 015 S6.3)",
+      "why": "CLOSED schema: an unknown key is rejected, not silently stripped. A stripped key is a second digest for one delivery, which is exactly the malleability that defeated revocation-by-digest.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXSwic3VycHJpc2UiOjF9XQ",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "element_not_a_grant",
+      "error": null,
+      "invalidElementIndex": 0
+    },
+    {
+      "name": "refused — a key-audience link without expiresAt (spec 011)",
+      "why": "A bare key has no key log, so expiry is the only planned end a grant to one can have. The link is otherwise honest and honestly signed — the signature covers the record WITHOUT `expiresAt`, so this is a shape refusal and not a forgery, which is the point: the schema refuses records a signature cannot rescue.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6Ino2TWtuM3NVYVJKTVJ3VDRpUGJCdEhVelRrNDJtSERTQTNNM0Q4a3JHcFpmR1c4RCIsImFiaWxpdGllcyI6WyJwaG90b3MvcmVhZCJdLCJjYXZlYXRzIjp7ImF1ZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIn0sInByb29mIjpudWxsLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6NjVQcFFOQVpidFFwZXo4QW9YM1dDMmFiUXNyS0VjR3pveUUzTEZIbkhDZlhGM1R6ZVU0Rm53S0g1b2YxNER1ZTVXOUdSOFpZMVFqTXJHeTZiVnRyQ0UzWCJdfV0",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "element_not_a_grant",
+      "error": null,
+      "invalidElementIndex": 0
+    },
+    {
+      "name": "refused — a valid leaf followed by a non-grant element",
+      "why": "EVERY element is parsed, not just the leaf. A decoder that validated element 0 and passed the rest through would hand a verifier a chain whose parent links are attacker-shaped objects, and the leaf is the one link a lazy implementation is most likely to check.",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX0seyJub3QiOiJhIGdyYW50In1d",
+      "accept": false,
+      "payloadJson": null,
+      "chain": null,
+      "signerKeys": null,
+      "rejection": "element_not_a_grant",
+      "error": null,
+      "invalidElementIndex": 1
+    }
+  ]
+}

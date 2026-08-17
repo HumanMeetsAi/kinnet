@@ -1,0 +1,121 @@
+{
+  "description": "Trust-resolver conformance fixture (specs 008/009): an org -> agent represents chain with a bounding two-link grant chain, plus a revoked claim. The org log contains one rotation; the edge and claim are signed by the pre-rotation key.",
+  "verifyAt": "2026-06-12T12:00:00.000Z",
+  "organizationLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX"],
+      "threshold": "1",
+      "next": "zQmP8LyXw4SCxSVRG8iND2dQzhH8fHkLfuWc7dnb6tUj394",
+      "id": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+      "prior": null,
+      "signature": [
+        "z5V6ocnHs4g1qqEMxtDUvp5pVfe49RxF66bkeaBuo8uk4QbRCpY7unsMM54t6Pc4qxaVzXrJ4G6WggwgNjarBQcEP"
+      ]
+    },
+    {
+      "id": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+      "seq": "1",
+      "prior": "zQmTg4BWmouSSLWTYf6iJeo9e7ytcnHLovChPB2Q2MJXzcS",
+      "kind": "rot",
+      "keys": ["z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"],
+      "threshold": "1",
+      "next": "zQmf6cKvWE39tjQawvN3LcgYAByZjosGQ3bDbxqvbBbtdhN",
+      "signature": [
+        "z3Mcz7rMQnHBDRAGL8y1ysgUPoxs92kn8Ue2BgAndi78vkxayXsrdxbK9ajnWJK1AqeWgAbWCgbv6yFUtFc4VBf4L"
+      ]
+    }
+  ],
+  "adminLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+      "threshold": "1",
+      "next": "zQmTt2zvT7e3ap7veR4ztGqwb4F3J2WvxVXpozPqr1e98dm",
+      "id": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
+      "prior": null,
+      "signature": [
+        "z5hdEt9mxq6nfz6GJDEFph7ZBpQLrABbY3JSc8cheXbjibc5PdeBnKYofUwCvzjpim4kT3H619C7U4k5VAfP4e2Ag"
+      ]
+    }
+  ],
+  "agentLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+      "threshold": "1",
+      "next": "zQmU6JejHqBMAbpnEFM3f5rhyqAmrWucTZGj2rci4qrFBN8",
+      "id": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+      "prior": null,
+      "signature": [
+        "z4QaxXmQtG2R3HGbedpekdf3vttfCG3aim8EUG1gZBYF32vScttWTwNAzwuBNqR1SZpNRNtr8hiRJqwgtJ2RjJo3E"
+      ]
+    }
+  ],
+  "edge": {
+    "id": "fixture-represents-1",
+    "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+    "predicate": "represents",
+    "objectId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "issuedBy": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "issuedAt": "2026-06-12T00:00:00.000Z",
+    "signature": "z29ugDs4VNcnKw2r9hjk5qmu7ZWywNTqLJSFK6UKf3tT9ZktvVge7f7jfrb23nqucPziVS1amFvop7qukWedQ6ka6"
+  },
+  "grants": [
+    {
+      "subjectId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+      "issuerId": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
+      "audienceId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+      "abilities": ["directory/curate"],
+      "caveats": {},
+      "proof": "zQmdp7dkVBJ198DZkJqUDh4sq6UMPRG1AsPCb4xiapEX1vq",
+      "issuedAt": "2026-06-12T00:00:00.000Z",
+      "signature": [
+        "z2GSmZSr63jKyM7XiqWxdGHh3oTzau7jTY3c7P57FaW5u7dAQJVHyxK6Zn2P5xGoBCB5iFC7QPn1GreaAaXRYXT8q"
+      ]
+    },
+    {
+      "subjectId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+      "issuerId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+      "audienceId": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
+      "abilities": ["directory"],
+      "caveats": {},
+      "proof": null,
+      "issuedAt": "2026-06-12T00:00:00.000Z",
+      "signature": [
+        "z34AL8fWXu9jJzVbRv5FpfAZjoS64CQQbe5NQQnmeFUJj5emonc5BwozFXF3Mspv1MDj4BVeKKEB1RwzXcEGTx8fP"
+      ]
+    }
+  ],
+  "revokedClaim": {
+    "id": "fixture-claim-1",
+    "subjectId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "claimType": "domain",
+    "value": "acme.example",
+    "issuedBy": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "issuedAt": "2026-06-12T00:00:00.000Z",
+    "signature": "z4SGdCYd3mtKGhe4zrwTq8HeYMbB4AZavaffVPnV3poy4LHq2nc7wBNpxTH12nrNNqvxD5rFpgaowV8rVZekmoJMK"
+  },
+  "revocation": {
+    "revokes": "zQmStmGqVXVbrusdpeYWH7PVaD59Cq8d89Ckm1T7VcA8Nbh",
+    "issuerId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "revokedAt": "2026-06-12T00:00:00.000Z",
+    "reason": "domain handed back",
+    "signature": [
+      "z21QvH9sDxqahvLdZnMTHH6JGDp9m7uyTguVi2w2S8Qf4DLSRQ8MJYJqgjG5uqepveDfnU61p27EgtGxnKvhqFw9h"
+    ]
+  },
+  "expect": {
+    "organizationId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "agentId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
+    "edgeDigest": "zQmNXiSoGEcEWymFkoTki24jAk7VV4gKFB7iyr1oHRmNMkv",
+    "rootGrantDigest": "zQmdp7dkVBJ198DZkJqUDh4sq6UMPRG1AsPCb4xiapEX1vq",
+    "leafGrantDigest": "zQmWGgp2jdsQ4kA9SLNyWUu7i6yFwM6G6V9tYAhJ3YQ57wS",
+    "representsValid": true,
+    "abilities": ["directory/curate"],
+    "revokedClaimReason": "claim_revoked"
+  }
+}

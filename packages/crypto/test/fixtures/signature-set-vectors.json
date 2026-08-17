@@ -1,0 +1,550 @@
+{
+  "note": "Conformance vectors for spec 015 (canonical signature sets). Every vector is verifiable from bytes alone: `signingInput` is the UTF-8 JCS of the record without its `signature` field (spec 001), `matrix[i][j]` records whether signature i verifies over that input under `state.keys[j]` (Ed25519, spec 005), and `digest` is the spec-003 multihash of the JCS of the COMPLETE signed record, signature array included. `valid` is the spec-015 verdict for the record against `state`: every member verifies under a distinct listed key, in strictly increasing key-list order, with m = t <= n, no key repeated in the state, and a threshold in ^[1-9][0-9]*$. `schemaValid` is the separate question of whether @kinnet/protocol's schema for `schema` accepts the record shape. Regenerate with packages/crypto/scripts/generate-signature-set-fixtures.ts.",
+  "vectors": [
+    {
+      "name": "valid — single signature, 1-of-1",
+      "why": "One key, threshold 1, one member verifying under it. m = t = n = 1, so there is nothing to order and nothing surplus. The overwhelmingly common shape today.",
+      "valid": true,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": ["z6MkqnwoKGg5VjWaypVSDkp5w9PVjaMwUK4Eszk1d4cejLP8"],
+        "threshold": "1"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z3zDZU6km75PuZa2bGVCAx96RRtMeJPpLdE2B92PvU1J24zW5su5ceq8ea6LPeLkBBzZ3P7UNVi6zf7RFxaF56mL9"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmQxpR8Wd4kh72RBqEwhBEoHVXN7uhmHDzdNfUK62BNz23",
+      "matrix": [[true]]
+    },
+    {
+      "name": "deletion family 1/3 — over-signed 2-of-3, m = 3",
+      "why": "All three committee keys signed a record whose state requires two. Every member verifies under a distinct key in key order, so this passes S2 and S3 and fails only S1's exact count: m = 3, t = 2. Under the rule 015 replaces this was VALID, and deleting any one member left another valid record with a different digest — the surplus-deletion malleability that decided the m = t rule.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn",
+          "z6Mkj6joiZPz3kKe5PpGNLjCrTphanK4S5PXgpwVQPkyrvVk"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
+          "z3o9ndLZryFebX2Dv3dNTh61jobYeNk7gyUvkm1TuDn76GEfeZrtmGUA79M8w5Z1BVqMNhm4zqAMEyynb9JkhsS5i",
+          "z5HRQXYGEGorAdfsZPnJW8qKhfSkCBC6v1YEH6S1yhkT5BdvmnkLkerAfZ3LLF4hemYunQtCPP1Vdzks5DSU9wUEv"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmaD1kx9VFGz6xCuemkTZiy1AHcPjapTKPpEWgnDVKpnXB",
+      "matrix": [
+        [true, false, false],
+        [false, true, false],
+        [false, false, true]
+      ]
+    },
+    {
+      "name": "deletion family 2/3 — the conforming 2-of-3, m = t = 2",
+      "why": "Keys 0 and 2 signed, in that order, so the assignment is strictly increasing in key index and m = t = 2 < n = 3. This is byte-for-byte what deleting the middle member of 1/3 produces, and it is VALID — correctly so, because it is exactly the record the signers authorized and it manufactures no authority. The property m = t buys is not that this form is unreachable, but that it is the ONLY conforming member of the family.",
+      "valid": true,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn",
+          "z6Mkj6joiZPz3kKe5PpGNLjCrTphanK4S5PXgpwVQPkyrvVk"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
+          "z5HRQXYGEGorAdfsZPnJW8qKhfSkCBC6v1YEH6S1yhkT5BdvmnkLkerAfZ3LLF4hemYunQtCPP1Vdzks5DSU9wUEv"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmbdDkA4RsWC7twams5tJVQT3K11yCt924HkNyb3NhiPdM",
+      "matrix": [
+        [true, false, false],
+        [false, false, true]
+      ]
+    },
+    {
+      "name": "deletion family 3/3 — one member deleted from the conforming set, m = 1",
+      "why": "Byte-for-byte what deleting the second member of 2/3 produces. The remaining signature verifies under key 0, but m = 1 and t = 2, so S1 rejects it before any curve work. This is the deletion attack applied to a CONFORMING record, and it is closed: no edit carries a verifier from one valid record in this family to another.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn",
+          "z6Mkj6joiZPz3kKe5PpGNLjCrTphanK4S5PXgpwVQPkyrvVk"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmVxSrQVt4Mw6PFkvf2Zuz8VRg9nL1K8FhqsxQvWnLcKTh",
+      "matrix": [[true, false, false]]
+    },
+    {
+      "name": "invalid — duplicate signature",
+      "why": "Both members are the same signature by key 0. Key 0 can be assigned only once, so the second member is unassignable (S2, injective). Under the rule 015 replaces this record verified at threshold 2 only if another key also signed; the duplicate itself was never rejected, and it changed the digest.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn",
+          "z6Mkj6joiZPz3kKe5PpGNLjCrTphanK4S5PXgpwVQPkyrvVk"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmdi4n9P88SQ6BDovrvJ7vM1eyrVrvAP8Dm2DTckY7L7uU",
+      "matrix": [
+        [true, false, false],
+        [true, false, false]
+      ]
+    },
+    {
+      "name": "invalid — non-verifying extra appended to a 1-of-1 grant (the revocation bypass)",
+      "why": "The exploited shape. A valid grant signed by its sole issuer key, plus one arbitrary signature that verifies under nothing. The rule 015 replaces accepted it — one listed key had a valid signature — while the appended member changed the digest the revocation was keyed to. Rejected here three times over: m = 2 is not t = 1 (S1), m exceeds n = 1 (S1), and the extra member verifies under no listed key (S2).",
+      "valid": false,
+      "schema": "grant",
+      "schemaValid": true,
+      "state": {
+        "keys": ["z6MkqnwoKGg5VjWaypVSDkp5w9PVjaMwUK4Eszk1d4cejLP8"],
+        "threshold": "1"
+      },
+      "record": {
+        "subjectId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "audienceId": "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+        "abilities": ["directory"],
+        "caveats": {},
+        "proof": null,
+        "issuedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z2A89GjY6Nifi1A5sfdMBn3arUMkH1s7wZmuQcXjUBA1yPsuQYPrmJPtjG5DCCQ4RP9LDFDPjvCK2dNVeiuAzEe61",
+          "z4AjGde4ZzwTZ7QF5tbUtDnPnayoMMJHaQHKCYaxAUzFzKx5mbum1uXsuthdM3dA7XE7bohgkDKTBEkgvkpbeMqdv"
+        ]
+      },
+      "signingInput": "{\"abilities\":[\"directory\"],\"audienceId\":\"pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC\",\"caveats\":{},\"issuedAt\":\"2026-06-12T00:00:00.000Z\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"proof\":null,\"subjectId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\"}",
+      "digest": "zQme7AVNCPFGMdj3n8QuoCsqvrxBRMyrERpQp2qxQdprYyB",
+      "matrix": [[true], [false]]
+    },
+    {
+      "name": "invalid — non-verifying extra that passes every count check",
+      "why": "The same attack against a 2-of-2 state: m = 2 equals the threshold AND does not exceed n = 2, so every count rule in 015 and 009 is satisfied and ONLY S2 rejects it. This is the vector that shows counting is not enough — an implementation that checks lengths, the exact-count rule and the threshold but never asks which key each member verifies under accepts a record carrying one genuine signature and one forgery-shaped junk value.",
+      "valid": false,
+      "schema": "grant",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "subjectId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "audienceId": "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+        "abilities": ["directory"],
+        "caveats": {},
+        "proof": null,
+        "issuedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "zZmxe5BCHLbr6qnGhroPTeg7nAp18QWdhZcJdhjAV9kaDAGLyNWB1kfoPqn36Vfw8Yx8vdrR1WSMo9TV3t7BfZR5",
+          "z4AjGde4ZzwTZ7QF5tbUtDnPnayoMMJHaQHKCYaxAUzFzKx5mbum1uXsuthdM3dA7XE7bohgkDKTBEkgvkpbeMqdv"
+        ]
+      },
+      "signingInput": "{\"abilities\":[\"directory\"],\"audienceId\":\"pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC\",\"caveats\":{},\"issuedAt\":\"2026-06-12T00:00:00.000Z\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"proof\":null,\"subjectId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\"}",
+      "digest": "zQmd7BsCooQ5MEtogNXyiQcB8VoGUoEUNPacWatXzMgQbqX",
+      "matrix": [
+        [true, false],
+        [false, false]
+      ]
+    },
+    {
+      "name": "invalid — duplicate signature the current implementation ACCEPTS",
+      "why": "The duplication half of the defect, in the shape where today's verifyThresholdRecord gets it wrong. A 1-of-2 state and the same signature twice: the current rule counts satisfied KEYS, finds key 0 satisfied, and 1 >= 1 accepts — while the appended duplicate changed the digest. 015 rejects on S1 (m = 2, t = 1). The other duplicate vector here sits at threshold 2, where the current rule happens to reject for its own reasons; this one is the case that is actually exploitable today, so the suite pins both.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn"
+        ],
+        "threshold": "1"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmdi4n9P88SQ6BDovrvJ7vM1eyrVrvAP8Dm2DTckY7L7uU",
+      "matrix": [
+        [true, false],
+        [true, false]
+      ]
+    },
+    {
+      "name": "invalid — key state listing the same key twice (S0)",
+      "why": "The state itself is malformed: K = (K0, K0, K1) with t = 2. An INDEX-based reading of S2 pairs the two identical members with positions 0 and 1 and accepts, letting one signature satisfy a threshold of two — while the reference implementation, which dedupes by key value, rejects. S0 closes it by making the state invalid, and S2's injectivity is on key value rather than list position. 003 gains the matching record-layer rule; keyEventSchema still accepts such an event today.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmdi4n9P88SQ6BDovrvJ7vM1eyrVrvAP8Dm2DTckY7L7uU",
+      "matrix": [
+        [true, true, false],
+        [true, true, false]
+      ]
+    },
+    {
+      "name": "invalid — mis-ordered set",
+      "why": "Both members verify, under distinct keys 2 and 0 — but in that order the assignment is decreasing, so S3 rejects it. Reordering to key order yields the second vector above, with a different digest. Without S3 an m-member set would have m! valid byte-forms.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn",
+          "z6Mkj6joiZPz3kKe5PpGNLjCrTphanK4S5PXgpwVQPkyrvVk"
+        ],
+        "threshold": "2"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5HRQXYGEGorAdfsZPnJW8qKhfSkCBC6v1YEH6S1yhkT5BdvmnkLkerAfZ3LLF4hemYunQtCPP1Vdzks5DSU9wUEv",
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmeWesmg6HwPAmULxAcC5pRCnNVcFoibDxNPMonTrNB2VB",
+      "matrix": [
+        [false, false, true],
+        [true, false, false]
+      ]
+    },
+    {
+      "name": "invalid — signature by a key the state does not list",
+      "why": "A single well-formed signature over exactly these bytes, by a key that is not in the state. It verifies under nothing listed, so S2 rejects it. Membership of the state's key list — not signature well-formedness — is what counts.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn",
+          "z6Mkj6joiZPz3kKe5PpGNLjCrTphanK4S5PXgpwVQPkyrvVk"
+        ],
+        "threshold": "1"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z3dWkR45EM13KegsxKX9hvfYF3mB1ceVUBzYngad1VhszQWeKR9iVbvTRPFqN9mJ458abQvW3r66DsPZoKtfmeUrY"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmcQrnpyowKiXthi6JwY6bQgKeyEdvWvzR81ApLYDwqZEX",
+      "matrix": [[false, false, false]]
+    },
+    {
+      "name": "invalid — threshold above the state's key count",
+      "why": "Two keys, threshold 3. Unsatisfiable by construction, so 015 makes the STATE invalid rather than leaving a state every record fails against. `keyEventSchema` bounds `keys` and constrains `threshold` to ^[1-9][0-9]*$ with no upper bound and no cross-field rule, so this event is representable and accepted today.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": true,
+      "state": {
+        "keys": [
+          "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+          "z6MkgAnvkP45uNxwCKeNdt6wrYkEjpYX4f7Nrd8MQqFL8Fbn"
+        ],
+        "threshold": "3"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": [
+          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
+          "z3o9ndLZryFebX2Dv3dNTh61jobYeNk7gyUvkm1TuDn76GEfeZrtmGUA79M8w5Z1BVqMNhm4zqAMEyynb9JkhsS5i"
+        ]
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmQogX8LkPH7X46S3n4qwXZHZ4Uqjq7VVi7TokwHJ6axrv",
+      "matrix": [
+        [true, false],
+        [false, true]
+      ]
+    },
+    {
+      "name": "invalid — degenerate threshold, empty state, empty set",
+      "why": "`threshold: \"0\"` is outside ^[1-9][0-9]*$, so S1 rejects it and there is no verdict to reach. Recorded because `verifyThresholdRecord({signature: []}, [], \"0\")` returns TRUE today: the comparison `satisfied.size >= Number(threshold)` is 0 >= 0. The record schemas make an empty signature array unrepresentable, so this is a public-API surface rather than stored data — which is why `schemaValid` is false here.",
+      "valid": false,
+      "schema": "revocation",
+      "schemaValid": false,
+      "state": {
+        "keys": [],
+        "threshold": "0"
+      },
+      "record": {
+        "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+        "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "revokedAt": "2026-06-12T00:00:00.000Z",
+        "signature": []
+      },
+      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmXYS5GvGBurmKvCQrL2Yppr7erTuZWYCRpVSUqR3DbAV4",
+      "matrix": []
+    }
+  ],
+  "logRuleNote": "Conformance vectors for spec 003's 'no two states may share a quorum' rule, the interim measure that closes the cross-state routes until record anchoring lands. Each vector is a sequence of key states one log commits, in order. `legal` is true iff |keys(A) n keys(B)| < min(threshold(A), threshold(B)) holds for EVERY pair of states, not merely consecutive ones — records verify against any state a log ever committed, so every pair is simultaneously live. These carry no records and no signatures: the rule constrains log SHAPE, and a third party can check every vector by intersecting the key lists.",
+  "logRuleVectors": [
+    {
+      "name": "illegal — route 3: the later state's keys are a SUBSET of the earlier state's",
+      "why": "The cross-state deletion route, as executed. A record signed by all three keys conforms against A; delete one member — no key required — and the remaining two conform against B. Shared keys 2, min threshold 2, so 2 < 2 is false and the log is rejected.",
+      "legal": false,
+      "states": [
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
+          ],
+          "threshold": "3"
+        },
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
+          ],
+          "threshold": "2"
+        }
+      ]
+    },
+    {
+      "name": "illegal — route 4: the later state is a PERMUTATION of the earlier state",
+      "why": "The cross-state reorder route, as executed. Same two keys, opposite order, so a record conforming against A conforms against B once its two members are swapped. Both thresholds are 2, which is why the m = t rule alone gives no protection here. Shared 2, min threshold 2.",
+      "legal": false,
+      "states": [
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"
+          ],
+          "threshold": "2"
+        },
+        {
+          "keys": [
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"
+          ],
+          "threshold": "2"
+        }
+      ]
+    },
+    {
+      "name": "illegal — variant G: the key set GROWS, which a backwards-looking rule misses",
+      "why": "The attack does not care which state came first. The m = 2 record conforming against B loses a member and conforms against A. B is not a subset of A, so a rule phrased as 'no state may be a subset of an EARLIER one' accepts this log; the intersection rule rejects it, shared 1 against min threshold 1.",
+      "legal": false,
+      "states": [
+        {
+          "keys": ["z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"],
+          "threshold": "1"
+        },
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"
+          ],
+          "threshold": "2"
+        }
+      ]
+    },
+    {
+      "name": "illegal — variant P: partial rotation with a lowered threshold",
+      "why": "THE case that killed the more permissive rule, kept so a future reader does not propose it again. The rotation retires K2, introduces K3 and keeps K0 and K1 — neither key set is a subset or a permutation of the other, so subset/permutation rules in BOTH the one-way and symmetric forms accept this log. It is still a working attack: drop one member from the m = 3 record conforming against A and the remaining two conform against B. Shared 2, min threshold 2. This is why the rule counts the intersection against the threshold rather than comparing key lists.",
+      "legal": false,
+      "states": [
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
+          ],
+          "threshold": "3"
+        },
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB"
+          ],
+          "threshold": "2"
+        }
+      ]
+    },
+    {
+      "name": "legal — 1-of-1 rotation, the shape every first-party log has",
+      "why": "A rotation that replaces its single key shares nothing: 0 < 1. Every documented first-party participant is this shape, which is why the rule costs zero migration.",
+      "legal": true,
+      "states": [
+        {
+          "keys": ["z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"],
+          "threshold": "1"
+        },
+        {
+          "keys": ["z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"],
+          "threshold": "1"
+        }
+      ]
+    },
+    {
+      "name": "legal — 3-of-5 retaining two old keys",
+      "why": "Key reuse is NOT forbidden, only reuse up to a quorum. Two keys carry over against a threshold of three: 2 < 3, so the log is legal. This is the boundary from the permissive side, and it is what makes the intersection rule strictly weaker than banning reuse.",
+      "legal": true,
+      "states": [
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb",
+            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB",
+            "z6MkuEUybFgDhSyrmvPMUbezRNH8hHdv8PYpg6PsTcrLXswS"
+          ],
+          "threshold": "3"
+        },
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6MkghLt1e8m1fmANsdJJco3aCLV8Xnigr5UWwC3u5iZFPd3",
+            "z6MkgopvLwZuxuvDkrEogYLLHQACmcQeX344dnMcPJb6VHQH",
+            "z6MktwtqAzuD5F77tAMBMwNs1KybZeff61EehV9xB1ZpXQG7"
+          ],
+          "threshold": "3"
+        }
+      ]
+    },
+    {
+      "name": "legal — 2-of-3 retaining exactly one old key",
+      "why": "The most a 2-of-3 may keep. One key carries over against a threshold of two: 1 < 2. Retaining TWO would share a quorum and be rejected — the restriction an operator most needs to know about, pinned here from the legal side.",
+      "legal": true,
+      "states": [
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
+          ],
+          "threshold": "2"
+        },
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB",
+            "z6MkuEUybFgDhSyrmvPMUbezRNH8hHdv8PYpg6PsTcrLXswS"
+          ],
+          "threshold": "2"
+        }
+      ]
+    },
+    {
+      "name": "illegal — a non-adjacent pair, so the rule is over ALL pairs not consecutive ones",
+      "why": "States 0 and 2 share both their keys against a threshold of two, while each is legal against the state between them. Records verify against ANY state a log ever committed, so every pair is live and the rule must be checked pairwise across the whole log. A replay that only compared consecutive events would accept this log and leave the route open.",
+      "legal": false,
+      "states": [
+        {
+          "keys": [
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"
+          ],
+          "threshold": "2"
+        },
+        {
+          "keys": [
+            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb",
+            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB",
+            "z6MkuEUybFgDhSyrmvPMUbezRNH8hHdv8PYpg6PsTcrLXswS"
+          ],
+          "threshold": "3"
+        },
+        {
+          "keys": [
+            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
+            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"
+          ],
+          "threshold": "2"
+        }
+      ]
+    }
+  ]
+}

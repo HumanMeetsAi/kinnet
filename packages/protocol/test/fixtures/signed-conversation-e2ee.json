@@ -1,0 +1,44 @@
+{
+  "creatorLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MktULudTtAsAhRegYPiZ6631RV3viv12qd4GQF8z1xB22S"],
+      "threshold": "1",
+      "next": "zQmR1TG4iPmPAhYFNKGfjtVcmtEGkT43XPdAG2AuULTr5Jr",
+      "id": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+      "prior": null,
+      "signature": [
+        "z67nAJpZyk9CpuHrpPBSQem8dGjSneG5zDwGzRFayMwiDRe2a2akPhJsgWc6aQqQT7miJYhL1pVpgL4yHSJ2pXxZ8"
+      ]
+    }
+  ],
+  "otherLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+      "threshold": "1",
+      "next": "zQmNmZ6KMpRj2xnDzjwhaa7FhqcYcowTWaiA4QNNyKRYArQ",
+      "id": "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+      "prior": null,
+      "signature": [
+        "z5PGhprzp2zJmhyDBuuFRnsu8mRzEierd7EpnWeX3wpK2SX4hdtDCQhNXJCHgNCYmebESZhD3pDZbLWERzPRWVdty"
+      ]
+    }
+  ],
+  "conversation": {
+    "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+    "participants": [
+      "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+      "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+    ],
+    "createdAt": "2026-08-01T00:00:00.000Z",
+    "lane": "e2ee",
+    "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+    "signature": [
+      "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+    ]
+  },
+  "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE"
+}

@@ -1,0 +1,27 @@
+{
+  "log": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX"],
+      "threshold": "1",
+      "next": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
+      "id": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "prior": null,
+      "signature": [
+        "z5ZxhPPQrdDJHQDYvrFDMVc7RwrQ2ws8fQEXbQ27n8HmvpXdki4YZUpnmFuiUs4Uj7YT9cBgPt5F3nQn1a5CaCoZp"
+      ]
+    }
+  ],
+  "envelope": {
+    "id": "msg-fixture-1",
+    "from": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+    "to": "pk_zQmVGWk7HZHU6j8JZNDGTJhDuU1AZA9y6MBgGgUVaUASRvm",
+    "createdAt": "2026-06-12T00:00:00.000Z",
+    "type": "text",
+    "payload": {
+      "body": "hello from the fixture"
+    },
+    "signature": "z5MMVA7vvmyNe6rMGuKsoFK5yZi1ti8ZGKUxsDQAGbGyVbj7ei13MqdQZhk3y2Asfem8m9eAnsL6HjWaqdfcXpi8M"
+  }
+}

@@ -1,0 +1,494 @@
+{
+  "note": "ConversationUpdate schema vectors (spec 014). Each entry is a bytes-level accept/reject case for conversationUpdateSchema, which enforces well-formedness ONLY: the lane-conditional and authorization rules (E2EE lane only, leaves against the group tree, rule 2's actor authority, the epoch's one-shot binding to a commit) are evaluated where the Conversation record and MLS group state are held, not here. The `signature` values are shape-valid Signature strings, not verifiable signatures — signature checking is 012's two modes at the validation layer, and most reject vectors are deliberately malformed bytes nobody would sign. `conversationId` is the pinned id from signed-conversation-e2ee.json.",
+  "vectors": [
+    {
+      "name": "add — creator adds another participant (actor need not be in members)",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "add — several sorted members and leaves in one record",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": [
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+          "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+        ],
+        "leaves": [
+          "z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2",
+          "z6MktULudTtAsAhRegYPiZ6631RV3viv12qd4GQF8z1xB22S"
+        ],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "12",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "remove — self-authorized departure (members == [actor])",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "remove",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+        "epoch": "4",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "remove — creator removes another participant",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "remove",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "5",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "device-add — members is exactly [actor]",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "device-add",
+        "members": ["pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"],
+        "leaves": ["z6MktULudTtAsAhRegYPiZ6631RV3viv12qd4GQF8z1xB22S"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "6",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "device-remove — epoch 0 is a legal epoch",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "device-remove",
+        "members": ["pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"],
+        "leaves": [
+          "z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2",
+          "z6MktULudTtAsAhRegYPiZ6631RV3viv12qd4GQF8z1xB22S"
+        ],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "0",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "unsorted members",
+      "valid": false,
+      "reason": "members must be sorted by codepoint — an unstable order is a second byte-form of one logical set",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": [
+          "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"
+        ],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "duplicate members",
+      "valid": false,
+      "reason": "members must be unique",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": [
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"
+        ],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "empty members",
+      "valid": false,
+      "reason": "members must be non-empty — a record that affects nobody authorizes nothing",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": [],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "unsorted leaves",
+      "valid": false,
+      "reason": "leaves must be sorted by codepoint",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": [
+          "z6MktULudTtAsAhRegYPiZ6631RV3viv12qd4GQF8z1xB22S",
+          "z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"
+        ],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "duplicate leaves",
+      "valid": false,
+      "reason": "leaves must be unique",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": [
+          "z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2",
+          "z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"
+        ],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "empty leaves",
+      "valid": false,
+      "reason": "leaves must be non-empty — evidence names the affected MLS leaves",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": [],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "device-add whose members is not the actor",
+      "valid": false,
+      "reason": "device-* members must be exactly [actor] — a device record can never introduce a participant",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "device-add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "device-add whose members contains the actor plus another participant",
+      "valid": false,
+      "reason": "device-* members must be exactly [actor] — set equality, not containment",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "device-add",
+        "members": [
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+          "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+        ],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "device-remove whose members is not the actor",
+      "valid": false,
+      "reason": "device-* members must be exactly [actor]",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "device-remove",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "epoch with a leading zero",
+      "valid": false,
+      "reason": "epoch is decimal with no leading zeros — epoch EQUALITY is the one-shot replay defense, so \"01\" and \"1\" must not both name epoch 1",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "01",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "epoch that is not a decimal number",
+      "valid": false,
+      "reason": "epoch must match /^(0|[1-9][0-9]*)$/",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "three",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "negative epoch",
+      "valid": false,
+      "reason": "epoch must match /^(0|[1-9][0-9]*)$/",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "-1",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "epoch as a JSON number",
+      "valid": false,
+      "reason": "epoch is a decimal STRING (spec 001's string-number rule)",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": 3,
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "unknown extra key",
+      "valid": false,
+      "reason": "the schema is strict/closed — an unknown key is rejected, never stripped, so two implementations cannot digest one logical record to different ids",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "prior": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "missing signature",
+      "valid": false,
+      "reason": "evidence is a signed record",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z"
+      }
+    },
+    {
+      "name": "empty signature array",
+      "valid": false,
+      "reason": "at least one signature (012's threshold-signing convention)",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": []
+      }
+    },
+    {
+      "name": "unknown kind",
+      "valid": false,
+      "reason": "kind is a closed enum: add | remove | device-add | device-remove",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "rename",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "malformed conversationId",
+      "valid": false,
+      "reason": "conversationId is a multibase(base58btc) multihash",
+      "record": {
+        "conversationId": "not-a-digest",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "a leaf that is a ParticipantId rather than a KeyRef",
+      "valid": false,
+      "reason": "leaves are bare KeyRefs — MLS leaf signature keys, never participant ids",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "a member that is a bare KeyRef rather than a ParticipantId",
+      "valid": false,
+      "reason": "members are participants; leaves are devices",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "malformed createdAt",
+      "valid": false,
+      "reason": "createdAt is RFC 3339 (informational, but still well-formed)",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "yesterday",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "missing actor",
+      "valid": false,
+      "reason": "actor names the participant whose authority the record carries",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    }
+  ]
+}

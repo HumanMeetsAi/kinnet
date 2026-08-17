@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    // Off deliberately. Every package publishes `files: ["dist", "LICENSE"]`, so `src/` never
+    // reaches a consumer — a shipped `.d.ts.map` would resolve `sources: ["../src/x.ts"]` to
+    // nothing, and the `//# sourceMappingURL=` comment it dangles from would 404 in the
+    // consumer's editor. The repo already emits no `.js.map` either, so declaration maps were
+    // the only mapping artifact escaping into tarballs. Ship declarations without maps rather
+    // than maps without sources.
+    "declarationMap": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmitOnError": true,
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2023",
+    "types": ["node"]
+  }
+}

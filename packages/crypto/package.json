@@ -1,0 +1,55 @@
+{
+  "name": "@kinnet/crypto",
+  "version": "0.6.2",
+  "private": true,
+  "description": "Identity, signing, and verification for Kinnet: Ed25519, JCS canonicalization, participant-ID derivation, key-event logs with pre-rotation, and RFC 9421 HTTP Message Signatures.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "kinnet",
+    "ed25519",
+    "http-message-signatures",
+    "rfc9421",
+    "jcs"
+  ],
+  "homepage": "https://github.com/HumanMeetsAi/kinnet#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HumanMeetsAi/kinnet.git",
+    "directory": "packages/crypto"
+  },
+  "bugs": {
+    "url": "https://github.com/HumanMeetsAi/kinnet/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.typecheck.json"
+  },
+  "dependencies": {
+    "@kinnet/protocol": "workspace:^",
+    "@noble/curves": "^2.2.0",
+    "@noble/hashes": "^2.2.0",
+    "@scure/base": "^2.2.0"
+  }
+}

@@ -1,0 +1,640 @@
+{
+  "note": "The (record, chain) unit payloads (spec 014, amended 2026-08-02). Each vector is a bytes-level accept/reject case for conversationUpdatePayloadSchema (schema: conversation-update) or conversationPayloadSchema (schema: conversation). The payload of a pn/conversation-update or pn/conversation envelope IS the unit: the record, plus — when the record is delegated-signed — the leaf-first grant chain that authorizes it. The schemas enforce well-formedness only: whether a present chain actually authorizes the record (subject, leaf key binding, abilities, the record-time expiry window) is the verifier profile in spec 014, evaluated where key logs can be resolved. Grant signatures here are shape-valid Signature strings, not verifiable signatures, and `proof` digests are the real spec-003 digests of the links they name.",
+  "digestIdentity": {
+    "note": "The chain sits ALONGSIDE the record, never inside it, so record identity is a function of `record` alone: digest(payload.record) is the same id whether `chain` is absent or present. This is what makes a re-delivered or relayed unit name the same digest in a commit binding as the authoring delivery did.",
+    "conversationUpdate": {
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      },
+      "recordId": "zQmdcspqb1S5VKcxW94Bq87NDnGtZDg7mJsiux3RoydMt2j",
+      "chain": [
+        {
+          "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "issuerId": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+          "abilities": ["msg/conversation-update", "conversation/self-remove"],
+          "caveats": {
+            "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+          },
+          "proof": "zQmT6K4BFpWFmKwJegszEWRgEpMWDaZVu8rJDmUDgfTMdo5",
+          "issuedAt": "2026-07-31T00:00:00.000Z",
+          "expiresAt": "2026-08-02T00:00:00.000Z",
+          "signature": [
+            "z3nJgLLZUZBmDwLPhVEwPfXSEaFsAaTHhx8bmT5A6MZQ7f6BqAeukwv18SmoyLYyJnDVHzWMHXR1PkVK9tHRZTxcC"
+          ]
+        },
+        {
+          "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "audienceId": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "abilities": ["msg"],
+          "caveats": {
+            "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+          },
+          "proof": null,
+          "issuedAt": "2026-07-30T00:00:00.000Z",
+          "expiresAt": "2026-08-30T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        }
+      ]
+    },
+    "conversation": {
+      "record": {
+        "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "participants": [
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+          "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+        ],
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "lane": "e2ee",
+        "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      },
+      "recordId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+      "chain": [
+        {
+          "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+          "abilities": ["msg/conversation-update"],
+          "caveats": {
+            "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+          },
+          "proof": null,
+          "issuedAt": "2026-07-31T00:00:00.000Z",
+          "expiresAt": "2026-08-02T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        }
+      ]
+    }
+  },
+  "vectors": [
+    {
+      "name": "conversation-update — owner mode: the unit with no chain",
+      "schema": "conversation-update",
+      "valid": true,
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        }
+      }
+    },
+    {
+      "name": "conversation-update — delegated mode: the unit with a single-link session chain",
+      "schema": "conversation-update",
+      "valid": true,
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation-update — delegated mode: a two-link chain, leaf first",
+      "schema": "conversation-update",
+      "valid": true,
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update", "conversation/self-remove"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": "zQmT6K4BFpWFmKwJegszEWRgEpMWDaZVu8rJDmUDgfTMdo5",
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z3nJgLLZUZBmDwLPhVEwPfXSEaFsAaTHhx8bmT5A6MZQ7f6BqAeukwv18SmoyLYyJnDVHzWMHXR1PkVK9tHRZTxcC"
+            ]
+          },
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "abilities": ["msg"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-30T00:00:00.000Z",
+            "expiresAt": "2026-08-30T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation-update — a bare record, not wrapped in the unit",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "the old wire form: the payload is the unit, never the record alone, so a reader can never be handed a delegated-signed record with nowhere to look for its authorization",
+      "payload": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "conversation-update — a present but empty chain",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "an empty array claims delegated mode and then names no delegation; indistinguishable from a truncation, so it is malformed rather than weaker",
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": []
+      }
+    },
+    {
+      "name": "conversation-update — a chain entry missing expiresAt on a key audience",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "011: a key-audience grant must carry expiresAt — a bare key has no log",
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation-update — a chain entry that is not a grant at all",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "the chain is grants, not digests or opaque strings",
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": ["zQmciHHWRjDXFXCwLbRt2QNm1LaPoeKxwfjwfVB86kzm8fx"]
+      }
+    },
+    {
+      "name": "conversation-update — an unknown key alongside the unit",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "the unit is strict: a second chain-shaped field (here the transport chain, which rides with the message per 011) would leave two implementations disagreeing about which one authorizes the record",
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ],
+        "transportChain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation-update — the chain smuggled inside the record",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "the record stays strict underneath the unit: a chain inside the record is the one shape that would change the record's digest id, so it is malformed",
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "3",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ],
+          "chain": [
+            {
+              "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+              "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+              "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+              "abilities": ["msg/conversation-update"],
+              "caveats": {
+                "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+              },
+              "proof": null,
+              "issuedAt": "2026-07-31T00:00:00.000Z",
+              "expiresAt": "2026-08-02T00:00:00.000Z",
+              "signature": [
+                "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+              ]
+            }
+          ]
+        }
+      },
+      "holdsRecordIdentity": true
+    },
+    {
+      "name": "conversation-update — no record",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "a chain authorizes nothing on its own",
+      "payload": {
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation-update — a malformed record inside a well-formed unit",
+      "schema": "conversation-update",
+      "valid": false,
+      "reason": "the wrapper does not soften the record's rules: epoch 01 is a second byte-form of epoch 1",
+      "payload": {
+        "record": {
+          "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+          "kind": "add",
+          "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+          "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+          "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "epoch": "01",
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation — owner mode: the unit with no chain",
+      "schema": "conversation",
+      "valid": true,
+      "payload": {
+        "record": {
+          "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "participants": [
+            "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+            "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+          ],
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "lane": "e2ee",
+          "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        }
+      }
+    },
+    {
+      "name": "conversation — delegated mode: the unit with a session chain",
+      "schema": "conversation",
+      "valid": true,
+      "payload": {
+        "record": {
+          "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "participants": [
+            "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+            "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+          ],
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "lane": "e2ee",
+          "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "conversation — a bare record, not wrapped in the unit",
+      "schema": "conversation",
+      "valid": false,
+      "reason": "same unit, same rule: a custodial creator's record must carry its authorization wherever it travels",
+      "payload": {
+        "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "participants": [
+          "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+          "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+        ],
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "lane": "e2ee",
+        "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "conversation — a present but empty chain",
+      "schema": "conversation",
+      "valid": false,
+      "reason": "as above: delegated mode with no delegation named",
+      "payload": {
+        "record": {
+          "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "participants": [
+            "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+            "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+          ],
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "lane": "e2ee",
+          "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": []
+      }
+    },
+    {
+      "name": "conversation — an unknown key alongside the unit",
+      "schema": "conversation",
+      "valid": false,
+      "reason": "the unit is strict",
+      "payload": {
+        "record": {
+          "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "participants": [
+            "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+            "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+          ],
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "lane": "e2ee",
+          "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "lane": "e2ee"
+      }
+    },
+    {
+      "name": "conversation — the chain smuggled inside the record",
+      "schema": "conversation",
+      "valid": false,
+      "reason": "012's record is strict: a chain inside it would change the conversation id",
+      "payload": {
+        "record": {
+          "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "participants": [
+            "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+            "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+          ],
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "lane": "e2ee",
+          "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ],
+          "chain": [
+            {
+              "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+              "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+              "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+              "abilities": ["msg/conversation-update"],
+              "caveats": {
+                "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+              },
+              "proof": null,
+              "issuedAt": "2026-07-31T00:00:00.000Z",
+              "expiresAt": "2026-08-02T00:00:00.000Z",
+              "signature": [
+                "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+              ]
+            }
+          ]
+        }
+      },
+      "holdsRecordIdentity": true
+    },
+    {
+      "name": "conversation — a malformed record inside a well-formed unit",
+      "schema": "conversation",
+      "valid": false,
+      "reason": "an e2ee record must carry a groupNonce (014); the wrapper does not soften that",
+      "payload": {
+        "record": {
+          "creator": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+          "participants": [
+            "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC",
+            "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1"
+          ],
+          "createdAt": "2026-08-01T00:00:00.000Z",
+          "lane": "e2ee",
+          "signature": [
+            "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+          ]
+        },
+        "chain": [
+          {
+            "subjectId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "issuerId": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+            "audienceId": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+            "abilities": ["msg/conversation-update"],
+            "caveats": {
+              "aud": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"
+            },
+            "proof": null,
+            "issuedAt": "2026-07-31T00:00:00.000Z",
+            "expiresAt": "2026-08-02T00:00:00.000Z",
+            "signature": [
+              "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

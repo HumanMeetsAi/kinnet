@@ -1,0 +1,137 @@
+{
+  "description": "One shape-valid instance of every record kind and payload kind @kinnet/protocol defines (spec 001, 'Record kinds are non-confusable'). Each MUST validate under its own schema and be rejected by every other one. Signatures, key refs and digests are shape-valid rather than genuine: the property under test is record-kind membership, which is decided by the schema alone. The signed-bytes conformance fixtures for the kinds that have them live alongside this file.",
+  "records": {
+    "keyEvent": {
+      "id": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "seq": "0",
+      "prior": null,
+      "kind": "icp",
+      "keys": ["z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"],
+      "threshold": "1",
+      "next": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "signature": [
+        "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+      ]
+    },
+    "participantProfile": {
+      "id": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "type": "agent",
+      "displayName": "Fixture Agent",
+      "capabilities": [],
+      "verifiedDomains": [],
+      "updatedAt": "2026-08-01T00:00:00.000Z",
+      "signature": "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+    },
+    "participantNode": {
+      "id": "node-fixture-1",
+      "participantId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "label": "Fixture Node",
+      "publicKey": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      "transports": ["https"],
+      "updatedAt": "2026-08-01T00:00:00.000Z",
+      "signature": "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+    },
+    "revocation": {
+      "revokes": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "issuerId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "revokedAt": "2026-08-01T00:00:00.000Z",
+      "signature": [
+        "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+      ]
+    },
+    "grant": {
+      "subjectId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "issuerId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "audienceId": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "abilities": ["msg/send"],
+      "caveats": {},
+      "proof": null,
+      "issuedAt": "2026-08-01T00:00:00.000Z",
+      "signature": [
+        "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+      ]
+    },
+    "relationship": {
+      "id": "relationship-fixture-1",
+      "subjectId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "predicate": "represents",
+      "objectId": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "issuedBy": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "issuedAt": "2026-08-01T00:00:00.000Z",
+      "signature": "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+    },
+    "claim": {
+      "id": "claim-fixture-1",
+      "subjectId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "claimType": "domain",
+      "value": "example.com",
+      "issuedBy": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "issuedAt": "2026-08-01T00:00:00.000Z",
+      "signature": "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+    },
+    "messageEnvelope": {
+      "id": "envelope-fixture-1",
+      "from": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "to": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "createdAt": "2026-08-01T00:00:00.000Z",
+      "type": "text",
+      "payload": { "text": "hello" },
+      "signature": "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+    },
+    "conversation": {
+      "creator": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "participants": [
+        "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+        "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS"
+      ],
+      "createdAt": "2026-08-01T00:00:00.000Z",
+      "title": "Fixture Conversation",
+      "signature": [
+        "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+      ]
+    },
+    "conversationUpdate": {
+      "conversationId": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "kind": "add",
+      "members": ["pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS"],
+      "leaves": ["z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"],
+      "actor": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "epoch": "3",
+      "createdAt": "2026-08-01T00:00:00.000Z",
+      "signature": [
+        "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+      ]
+    }
+  },
+  "payloads": {
+    "conversationPayload": {
+      "record": {
+        "creator": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+        "participants": [
+          "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+          "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS"
+        ],
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+        ]
+      }
+    },
+    "conversationUpdatePayload": {
+      "record": {
+        "conversationId": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+        "kind": "device-add",
+        "members": ["pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq"],
+        "leaves": ["z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"],
+        "actor": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+        "epoch": "4",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+        ]
+      }
+    },
+    "mlsPayload": { "mlsMessage": "AAECAw_-" },
+    "welcomePayload": { "welcome": "AAECAw_-" }
+  }
+}

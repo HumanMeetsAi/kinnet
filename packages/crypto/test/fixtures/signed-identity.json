@@ -1,0 +1,25 @@
+{
+  "log": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+      "threshold": "1",
+      "next": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
+      "id": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+      "prior": null,
+      "signature": [
+        "z33YuSygVm3zCTRLs7wRPciRNaNnVVHCr823VHHJrtAoE6MJ3kBZGGgGsPKJE1DnFPtcJuqCPdzzEH7vR1v3WwqCH"
+      ]
+    }
+  ],
+  "profile": {
+    "id": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+    "type": "person",
+    "displayName": "Fixture Person",
+    "capabilities": ["messaging"],
+    "verifiedDomains": [],
+    "updatedAt": "2026-06-12T00:00:00.000Z",
+    "signature": "z3fMTrtjAP87WgKdf1TbBqdtGyAM6FNiRzABuY53EipFoigHTZicvfvByQiGTVA6o7oCrXYBpT2ot5AjPxztjXuyT"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "creatorLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX"],
+      "threshold": "1",
+      "next": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
+      "id": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+      "prior": null,
+      "signature": [
+        "z5ZxhPPQrdDJHQDYvrFDMVc7RwrQ2ws8fQEXbQ27n8HmvpXdki4YZUpnmFuiUs4Uj7YT9cBgPt5F3nQn1a5CaCoZp"
+      ]
+    }
+  ],
+  "otherLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+      "threshold": "1",
+      "next": "zQmYqZcaMzwYKUTrGjW1pvm1rW7psHgNVS8U7iBxmvrtD8x",
+      "id": "pk_zQmSJjuiPBR9Envs28QR2Evxi6eRAHymWynZWZ8ptfsHQSm",
+      "prior": null,
+      "signature": [
+        "zC8qTpPKSHvf82gLhh6EfKZgCSfHFuMhwTKqqvw2nHHYcziKaY5J8k7vpQG15vfpMNVwyRKFTX16KX1XSRhwcwYJ"
+      ]
+    }
+  ],
+  "conversation": {
+    "creator": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
+    "participants": [
+      "pk_zQmSJjuiPBR9Envs28QR2Evxi6eRAHymWynZWZ8ptfsHQSm",
+      "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS"
+    ],
+    "createdAt": "2026-07-28T00:00:00.000Z",
+    "title": "Fixture Conversation",
+    "signature": [
+      "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
+    ]
+  },
+  "conversationId": "zQmW3ubn3FGrQ9uysAEWzZZqLmWcpNgknm77L5QwqikBF1M"
+}

@@ -1,0 +1,82 @@
+{
+  "description": "Trust-resolver conformance fixture (spec 011, `aud` absent): a two-link chain between participants only, so no link is required to carry an `aud` caveat and none does. Verifiable from these bytes alone: valid at ANY verifier id, and rejected as 'grant_audience_required' by a verifier that sets requireAud.",
+  "verifyAt": "2026-07-21T12:00:00.000Z",
+  "userLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE"],
+      "threshold": "1",
+      "next": "zQmQqFbSxNBFaPk25ZPzZovw4Bmow3xtf2yTjr4qUFy2sqz",
+      "id": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+      "prior": null,
+      "signature": [
+        "z3zBNsCFCpGJkxRtECbfM6hzNDhKHf6UKnzo9GUqy5F1TJDbJ4mXxTtEjYdERVWDeS2E7ZdhqSbXWFpacs7aRd79U"
+      ]
+    }
+  ],
+  "appLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6Mkuhai1adkd5vSGvB99B2ezAUuZtfCf3zoYRN1ZM3XU2kQ"],
+      "threshold": "1",
+      "next": "zQmPm8NE6hGjkfSnjq7Zoz5a2Lq6o9abXKavRqMwF3rfoiT",
+      "id": "pk_zQmX7NrZGwVYHLfFRD5aXj2UMWMHpQkSGAsqH9LmuFRnh2Z",
+      "prior": null,
+      "signature": [
+        "z4u2WXWGyB2fY2UHbjpVJXDb1QsTbsA6NZF5bRrMyaBUhCXNYKRbqCXv1sc5yzFn8cxuPozGo27qTZYKqKJtsAjVb"
+      ]
+    }
+  ],
+  "serviceLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6Mkg49NtQR2LyYRDCQFK4w1VVHqhypZSSRo7HsyuN7SV7v5"],
+      "threshold": "1",
+      "next": "zQmf6vShsJYkDGiXXjcrW7ZtAQrNr5kdHKUtfXE3p7wkMc5",
+      "id": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
+      "prior": null,
+      "signature": [
+        "zgRHNqU3Be3UxLbJUSmGU2dhHrDsQQVVRZG54gt1JG4NjxNFBeW9Tzgiv5B9QdvszeD6HB8TLdJmKguyhWTfgeJ2"
+      ]
+    }
+  ],
+  "grants": [
+    {
+      "subjectId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+      "issuerId": "pk_zQmX7NrZGwVYHLfFRD5aXj2UMWMHpQkSGAsqH9LmuFRnh2Z",
+      "audienceId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
+      "abilities": ["msg/send"],
+      "caveats": {},
+      "proof": "zQmYRVuVkx5JBAbQkpRomZYAKwFgeJseY9hUVDpWL12sEge",
+      "issuedAt": "2026-07-01T00:00:00.000Z",
+      "signature": [
+        "z5vPcwC2nk3UMQ6XBjmyfRyS6JKRkcgbMUBxxZ9WBLoPPK2K2anxB9GFhbr2Zd3vnCCwFkcaUYmArLiVEo5c8JnSM"
+      ]
+    },
+    {
+      "subjectId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+      "issuerId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+      "audienceId": "pk_zQmX7NrZGwVYHLfFRD5aXj2UMWMHpQkSGAsqH9LmuFRnh2Z",
+      "abilities": ["msg"],
+      "caveats": {},
+      "proof": null,
+      "issuedAt": "2026-07-01T00:00:00.000Z",
+      "signature": [
+        "z23W8UaiSrazQWSEbcUpovqzRFYYnBaAtrsPdGNvdni8fC21rdYgFmfENBowuvJwoB854xfmyYxtAogSuuzqdRnLk"
+      ]
+    }
+  ],
+  "expect": {
+    "userId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
+    "appId": "pk_zQmX7NrZGwVYHLfFRD5aXj2UMWMHpQkSGAsqH9LmuFRnh2Z",
+    "serviceId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
+    "rootGrantDigest": "zQmYRVuVkx5JBAbQkpRomZYAKwFgeJseY9hUVDpWL12sEge",
+    "leafGrantDigest": "zQmNqLc7UcDxT9di3EBFtx1azX8FfFTuHNkRRGR8VnE6Zio",
+    "valid": true,
+    "abilities": ["msg/send"],
+    "requireAudReason": "grant_audience_required"
+  }
+}

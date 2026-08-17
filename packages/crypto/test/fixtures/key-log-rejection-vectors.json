@@ -1,0 +1,727 @@
+{
+  "note": "Replay conformance vectors for spec 003's key-history log — chaining, sequencing, pre-rotation (including the committed THRESHOLD), spec 015's signature-set rules as the log applies them, the quorum rule, the work bound, and the participant binding. Every vector is verifiable from bytes alone: `events` is the log exactly as delivered, `signingInputs[i]` is the UTF-8 JCS of event i WITHOUT its `signature` field (the spec-001 signing input), and `digests[i]` is the spec-003 multihash of the COMPLETE event i, which event i+1's `prior` must name. `valid` is the replay verdict. For a rejected log, `rejection` is the normative class (see `codes`) and `error` is the reference implementation's exact throw — recorded so this repo's test can assert it byte for byte, NOT as a wire contract another implementation must reproduce; conform to `rejection`, not to the English. For an accepted log, `state` is the resulting key state. `expectedId`, when present, means the log is judged with the participant binding (`replayKeyLogFor`); `options` carries the replay options the verdict assumes. Regenerate with packages/crypto/scripts/generate-key-log-rejection-fixtures.ts.",
+  "codes": {
+    "chain_prior_mismatch": "An event's `prior` is not the digest of the event before it (003). The hash chain is what makes a log an append-only history rather than a bag of events.",
+    "sequence_not_contiguous": "`seq` is not the previous event's `seq` plus one (003) — a gap, a repeat, or a jump.",
+    "signature_count_not_threshold": "The event carries a number of signatures other than exactly its threshold (015 S1's `m = t`). Counted before any curve work.",
+    "signature_set_not_conforming": "015 S2/S3: some member does not verify under a distinct listed key in strictly increasing key order. Covers a signature by an unlisted key and a tampered event body alike — the verifier learns only that the set does not conform, which is all it can honestly report.",
+    "commitment_not_reproduced": "A rotation's `{keys, threshold}` does not reproduce the PRIOR event's `next` commitment (003, _The committed next key state_). The threshold is inside the commitment, so a rotation cannot restate it — this is the rule that closes the lowered-threshold rotation.",
+    "state_repeats_key": "015 S0: the event's key list holds the same key twice, so the state is invalid and every record checked against it is invalid with it.",
+    "quorum_shared": "003's 'no two states may share a quorum': two states this log commits share at least `min(t_A, t_B)` keys, which would let a signature set conform against both.",
+    "work_budget_exceeded": "The replay would spend more Ed25519 verifications than its budget allows. NOT a verdict on the log — a refusal to spend CPU on attacker-supplied input — so it is a distinct class.",
+    "participant_mismatch": "The log is internally valid and belongs to a DIFFERENT participant than the caller asked for: the substituted-log attack, refused by `replayKeyLogFor`."
+  },
+  "vectors": [
+    {
+      "name": "accepted — 1-of-1 inception alone",
+      "why": "The shape every documented first-party participant has: one key, threshold 1, one signature, and a commitment to a next state nobody has revealed yet. The participant id is the digest of the establishment data ({seq, kind, keys, threshold, next}), so a third party can rederive it from these bytes without any signature.",
+      "valid": true,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}"
+      ],
+      "digests": ["zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51"],
+      "schemaValid": true,
+      "state": {
+        "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+        "threshold": "1",
+        "seq": "0"
+      },
+      "rejection": null,
+      "error": null
+    },
+    {
+      "name": "accepted — 1-of-1 rotation revealing the committed key",
+      "why": "The rotation reveals exactly the key the inception committed to, declares the committed threshold, chains to the inception's digest, and is signed by the REVEALED key (KERI semantics — recoverable when the outgoing key is lost or stolen). The id does not change.",
+      "valid": true,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+          "kind": "rot",
+          "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+          "threshold": "1",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z2uYaBLuvNqqGV24dJSZRDFsAfqRc4MMEypPd9mvshy1yepztcQiGYy9KjdYS5VpX2Th22kjhFmzPdjt6PoNp1QQE"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmYiwNcW4spobGGgcc2kzLSdUfYqiEDytWgpustgMCAsdV"
+      ],
+      "schemaValid": true,
+      "state": {
+        "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+        "threshold": "1",
+        "seq": "1"
+      },
+      "rejection": null,
+      "error": null
+    },
+    {
+      "name": "accepted — rotation revealing a committed 2-of-2 committee",
+      "why": "A 1-of-1 identity growing into a committee, which is the only way the shape of a key state may change: the inception commits {two keys, threshold 2} and the rotation reveals exactly that, carrying exactly two signatures in key order. An implementation that handles only threshold 1 fails HERE rather than silently on a rejection vector.",
+      "valid": true,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E",
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "prior": null,
+          "signature": [
+            "z2RAbfYw2VmEX6UfuXsdQV7Vgi1DEmMVYVVYsQojoaq9rCDAdnfJbjvudYFvFJfx9nT7qNQZY7FxgeksS1xuqT8b9"
+          ]
+        },
+        {
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "seq": "1",
+          "prior": "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+          "kind": "rot",
+          "keys": [
+            "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+          ],
+          "threshold": "2",
+          "next": "zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN",
+          "signature": [
+            "z475qeCvzyKDY9fmDGnzxMSxiBS3zs1DavfaYCMndzjWECvyk4X6djJGBGd8qLZB3Qpykvujc8LwinoaxUnASvtjf",
+            "z3zZQvzBEPXqwEH9bUsw1oRLBn9n6V5rbQjT9wh8PQh6BMEA5cizzDdtC18NGVK6LeZQNgYPyyVvSagQy21FKQZRY"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX\",\"z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ\"],\"kind\":\"rot\",\"next\":\"zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN\",\"prior\":\"zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r\",\"seq\":\"1\",\"threshold\":\"2\"}"
+      ],
+      "digests": [
+        "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+        "zQmbjovSAdjMuAYtg5LoqGQpN4YBegx4zi6pV5t3VZB14n3"
+      ],
+      "schemaValid": true,
+      "state": {
+        "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+        "keys": [
+          "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+        ],
+        "threshold": "2",
+        "seq": "1"
+      },
+      "rejection": null,
+      "error": null
+    },
+    {
+      "name": "rejected — the rotation's `prior` is not the inception's digest",
+      "why": "Isolated to the chain rule: the event is re-signed after the override, so its signature set conforms and only `prior` is wrong. The value used is the digest of a DIFFERENT honest inception (the committee one), which is the realistic shape — a splice from another log, not random bytes.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+          "kind": "rot",
+          "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+          "threshold": "1",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z4DaiNqyFfudUQG7opJL3XDoRM2udYdrsnMUHoTdh8k3wMBSGL9DWQyyyPq8CzavfvMwJLTQZTcQCTDXhU2NY5P37"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmScuNoX52yXHNN6dK16K1YsRT2zPhC57ueuV91jMwunrr"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "chain_prior_mismatch",
+      "error": {
+        "name": "Error",
+        "message": "Key event 1 does not chain to the previous event"
+      }
+    },
+    {
+      "name": "rejected — a sequence gap: seq jumps from 0 to 2",
+      "why": "Everything else is honest, including `prior`, which still names the inception. A verifier that checked only the hash chain would accept this log and read a two-event history as three events long — which is how a log with a withheld middle event would read.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "2",
+          "prior": "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+          "kind": "rot",
+          "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+          "threshold": "1",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z24adVXwviGswKorcPjDcaNtUDro5shUgq75fLqM5BaFd12nUs49fc3e633F9Yj2tRd2Mekd11fny9CVNi1Xeh8Yw"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51\",\"seq\":\"2\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmdLA98P7GWRzGR9XHZobGRLg7kJSWKAHPSkzumxFEttmu"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "sequence_not_contiguous",
+      "error": {
+        "name": "Error",
+        "message": "Key event sequence is not contiguous at 2"
+      }
+    },
+    {
+      "name": "rejected — a duplicated sequence number: two events at seq 1",
+      "why": "The third event chains correctly to the second (its `prior` is the second's digest) and reveals the correctly committed key state, so the ONLY thing wrong with it is that it restates seq 1. The contiguity rule is what makes `seq` an index rather than a label.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+          "kind": "rot",
+          "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+          "threshold": "1",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z2uYaBLuvNqqGV24dJSZRDFsAfqRc4MMEypPd9mvshy1yepztcQiGYy9KjdYS5VpX2Th22kjhFmzPdjt6PoNp1QQE"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmYiwNcW4spobGGgcc2kzLSdUfYqiEDytWgpustgMCAsdV",
+          "kind": "rot",
+          "keys": ["z6MkvRXNYcE7MMduynWTgeKbDaT1iijDSC8pZqXZc8rHPrf2"],
+          "threshold": "1",
+          "next": "zQmQq69f1VcXA5gRQDBuqWDwJ58jeZqJYm1iv7xrLoUF2Wh",
+          "signature": [
+            "z5pm57qbH7M3RSVrfGiwMQjE9kaYLsk8vBHDwF61cgYTbPF6ABPWtybGgXMsfsMfhCmAmjoqLtQ9c8KRQ1J3k3bMy"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51\",\"seq\":\"1\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6MkvRXNYcE7MMduynWTgeKbDaT1iijDSC8pZqXZc8rHPrf2\"],\"kind\":\"rot\",\"next\":\"zQmQq69f1VcXA5gRQDBuqWDwJ58jeZqJYm1iv7xrLoUF2Wh\",\"prior\":\"zQmYiwNcW4spobGGgcc2kzLSdUfYqiEDytWgpustgMCAsdV\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmYiwNcW4spobGGgcc2kzLSdUfYqiEDytWgpustgMCAsdV",
+        "zQmUnURrwE7QUbsQzKx2R5XocqaTbhja4GrF5wXqV4WSYa2"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "sequence_not_contiguous",
+      "error": {
+        "name": "Error",
+        "message": "Key event sequence is not contiguous at 1"
+      }
+    },
+    {
+      "name": "rejected — a 2-of-2 rotation carrying one signature",
+      "why": "The committed threshold is met by the DECLARED threshold but not by the signature count: the rotation reveals the committed committee and declares `2`, so the commitment check passes, and it then fails 015 S1's `m = t` with one member against a threshold of two. The signature it does carry is genuine and verifies under key 0, so nothing but the count is wrong — this is the vector that catches an implementation reading the threshold as a floor it forgot to apply. `schemaValid` is false: `keyEventSchema` enforces `m = t` too, so a delivery over HTTP never reaches the replay. The replay still owns the rule, because its parameter is a bare event array rather than a parsed log.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E",
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "prior": null,
+          "signature": [
+            "z2RAbfYw2VmEX6UfuXsdQV7Vgi1DEmMVYVVYsQojoaq9rCDAdnfJbjvudYFvFJfx9nT7qNQZY7FxgeksS1xuqT8b9"
+          ]
+        },
+        {
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "seq": "1",
+          "prior": "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+          "kind": "rot",
+          "keys": [
+            "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+          ],
+          "threshold": "2",
+          "next": "zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN",
+          "signature": [
+            "z475qeCvzyKDY9fmDGnzxMSxiBS3zs1DavfaYCMndzjWECvyk4X6djJGBGd8qLZB3Qpykvujc8LwinoaxUnASvtjf"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX\",\"z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ\"],\"kind\":\"rot\",\"next\":\"zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN\",\"prior\":\"zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r\",\"seq\":\"1\",\"threshold\":\"2\"}"
+      ],
+      "digests": [
+        "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+        "zQmVqygLXnBHorR9GJX96w7Re9au7gnc4o6Dr2t2Zs7cYH2"
+      ],
+      "schemaValid": false,
+      "state": null,
+      "rejection": "signature_count_not_threshold",
+      "error": {
+        "name": "Error",
+        "message": "Key event 1 is invalid (signature_count_not_threshold): Signature set carries 1 members against a threshold of 2"
+      }
+    },
+    {
+      "name": "rejected — the inception is signed by a key it does not list",
+      "why": "A well-formed Ed25519 signature over exactly these bytes, by a key that appears in no state. The participant id still derives correctly, because the id hashes the establishment data and the signature is not part of it — so an implementation that checked the id and skipped the curve would accept a log anyone could mint for any establishment data.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "zjMkPorrwomi3hz23y4prk9G5aWDgpwBKMXuUxQB7AJqHueURFXf51bxfB8Wf26S6yDzGSPNy1ERAZHqCuCP6MfQ"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}"
+      ],
+      "digests": ["zQmZxJqfXfKU2ExnQzCnp4iJD4jb84qbLgQndh9VJdxkxqr"],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "signature_set_not_conforming",
+      "error": {
+        "name": "Error",
+        "message": "Key event 0 signature 0 does not verify under a distinct listed key in key order (threshold 1)"
+      }
+    },
+    {
+      "name": "rejected — a tampered event body under a genuine signature",
+      "why": "The honest rotation's `next` commitment is replaced after signing, and the original signature is kept. Every structural check still passes: the chain digest is unchanged, `seq` is contiguous, and the pre-rotation commitment covers `{keys, threshold}` rather than `next`, so the commitment check cannot see this edit. Only the signature can — the signing input is the whole event minus its signature array, and that is the point of signing it. An implementation that verified signatures over the establishment data alone would accept this and let anyone rewrite where the log rotates NEXT.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+          "kind": "rot",
+          "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+          "threshold": "1",
+          "next": "zQmQq69f1VcXA5gRQDBuqWDwJ58jeZqJYm1iv7xrLoUF2Wh",
+          "signature": [
+            "z2uYaBLuvNqqGV24dJSZRDFsAfqRc4MMEypPd9mvshy1yepztcQiGYy9KjdYS5VpX2Th22kjhFmzPdjt6PoNp1QQE"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmQq69f1VcXA5gRQDBuqWDwJ58jeZqJYm1iv7xrLoUF2Wh\",\"prior\":\"zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmXTnEFFxBuhg5DSWoZCZ3cqci6h24rn9jG6WMexmpgfQP"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "signature_set_not_conforming",
+      "error": {
+        "name": "Error",
+        "message": "Key event 1 signature 0 does not verify under a distinct listed key in key order (threshold 1)"
+      }
+    },
+    {
+      "name": "rejected — an event listing the same key twice",
+      "why": "The commitment names {[K, K], threshold 2} and the rotation reveals exactly that, so the commitment check passes and 015 S0 is the only rule violated. Two signatures by the one key would satisfy an INDEX-based reading of the threshold — one key counted twice — which is why the state itself is invalid rather than the record merely failing against it. Recorded because the commitment helper does not dedupe: a log can commit to this shape and only discover on reveal that it has bricked the identity. `schemaValid` is false — `keyEventSchema` carries the same rule, so both gates hold it, which is the state 015 S0 asked for after the rule spent a while living only in the replay.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmeXspi7DXKydVqniS29zdYdZrQcf6VKNo6a7bvnvELBdp",
+          "id": "pk_zQmSgQgBUkYqxoweh8YdfpHVemJjSh2RstYmmvkUe6mNSaY",
+          "prior": null,
+          "signature": [
+            "z5C7sUc1EjEAYA44NZ2dxzrdCJD3bAHfngDeWrGaQrwknYmYxbnNYYFFnS1aargxoms9Zo1cK46GBe9tnLnvfY71K"
+          ]
+        },
+        {
+          "id": "pk_zQmSgQgBUkYqxoweh8YdfpHVemJjSh2RstYmmvkUe6mNSaY",
+          "seq": "1",
+          "prior": "zQmVvqrufNbnATL4nu1nfhpdZzoqfH1TvMYK1podk59fJCJ",
+          "kind": "rot",
+          "keys": [
+            "z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH",
+            "z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"
+          ],
+          "threshold": "2",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z2QLycqK9FSdDXUvV5dtBePknxSKbQ8S5QEEwfDEKnA6NuWovqsmkT36LiMmSjLeHnk5ReHnTGSKPE9R9B5pyk8Zx",
+            "z2QLycqK9FSdDXUvV5dtBePknxSKbQ8S5QEEwfDEKnA6NuWovqsmkT36LiMmSjLeHnk5ReHnTGSKPE9R9B5pyk8Zx"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmSgQgBUkYqxoweh8YdfpHVemJjSh2RstYmmvkUe6mNSaY\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmeXspi7DXKydVqniS29zdYdZrQcf6VKNo6a7bvnvELBdp\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmSgQgBUkYqxoweh8YdfpHVemJjSh2RstYmmvkUe6mNSaY\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\",\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmVvqrufNbnATL4nu1nfhpdZzoqfH1TvMYK1podk59fJCJ\",\"seq\":\"1\",\"threshold\":\"2\"}"
+      ],
+      "digests": [
+        "zQmVvqrufNbnATL4nu1nfhpdZzoqfH1TvMYK1podk59fJCJ",
+        "zQmUjZQFBQCDFn17Q6sM6emZ456QbDPKKuCm2dfWuXYcCje"
+      ],
+      "schemaValid": false,
+      "state": null,
+      "rejection": "state_repeats_key",
+      "error": {
+        "name": "Error",
+        "message": "Key event 1 is invalid (state_repeats_key): Key state lists 2 keys but only 1 distinct ones"
+      }
+    },
+    {
+      "name": "rejected — the committed committee revealed at a LOWERED threshold",
+      "why": "The attack the commitment's threshold half exists to stop, executed. A holder of ONE key from the committed 2-of-2 set reveals exactly the committed keys — the key list matches byte for byte — declares `threshold: \"1\"`, signs once, and would take sole control of an M-of-N identity, then rotate again to keys only they hold. Because the commitment covers {keys, threshold} rather than the key list alone, `commitToKeyState(keys, \"1\")` does not reproduce the prior `next`, and the log is refused BEFORE any signature is verified. Note what the vector proves about ordering: the PRIOR event's commitment governs, never the new event's own declaration.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E",
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "prior": null,
+          "signature": [
+            "z2RAbfYw2VmEX6UfuXsdQV7Vgi1DEmMVYVVYsQojoaq9rCDAdnfJbjvudYFvFJfx9nT7qNQZY7FxgeksS1xuqT8b9"
+          ]
+        },
+        {
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "seq": "1",
+          "prior": "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+          "kind": "rot",
+          "keys": [
+            "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+          ],
+          "threshold": "1",
+          "next": "zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN",
+          "signature": [
+            "zk7AQqzuhxe5JQPGyMuf9bYUwfMa6eWKojF5371j6MuGq7GbXSnsK5sztZKic8UZXv63qKw33S2H2dBWFbp8E93Y"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX\",\"z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ\"],\"kind\":\"rot\",\"next\":\"zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN\",\"prior\":\"zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+        "zQmXdEeJgBAABJ3mdQAkui6jG3j6VRfFk5eSRThexvbfiLF"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "commitment_not_reproduced",
+      "error": {
+        "name": "Error",
+        "message": "Key event 1 does not reveal the pre-committed next key state: its keys and threshold \"1\" do not reproduce the prior event's commitment"
+      }
+    },
+    {
+      "name": "rejected — a rotation revealing keys that were never committed",
+      "why": "Pre-rotation in its plainest form: the inception committed to `rotated`, and this event reveals a key nobody committed to, honestly signed by that key. This is what a stolen current key buys an attacker — nothing — because the next key state was fixed one event ago and the thief does not hold it.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+          "kind": "rot",
+          "keys": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+          "threshold": "1",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z5pTUPfa5AKJkG1p9C2pnDu2e26YmDpcqUkFQZZanioq6oNTVtruXWw187UmirYLoxFc8wULYWyguEpVZ54ST2Ze"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmYDLuFSQZWN1eauwM3CSwtE8am3j8gatAkA2ettgAhE8R"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "commitment_not_reproduced",
+      "error": {
+        "name": "Error",
+        "message": "Key event 1 does not reveal the pre-committed next key state: its keys and threshold \"1\" do not reproduce the prior event's commitment"
+      }
+    },
+    {
+      "name": "rejected — two committed states sharing a quorum",
+      "why": "Both events are individually valid: the rotation reveals exactly the committed key state and carries exactly its two signatures. The LOG is still refused, because the two states share both keys against a threshold of two — records verify against any state a log ever committed, so a two-member signature set would conform against both, and 015's cross-state deletion and reordering routes reopen. A log-level rule, checked after every event's own structure.",
+      "valid": false,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": [
+            "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+          ],
+          "threshold": "2",
+          "next": "zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E",
+          "id": "pk_zQmeLjhTQxQhiN2Z1obTK2RaJxe2ubMJBhUYmPkn38mKF3Y",
+          "prior": null,
+          "signature": [
+            "z5xj6sMjaJpurpmBqb7yW7gJyZvgitVQNmeuLQ3ib8SUGQUd1tt4ArQhAi9DF89i82r1oDU1vvDvZKyNbK4H6Jcnu",
+            "z2dHk59xQE8aF7JBXgymgGyLmGZykVxeUWZaR52D5LmXsgetHzXqvUAQXyFmJ1waHWUSzKSSsFkxQ8RvaWJaLByXv"
+          ]
+        },
+        {
+          "id": "pk_zQmeLjhTQxQhiN2Z1obTK2RaJxe2ubMJBhUYmPkn38mKF3Y",
+          "seq": "1",
+          "prior": "zQmcTnemKC8F1kXa3odRT9XW5w8j4bz3mp3Zk8mFBXf7PZP",
+          "kind": "rot",
+          "keys": [
+            "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+          ],
+          "threshold": "2",
+          "next": "zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN",
+          "signature": [
+            "z3rXnmnjVGPM6rEiSbixs4czn6C4piSefVWFctfggz7HdyQJudmLYEPHKHTfUFPaeLRV19EUdmhZgFJrDkjZBtpyY",
+            "z2F4M63Za1na83wRpZmNnSC15H2W8GDPphKdcixbPBSURmSP1S5stE2TkuS3AEmSAymFTwpsPPdQpTr4vCpv3KD5b"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmeLjhTQxQhiN2Z1obTK2RaJxe2ubMJBhUYmPkn38mKF3Y\",\"keys\":[\"z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX\",\"z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ\"],\"kind\":\"icp\",\"next\":\"zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"2\"}",
+        "{\"id\":\"pk_zQmeLjhTQxQhiN2Z1obTK2RaJxe2ubMJBhUYmPkn38mKF3Y\",\"keys\":[\"z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX\",\"z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ\"],\"kind\":\"rot\",\"next\":\"zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN\",\"prior\":\"zQmcTnemKC8F1kXa3odRT9XW5w8j4bz3mp3Zk8mFBXf7PZP\",\"seq\":\"1\",\"threshold\":\"2\"}"
+      ],
+      "digests": [
+        "zQmcTnemKC8F1kXa3odRT9XW5w8j4bz3mp3Zk8mFBXf7PZP",
+        "zQmPyA4VWvgQ1nV5G4knzCRiQGMX6zJi1E8f8NtWqLbvqWf"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "quorum_shared",
+      "error": {
+        "name": "Error",
+        "message": "Key events 0 and 1 share 2 keys against a threshold of 2: no two key states of one log may share a quorum"
+      }
+    },
+    {
+      "name": "rejected — an honest log refused by the work bound",
+      "why": "The accepted two-event log above, replayed under a budget of one Ed25519 verification. The inception spends it, and the rotation is refused before spending a second. This is the pre-auth posture: a replay an unauthenticated caller commands is metered, and the refusal is a REFUSAL TO SPEND rather than a verdict — a caller must not cache it as 'this log is invalid', which is why it is its own error class.",
+      "valid": false,
+      "options": {
+        "maxSignatureVerifications": 1
+      },
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w",
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "prior": null,
+          "signature": [
+            "z4GwtEXqvp365uZ6u6rUZ66QkUHPvMKQNg2HyPx9yy2LDqg2BfcYTfbrnj6ffcCP75bvVEuNwfGT1k6PYguBXdqqp"
+          ]
+        },
+        {
+          "id": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "seq": "1",
+          "prior": "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+          "kind": "rot",
+          "keys": ["z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH"],
+          "threshold": "1",
+          "next": "zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi",
+          "signature": [
+            "z2uYaBLuvNqqGV24dJSZRDFsAfqRc4MMEypPd9mvshy1yepztcQiGYy9KjdYS5VpX2Th22kjhFmzPdjt6PoNp1QQE"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmZT1dPoaRmZ9Zwxfzvj2FU26VkD5HH4c7F77ogPMF347w\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9\",\"keys\":[\"z6Mko9hTggMwjSTEaJaPUfE6tqcy2xvU6BnNq3e3o8qVBiyH\"],\"kind\":\"rot\",\"next\":\"zQmSKBLFrfMcEbBAXk1NjMcrTLhg1f68ozj1YKXYFmQJEFi\",\"prior\":\"zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51\",\"seq\":\"1\",\"threshold\":\"1\"}"
+      ],
+      "digests": [
+        "zQmRC1XfcxEzEshHGqaTdX19bB5zfnWTYLEJUVQQPawZM51",
+        "zQmYiwNcW4spobGGgcc2kzLSdUfYqiEDytWgpustgMCAsdV"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "work_budget_exceeded",
+      "error": {
+        "name": "KeyLogWorkBudgetExceeded",
+        "message": "Key log replay exceeded its budget of 1 signature verifications"
+      }
+    },
+    {
+      "name": "rejected — a perfectly valid log served for the wrong participant",
+      "why": "The substituted-log attack. The committee log is internally flawless; it simply is not the log the caller asked for. A replay that discards the self-derived id — which is a claim the log makes about itself, never a confirmation of whose log it is — lets an untrusted discovery host serve attacker A's log at victim V's path and makes every record naming V verify under A's keys. The binding is the whole defence, so it is a vector.",
+      "valid": false,
+      "expectedId": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": ["z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX"],
+          "threshold": "1",
+          "next": "zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E",
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "prior": null,
+          "signature": [
+            "z2RAbfYw2VmEX6UfuXsdQV7Vgi1DEmMVYVVYsQojoaq9rCDAdnfJbjvudYFvFJfx9nT7qNQZY7FxgeksS1xuqT8b9"
+          ]
+        },
+        {
+          "id": "pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8",
+          "seq": "1",
+          "prior": "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+          "kind": "rot",
+          "keys": [
+            "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+          ],
+          "threshold": "2",
+          "next": "zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN",
+          "signature": [
+            "z475qeCvzyKDY9fmDGnzxMSxiBS3zs1DavfaYCMndzjWECvyk4X6djJGBGd8qLZB3Qpykvujc8LwinoaxUnASvtjf",
+            "z3zZQvzBEPXqwEH9bUsw1oRLBn9n6V5rbQjT9wh8PQh6BMEA5cizzDdtC18NGVK6LeZQNgYPyyVvSagQy21FKQZRY"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6Mkon3Necd6NkkyfoGoHxid2znGc59LU3K7mubaRcFbLfLX\"],\"kind\":\"icp\",\"next\":\"zQmYE9Be66nyDeN6ErgQr7xqAkvYhPZ4PQjTPj7Ymahaz2E\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"1\"}",
+        "{\"id\":\"pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8\",\"keys\":[\"z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX\",\"z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ\"],\"kind\":\"rot\",\"next\":\"zQmR4Bap6amyT8ut5aWtrdwfBHcMGBt374AdBbvNaPDX7FN\",\"prior\":\"zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r\",\"seq\":\"1\",\"threshold\":\"2\"}"
+      ],
+      "digests": [
+        "zQmb2nWYXnEuJKSN9UzXDdKMikcFo1mTdF8n5TJ1VioNc7r",
+        "zQmbjovSAdjMuAYtg5LoqGQpN4YBegx4zi6pV5t3VZB14n3"
+      ],
+      "schemaValid": true,
+      "state": null,
+      "rejection": "participant_mismatch",
+      "error": {
+        "name": "KeyLogParticipantMismatch",
+        "message": "Key log for pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9 replays as a different participant (pk_zQmRbEXBxcatR3A6KCJ4YaHzjRV4sETTnxoH9kurdMHF1Q8)"
+      }
+    }
+  ]
+}

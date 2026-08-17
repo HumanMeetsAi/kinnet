@@ -1,0 +1,71 @@
+{
+  "note": "Conformance vectors for the RFC 9530 `Content-Digest` value the spec 004 write-auth profile covers. They pin ONE rule: the digest is computed over the CONTENT OCTETS as transmitted, never over a decoded form of them. `bodyBase64` is the delivery and `contentDigest` is the exact header value a conforming implementation MUST produce for it — sha-256, base64 with padding, wrapped as `sha-256=:…:`. Checkable with a base64 decoder and a SHA-256 alone. `digestOverDecodedText` records what the text-normalizing implementation computes instead (lenient UTF-8 decode, re-encode, hash), and `distinguishesTextFromBytes` marks the vectors where the two disagree — those are the ones a text-based verifier fails. The reason a text-based verifier is not merely imprecise but unsound is the attack pair: UTF-8 decoding is not injective, because every malformed sequence becomes U+FFFD rather than an error, so the three octets EF BF BD (a body legitimately containing U+FFFD) and the single octet FF decode to the same text. The pair below is exactly that — two different deliveries with one decoded text — and under text digesting the second one's digest equals the first one's, so a signature over the first verifies over the second while the application receives the second's bytes. Over octets the digests differ and the substitution is refused. The binary vector states the same defect without an attacker: a text-normalized digest cannot cover non-UTF-8 content at all. The three controls (ASCII, empty, well-formed multi-byte UTF-8) agree under both implementations and are recorded so the failing vectors are not confused with 'non-ASCII is unsupported'. A `string` body is a SENDER-SIDE convenience only: it is digested as its UTF-8 encoding, which is correct exactly when the sender transmits that encoding, and a verifier must never reach it by decoding what it received. Regenerate with packages/crypto/scripts/generate-content-digest-fixtures.ts.",
+  "attackPair": {
+    "signed": "attack, signed half — a body containing a legitimate U+FFFD (EF BF BD)",
+    "delivered": "attack, delivered half — the same text with EF BF BD replaced by the invalid octet FF",
+    "sharedDecodedText": "{\"note\":\"�\"}",
+    "note": "Same decoded text, different octets, different digests. A verifier that digests octets rejects the delivered half against the signed half's Content-Digest; a verifier that digests decoded text accepts it. That is the whole finding."
+  },
+  "vectors": [
+    {
+      "name": "control — an ASCII JSON body",
+      "why": "The vector that stops this suite from passing vacuously. Plain ASCII round-trips through a UTF-8 decoder unchanged, so a byte-digesting and a text-digesting implementation agree here and both pass. It pins the header's exact wire form — the `sha-256=:` prefix, base64 with padding, the trailing colon — which every other vector reuses.",
+      "bodyBase64": "eyJ3YW50IjoicXVvdGUifQ==",
+      "contentDigest": "sha-256=:JPbXFOMZThaxugsIjB5WsthvsJsbGUqYwXvK8io/ccM=:",
+      "wellFormedUtf8": true,
+      "decodedText": "{\"want\":\"quote\"}",
+      "digestOverDecodedText": "sha-256=:JPbXFOMZThaxugsIjB5WsthvsJsbGUqYwXvK8io/ccM=:",
+      "distinguishesTextFromBytes": false
+    },
+    {
+      "name": "control — the empty body",
+      "why": "The spec 004 profile covers `content-digest` UNCONDITIONALLY, GETs included, so a bodyless request still carries a digest and every implementation must agree on which one. This is the SHA-256 of zero octets. It also pins that the empty string and zero bytes are the same input, which is what lets a signer pass `\"\"` and a verifier pass an empty `Uint8Array` for the same request.",
+      "bodyBase64": "",
+      "contentDigest": "sha-256=:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=:",
+      "wellFormedUtf8": true,
+      "decodedText": "",
+      "digestOverDecodedText": "sha-256=:47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=:",
+      "distinguishesTextFromBytes": false
+    },
+    {
+      "name": "control — multi-byte UTF-8 that decodes losslessly",
+      "why": "Non-ASCII text is NOT the defect. Well-formed UTF-8 survives a decode/re-encode round trip byte for byte, so this vector's two digests agree and a text-digesting implementation passes it. Recorded to keep the failing vectors honest: what breaks a text-based verifier is malformed input, not foreign scripts, and a fixture that only showed ASCII controls would leave that ambiguous.",
+      "bodyBase64": "eyJub3RlIjoiaMOpbGxvIOS4lueVjCDwn4yNIn0=",
+      "contentDigest": "sha-256=:E6keG1/WuxZlztbKZfWgjRnIOA4ZtczvGOOaqG7iIiE=:",
+      "wellFormedUtf8": true,
+      "decodedText": "{\"note\":\"héllo 世界 🌍\"}",
+      "digestOverDecodedText": "sha-256=:E6keG1/WuxZlztbKZfWgjRnIOA4ZtczvGOOaqG7iIiE=:",
+      "distinguishesTextFromBytes": false
+    },
+    {
+      "name": "attack, signed half — a body containing a legitimate U+FFFD (EF BF BD)",
+      "why": "The body the sender signs. U+FFFD is an ordinary character that any text may contain, and here it is correctly encoded as the three octets EF BF BD. Its digest is over those three octets. Pair this with the delivered half below: the two bodies are different byte strings, so they have different digests, and a signature over this one must not verify over that one.",
+      "bodyBase64": "eyJub3RlIjoi77+9In0=",
+      "contentDigest": "sha-256=:ergXfm88CdWE3pqijGZ+9yyaRv0hHs6BvMcFJ+NZio4=:",
+      "wellFormedUtf8": true,
+      "decodedText": "{\"note\":\"�\"}",
+      "digestOverDecodedText": "sha-256=:ergXfm88CdWE3pqijGZ+9yyaRv0hHs6BvMcFJ+NZio4=:",
+      "distinguishesTextFromBytes": false
+    },
+    {
+      "name": "attack, delivered half — the same text with EF BF BD replaced by the invalid octet FF",
+      "why": "The body an intermediary substitutes. `FF` is not valid UTF-8 anywhere, so a lenient decoder maps it to U+FFFD — producing EXACTLY the decoded text of the signed half, as `decodedText` shows for both. An implementation that digests the decoded text therefore computes the signed half's digest for this delivery and accepts it, while the application is handed these octets, which no signature ever covered. `digestOverDecodedText` here IS the signed half's `contentDigest` — that equality is the vulnerability, stated in bytes. Digesting the octets gives a different value and the substitution is refused.",
+      "bodyBase64": "eyJub3RlIjoi/yJ9",
+      "contentDigest": "sha-256=:gH74MmPY6tpT1vH4slD7X4BAjoTsKPRAQqN5vSlAs74=:",
+      "wellFormedUtf8": false,
+      "decodedText": "{\"note\":\"�\"}",
+      "digestOverDecodedText": "sha-256=:ergXfm88CdWE3pqijGZ+9yyaRv0hHs6BvMcFJ+NZio4=:",
+      "distinguishesTextFromBytes": true
+    },
+    {
+      "name": "binary — all 256 byte values, which is not text at all",
+      "why": "The other half of the same defect, present with no attacker. A text-normalizing digest cannot faithfully cover a binary body: 129 of these 256 octets are not well-formed UTF-8, a lenient decode replaces them, and the re-encoded text is a different and longer byte string. So the two digests differ, and under a text-based implementation the signature over a binary body means nothing at all — every binary body with the same replacement pattern shares one digest.",
+      "bodyBase64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+      "contentDigest": "sha-256=:QK/y6dLYki5Hr9RkjmlnSXFYeF+9Hahw5xECZr+USIA=:",
+      "wellFormedUtf8": false,
+      "decodedText": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u007f��������������������������������������������������������������������������������������������������������������������������������",
+      "digestOverDecodedText": "sha-256=:DxoNnJa2HG3YQvc3FPnhDAHEA4MhfwoJXAgUXvNrCBs=:",
+      "distinguishesTextFromBytes": true
+    }
+  ]
+}

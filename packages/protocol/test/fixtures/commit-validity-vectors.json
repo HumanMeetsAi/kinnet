@@ -1,0 +1,2198 @@
+{
+  "note": "Commit-validity conformance vectors for spec 014's rules 1-5 (§\"Membership change\").\nCommit validity is where two implementations reaching different verdicts on the same bytes split\na group irreparably, so each vector pins the whole input as data and the verdict as one of\n\"apply\" (014's \"valid under this profile\"), \"wait\", or \"invalid\".\n\nBytes are unpadded base64url: `authenticatedData` is the PNCommitBinding of the commit's\n`authenticated_data`, `credential` is a leaf's PNCredential, `signaturePublicKey` is a raw\n32-byte Ed25519 key. `keyRef` is that key's spec-005 KeyRef, restated so evidence `leaves`\nentries can be lined up by eye; it is derivable from `signaturePublicKey` and is checked\nrather than trusted. Every evidence entry's `digest` is the spec-001/003 digest of its\n`record`, and is the entry the binding names.\n\n`evidence[].verified` is whether this member has resolved that record's OWN signature (owner\nmode against the actor's key log, delegated mode against the presented chain). It is an input,\nnot a conclusion: resolution needs a network and commit validity must not, so the evaluator\ntakes the answer and treats held-but-unverified exactly like not-held — a wait.\n\n`expected.reason` is the reference implementation's label. Two implementations MUST agree on\nthe VERDICT; the reason string is diagnostic and is not part of the wire contract.\n\nNot represented here, deliberately: expiry, revocation status, and issuer key-state\nresolution. Spec 014 excludes all three from commit validity — they are wall-clock- and\nregistry-dependent, so making them validity conditions would let two honest members split the\ngroup. They survive as client-surfaced warnings and as grounds to author `device-remove`.",
+  "participants": {
+    "alice": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+    "bob": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+    "carol": "pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE",
+    "mallory": "pk_zQmWakxQj1LmvAAPM4jEKw8Ez5PPhPEacppjjYFdRDmN7Zv"
+  },
+  "devices": {
+    "alice/A": {
+      "owner": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+      "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX"
+    },
+    "alice/B": {
+      "owner": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+      "keyRef": "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+    },
+    "bob/A": {
+      "owner": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+      "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"
+    },
+    "bob/B": {
+      "owner": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+      "keyRef": "z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb"
+    },
+    "carol/A": {
+      "owner": "pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE",
+      "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"
+    },
+    "mallory/A": {
+      "owner": "pk_zQmWakxQj1LmvAAPM4jEKw8Ez5PPhPEacppjjYFdRDmN7Zv",
+      "keyRef": "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE"
+    }
+  },
+  "conversations": {
+    "main": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+    "other": "zQmTPYbkeuXdT14XvhwWvqtKTtjzrQwgGHVMt7ULEmgJxAT"
+  },
+  "vectors": [
+    {
+      "name": "add — the creator adds a participant",
+      "rule": "1, 2 (add)",
+      "comment": "The baseline: one Add proposal, covered by one `add` record naming exactly the participant it brings in, at the epoch the commit extends, authored by the conversation's creator while the creator holds a leaf.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "add — two participants under one record",
+      "rule": "1 (exact participant set)",
+      "comment": "Set equality is per record, not per proposal: one record may cover several Adds as long as the participants those Adds bring in are exactly its `members`.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jZ2NtRmQ2TGZUY1N2ZXE0cExnS0MxVGcxNFlCa2lVR3dVYVl2WmpubzdUdA",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          },
+          {
+            "keyRef": "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+            "signaturePublicKey": "-kg0FH9uaQw2k-_2EzYEZAPNiuKhTzGzxAc1hWkjlWU",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWMkZyZUZGcU1VeHRka0ZCVUUwMGFrVkxkemhGZWpWUVVHaFFSV0ZqY0hCcWFsbEdaRkpFYlU0M1duWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QzU2tad2RrcFdSbVV4TlhsblIyZFpURlJaZFdsUWQyWm9hMnRFVW10TlJ6UmxTMUZHVkRobk5qVjVSU0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TWtSb05HcHFNMlIzVG5oT2NFYzFWVGt5VnpWNVdqVldRazVSUVVoeGIwdFpVbHAxWWxKTVpFMDBSSGhHZFhKWmVESm5XRzl2VkVORFdrUkZPVFZZY0hGdWNGaGtSbGRPTldGb1IxWlhNVlpsZWxVNFRHNW1ReUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcgcmFd6LfTcSveq4pLgKC1Tg14YBkiUGwUaYvZjno7Tt",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": [
+              "pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE",
+              "pk_zQmWakxQj1LmvAAPM4jEKw8Ez5PPhPEacppjjYFdRDmN7Zv"
+            ],
+            "leaves": [
+              "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+              "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE"
+            ],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z5gcVMV4RehYWzAFYiq84kUSeeBeHh2hy7XmCotXJMdy2FojQSdYtLBGuiaBJB7Pf4L6BEwreRzyBvgGf3LNdtLB7"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "remove — the creator removes a participant",
+      "rule": "2 (remove, creator)",
+      "comment": "Every leaf bob holds in the pre-commit tree is removed, so the complete-removal check passes and 'bob left' is true cryptographically as well as on screen.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jeWdNZG1Yb1FvaldTWm5GeHFLblkyUGZtTHJ3Q0dFZFU1TWlrOWpGV0pKRA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcygMdmXoQojWSZnFxqKnY2PfmLrwCGEdU5Mik9jFWJJD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z2ozdFFuXsFm5xSG6R612tEn2CAo3GRFc8ZuPgUDEQ7tA8HPzbPHAP7E1B9Ap6HK8fRxdFhDDfGnfV2rCsTnw8bAb"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "remove — a self-authorized departure, committed by another member",
+      "rule": "2 (remove, members == [actor])",
+      "comment": "`members == [actor]` is self-authorizing, which is what lets anyone commit a departure — MLS forbids committing your own Remove, so a departure nobody else could commit would never land.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jb2lDWHBaWXdLYnRZZ2F2eUNRZ0F1dXF3MVNoaEJUeXFtQ2FDV3RMdWFNRA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcoiCXpZYwKbtYgavyCQgAuuqw1ShhBTyqmCaCWtLuaMD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "zWKPDNB44pHCqy3Zcgf5MwNcT3wBhJomdBdnpfkwwiCMuK5PLm6AqYQFwRcJNMbes3CX5UJLTNGkLj97S2xx2UVr"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "device-add — a member adds a second device",
+      "rule": "2 (device-add)",
+      "comment": "A participant governs their own device set. The actor already holds a leaf in the tree the commit extends, so this is not a way *in*.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1OcXI5QjJKRUpiZ3JNNm5va3lhazJuZHk0MnVuSm00RnZCSmZiNGpnNVVwWg",
+        "adds": [
+          {
+            "keyRef": "z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb",
+            "signaturePublicKey": "URw0oaLLUh3xa7JGuN6OeZfOI1x-drIqPXUDokgZ3Yo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RxZFhReGJYVmxORmhTVjBSeVRtdDJSWFY0WXpKTlRIVkNPV05PT0V4d1dHRTFUR1pMT0RkWE5VcExZaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TTNKMVNETnBVa0p3T1d0QmJrZFpRbUpPVVZkU1dGWndiVEU1VVU1NFdsVjFaVTEyVUd0dGQyNUJiMVUzUzFONmMyNVVlbHBWWWtWNlNEVndWRnBJZGpSNVZGRnVZV0psTjNwYVJVMUZZbk14TjB4TFpuTmhWaUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmNqr9B2JEJbgrM6nokyak2ndy42unJm4FvBJfb4jg5UpZ",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-add",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z3XXJeSWQu8cHoh2uTdpWqpQWqTahzpqbLqKDusNFcYFpBYTygDfogRGgxc6kcaDKQdQNn6W8X2PG9Mkm3cvtJXA7"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "device-remove — a member retires one of two devices",
+      "rule": "2 (device-remove)",
+      "comment": "The actor keeps a leaf, so the device path cannot be used for the self-expulsion the `conversation/self-remove` ability exists to gate.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ",
+          "signaturePublicKey": "C1E62bSSQBXKCQLtB5BE06xdvsIwbwaUjBDajrbjny0",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RtUkZOT1VuTXlhVGxUTmt4YU5YWmtORkppY0ZvMk56VTBTRGRTTTJKMFJIRlNWR1ZJYUdGdGNYWjFTaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TlhaU1YxbGhaV1Z4T1V3MGJYRlFXbk42U0dobFZUUTBRMkp4UXpaQ1ZGRXhkMVZxUTFkWWFXMVhRM2R5ZFVoSU1XTmhlRm8xT1dWUVlXbENSMEl5ZVhKRlRtdGtTMEU0VlhkNWNIRnpXbGxCT0RSSFJXWk5TeUpkZlYw"
+        },
+        {
+          "leafIndex": 2,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1OZm9SWWVjTW9yUTRKNmQ1MTlBYUVKVFIxUDVnUFU5eVZabmFrOE44aXNjRA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ",
+            "signaturePublicKey": "C1E62bSSQBXKCQLtB5BE06xdvsIwbwaUjBDajrbjny0",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RtUkZOT1VuTXlhVGxUTmt4YU5YWmtORkppY0ZvMk56VTBTRGRTTTJKMFJIRlNWR1ZJYUdGdGNYWjFTaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TlhaU1YxbGhaV1Z4T1V3MGJYRlFXbk42U0dobFZUUTBRMkp4UXpaQ1ZGRXhkMVZxUTFkWWFXMVhRM2R5ZFVoSU1XTmhlRm8xT1dWUVlXbENSMEl5ZVhKRlRtdGtTMEU0VlhkNWNIRnpXbGxCT0RSSFJXWk5TeUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmNfoRYecMorQ4J6d519AaEJTR1P5gPU9yVZnak8N8iscD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-remove",
+            "members": ["pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9"],
+            "leaves": ["z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z2294zbNPxJcDtLWBYfjCFVarMaTXUAKdj6kHPNsRuCN73Uu4oR4pvhxdFX8MeQt8HpEusjC9yT2XWRUo6t7kQv2N"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "founding commit — initial members, empty binding",
+      "rule": "founding commit",
+      "comment": "The Conversation record is the coverage, at epoch 0: no `add` records are minted for bytes that already say exactly this, and the binding is the empty list. Every added leaf's credential subject must be one of the record's `participants`.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": {
+        "members": [
+          "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"
+        ]
+      },
+      "preCommitLeaves": [],
+      "commit": {
+        "epoch": "0",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AA",
+        "adds": [
+          {
+            "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+          },
+          {
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "PCS commit — an update path touching no membership, empty binding",
+      "rule": "5 (update-path/PCS)",
+      "comment": "Rule 5: valid from any leaf with an empty binding. The path leaf keeps its signature key and its credential subject, which is what credential refresh means under rule 4.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AA",
+        "adds": [],
+        "removes": [],
+        "updatesPath": true,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": {
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        }
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "apply"
+      }
+    },
+    {
+      "name": "wait — the binding names a record this member does not hold",
+      "rule": "1 (wait, not reject)",
+      "comment": "No member can distinguish 'this names nothing' from 'this has not reached me yet', so an unheld digest is a wait. Waiting is safe because it is uniform: everyone lacking the record stalls, nobody diverges, and the stall clears monotonically once any member re-delivers it.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "wait",
+        "missing": ["zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb"]
+      }
+    },
+    {
+      "name": "wait — the record is held but its own signature has not resolved",
+      "rule": "1 (wait, not reject)",
+      "comment": "Held-but-unverified is a wait on exactly the same footing as missing. Failing open would apply an authorization nobody checked; failing closed would split the group on a key-log cache miss. Key logs are monotone, so the stall converges.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": false,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "wait",
+        "missing": ["zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb"]
+      }
+    },
+    {
+      "name": "add — authored by a member who is not the creator",
+      "rule": "2 (add)",
+      "comment": "Add authority is creator-only; no member-adds and no succession in v1.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1XbkZNS05kNWs0dVc2VlAzVUtDaWlBc3o0ZWthTm95S2Y2a0NMUGdMNVJpag",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmWnFMKNd5k4uW6VP3UKCiiAsz4ekaNoyKf6kCLPgL5Rij",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "zdoEfdyRm28PVpPGup26hrPheHfXdBCEFbWPQgJuvfepRY2tAPUybY6Rfg7nBm2nPVJcjrnUKwauonHjKW8qGZsw"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "add_actor_not_creator"
+      }
+    },
+    {
+      "name": "add — the creator has left the group",
+      "rule": "2 (add)",
+      "comment": "Add authority ends when the creator leaves: a creator-less conversation is closed to new participants, while removals, device changes and messaging continue.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": false
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "add_creator_not_a_member"
+      }
+    },
+    {
+      "name": "remove — authored by neither the creator nor the participant removed",
+      "rule": "2 (remove)",
+      "comment": "The only two removal authorities are the creator and the subject themselves.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1lTXhDNDdMaWNNUVE4M2VVRm92SndDTUU0c1E2TFVQQ00zRDh4Z0VhQ1JVcw",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmeMxC47LicMQQ83eUFovJwCME4sQ6LUPCM3D8xgEaCRUs",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmWakxQj1LmvAAPM4jEKw8Ez5PPhPEacppjjYFdRDmN7Zv",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z5rJqgfEic9YujQgVs2BwPk38ETfutgFCVCH2H2TV7GG6rvJHMaAXgmhCWhrCtVZEz9eqYCsXU9CiHB3REg4Ge48h"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "remove_not_authorized"
+      }
+    },
+    {
+      "name": "device-add — authored by a participant holding no leaf in the group",
+      "rule": "2 (device-add)",
+      "comment": "Without the 'actor already holds a leaf' clause a device-add is an unbounded membership bypass: anyone — including a participant who left, or was never a member — could author one for their own device and have any member commit it, defeating creator-only add authority.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1aVHZIcnpoTmhZWGQ5d2lpNmhBUHNRTW5uRmdZOE1xZmp6aGU5ZWY0VlFCcA",
+        "adds": [
+          {
+            "keyRef": "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+            "signaturePublicKey": "-kg0FH9uaQw2k-_2EzYEZAPNiuKhTzGzxAc1hWkjlWU",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWMkZyZUZGcU1VeHRka0ZCVUUwMGFrVkxkemhGZWpWUVVHaFFSV0ZqY0hCcWFsbEdaRkpFYlU0M1duWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QzU2tad2RrcFdSbVV4TlhsblIyZFpURlJaZFdsUWQyWm9hMnRFVW10TlJ6UmxTMUZHVkRobk5qVjVSU0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TWtSb05HcHFNMlIzVG5oT2NFYzFWVGt5VnpWNVdqVldRazVSUVVoeGIwdFpVbHAxWWxKTVpFMDBSSGhHZFhKWmVESm5XRzl2VkVORFdrUkZPVFZZY0hGdWNGaGtSbGRPTldGb1IxWlhNVlpsZWxVNFRHNW1ReUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmZTvHrzhNhYXd9wii6hAPsQMnnFgY8Mqfjzhe9ef4VQBp",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-add",
+            "members": ["pk_zQmWakxQj1LmvAAPM4jEKw8Ez5PPhPEacppjjYFdRDmN7Zv"],
+            "leaves": ["z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE"],
+            "actor": "pk_zQmWakxQj1LmvAAPM4jEKw8Ez5PPhPEacppjjYFdRDmN7Zv",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z5neprLuiZtgvSz45cLRt3mytJXAQCRJaDwAYvdXh6i3zHcpuHzqCxupGcrQbTVgDk1qFS7fsLNdFPRmNBvAd7aBF"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "device_actor_not_a_member"
+      }
+    },
+    {
+      "name": "device-remove — one named leaf's credential does not name the actor",
+      "rule": "2 (device-*)",
+      "comment": "The ghost leaf's credential does not decode, so it contributes no participant to the exact-set check and reaches rule 2's per-leaf subject clause. A leaf whose credential names a *different* participant is caught one check earlier, by set equality — this is the shape that makes the subject clause load-bearing rather than redundant.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        },
+        {
+          "leafIndex": 2,
+          "keyRef": "z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb",
+          "signaturePublicKey": "URw0oaLLUh3xa7JGuN6OeZfOI1x-drIqPXUDokgZ3Yo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RxZFhReGJYVmxORmhTVjBSeVRtdDJSWFY0WXpKTlRIVkNPV05PT0V4d1dHRTFUR1pMT0RkWE5VcExZaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TTNKMVNETnBVa0p3T1d0QmJrZFpRbUpPVVZkU1dGWndiVEU1VVU1NFdsVjFaVTEyVUd0dGQyNUJiMVUzUzFONmMyNVVlbHBWWWtWNlNEVndWRnBJZGpSNVZGRnVZV0psTjNwYVJVMUZZbk14TjB4TFpuTmhWaUpkZlYw"
+        },
+        {
+          "leafIndex": 3,
+          "keyRef": "z6Mkg49NtQR2LyYRDCQFK4w1VVHqhypZSSRo7HsyuN7SV7v5",
+          "signaturePublicKey": "F8t5-ytBIPKx7GXkGY1uCLKOgT_rAeSkAIObheGAgM4",
+          "credential": "f5mZ"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1UeFVnclFReVFOcE52Mlo2UnloOVpBa2l1MUpyakNaRGFONXdGRndRdmk1OA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 2,
+            "keyRef": "z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb",
+            "signaturePublicKey": "URw0oaLLUh3xa7JGuN6OeZfOI1x-drIqPXUDokgZ3Yo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RxZFhReGJYVmxORmhTVjBSeVRtdDJSWFY0WXpKTlRIVkNPV05PT0V4d1dHRTFUR1pMT0RkWE5VcExZaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TTNKMVNETnBVa0p3T1d0QmJrZFpRbUpPVVZkU1dGWndiVEU1VVU1NFdsVjFaVTEyVUd0dGQyNUJiMVUzUzFONmMyNVVlbHBWWWtWNlNEVndWRnBJZGpSNVZGRnVZV0psTjNwYVJVMUZZbk14TjB4TFpuTmhWaUpkZlYw"
+          },
+          {
+            "leafIndex": 3,
+            "keyRef": "z6Mkg49NtQR2LyYRDCQFK4w1VVHqhypZSSRo7HsyuN7SV7v5",
+            "signaturePublicKey": "F8t5-ytBIPKx7GXkGY1uCLKOgT_rAeSkAIObheGAgM4",
+            "credential": "f5mZ"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmTxUgrQQyQNpNv2Z6Ryh9ZAkiu1JrjCZDaN5wFFwQvi58",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": [
+              "z6Mkg49NtQR2LyYRDCQFK4w1VVHqhypZSSRo7HsyuN7SV7v5",
+              "z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb"
+            ],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z5dQ9pZoqmQLHTbSZve1FkHJ8RV8F3UUV19L9x6Vkwnz7sRZRReUZskucEjKyTj2QAwGshE3MjzFccdVHVMru5gEW"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "device_leaf_subject_not_actor"
+      }
+    },
+    {
+      "name": "device-remove — taking the actor's last leaf",
+      "rule": "2 (device-remove leaves a leaf)",
+      "comment": "Full departure is a `remove`, which a delegated signer may author for its own subject only with `conversation/self-remove`. A `device-remove` needs no more than the everyday `msg` umbrella and names public key refs, so without this rule the umbrella would keep unilateral self-expulsion authority by the device path.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1ZdUpKdHFOZEVTaGJUNDNqcFpxZUxDRWluOTN4WWkyUG9ma0YxMkxCcG9Udg",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmYuJJtqNdEShbT43jpZqeLCEin93xYi2PofkF12LBpoTv",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "zTMr3rpRVNZMy5jW5RxFZQQ3u9Aptxt7JyPAJgYwL38xTJrWfnBgJqQP99yCyACNR6YYUtvs7cG9wpuhTYETfbbW"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "device_removes_last_leaf"
+      }
+    },
+    {
+      "name": "device-remove — two records in one commit that jointly take the actor's last leaf",
+      "rule": "2 (device-remove leaves a leaf)",
+      "comment": "The retained-leaf test is measured against every Remove the commit carries, not the ones a single record covers. Read per record, each of these two retains what the other takes and both pass — which is exactly the split an attacker would use.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ",
+          "signaturePublicKey": "C1E62bSSQBXKCQLtB5BE06xdvsIwbwaUjBDajrbjny0",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RtUkZOT1VuTXlhVGxUTmt4YU5YWmtORkppY0ZvMk56VTBTRGRTTTJKMFJIRlNWR1ZJYUdGdGNYWjFTaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TlhaU1YxbGhaV1Z4T1V3MGJYRlFXbk42U0dobFZUUTBRMkp4UXpaQ1ZGRXhkMVZxUTFkWWFXMVhRM2R5ZFVoSU1XTmhlRm8xT1dWUVlXbENSMEl5ZVhKRlRtdGtTMEU0VlhkNWNIRnpXbGxCT0RSSFJXWk5TeUpkZlYw"
+        },
+        {
+          "leafIndex": 2,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "QGAvelFtTmZvUlllY01vclE0SjZkNTE5QWFFSlRSMVA1Z1BVOXlWWm5hazhOOGlzY0QvelFtZDRCN0R0dEV6SFZra01kb2pqVEFvUWZwNFJDY1Z1VGl6RjF2WWVpOFY3Vkg",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 0,
+            "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+          },
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ",
+            "signaturePublicKey": "C1E62bSSQBXKCQLtB5BE06xdvsIwbwaUjBDajrbjny0",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RtUkZOT1VuTXlhVGxUTmt4YU5YWmtORkppY0ZvMk56VTBTRGRTTTJKMFJIRlNWR1ZJYUdGdGNYWjFTaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TlhaU1YxbGhaV1Z4T1V3MGJYRlFXbk42U0dobFZUUTBRMkp4UXpaQ1ZGRXhkMVZxUTFkWWFXMVhRM2R5ZFVoSU1XTmhlRm8xT1dWUVlXbENSMEl5ZVhKRlRtdGtTMEU0VlhkNWNIRnpXbGxCT0RSSFJXWk5TeUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmd4B7DttEzHVkkMdojjTAoQfp4RCcVuTizF1vYei8V7VH",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-remove",
+            "members": ["pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9"],
+            "leaves": ["z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "zT5Q6ucMfuUNPaQfarmPsLpr5C37Em24wxYK4VRVaGJRRvYY882ay3mypaY2Fd75A4ZD8UarkqVDZJc5hoUYUFRR"
+            ]
+          }
+        },
+        {
+          "digest": "zQmNfoRYecMorQ4J6d519AaEJTR1P5gPU9yVZnak8N8iscD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-remove",
+            "members": ["pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9"],
+            "leaves": ["z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z2294zbNPxJcDtLWBYfjCFVarMaTXUAKdj6kHPNsRuCN73Uu4oR4pvhxdFX8MeQt8HpEusjC9yT2XWRUo6t7kQv2N"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "device_removes_last_leaf"
+      }
+    },
+    {
+      "name": "exact participant set — a record covering a participant it does not name",
+      "rule": "1 (exact participant set)",
+      "comment": "Set equality, never containment: containment would let a committer smuggle an extra participant in alongside a legitimate record.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1lZk1INTNXYnBpcEJuaUdkZ0JqS1RWam81V2Z5RE1Hem9mNFJlMzdiOEs0Yg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          },
+          {
+            "keyRef": "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+            "signaturePublicKey": "-kg0FH9uaQw2k-_2EzYEZAPNiuKhTzGzxAc1hWkjlWU",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWMkZyZUZGcU1VeHRka0ZCVUUwMGFrVkxkemhGZWpWUVVHaFFSV0ZqY0hCcWFsbEdaRkpFYlU0M1duWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QzU2tad2RrcFdSbVV4TlhsblIyZFpURlJaZFdsUWQyWm9hMnRFVW10TlJ6UmxTMUZHVkRobk5qVjVSU0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TWtSb05HcHFNMlIzVG5oT2NFYzFWVGt5VnpWNVdqVldRazVSUVVoeGIwdFpVbHAxWWxKTVpFMDBSSGhHZFhKWmVESm5XRzl2VkVORFdrUkZPVFZZY0hGdWNGaGtSbGRPTldGb1IxWlhNVlpsZWxVNFRHNW1ReUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmefMH53WbpipBniGdgBjKTVjo5WfyDMGzof4Re37b8K4b",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": [
+              "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+              "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE"
+            ],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z57yvwdSPLbGk6sHNf5YzbdUjksLCePt7qFZxV8znqqXsBuTnTjt39brfF69doP3kgTyarA4hFpk3TKdq3PB7MueU"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "evidence_participant_set_mismatch"
+      }
+    },
+    {
+      "name": "complete removal — one of the removed participant's leaves stays in the tree",
+      "rule": "1 (complete removal)",
+      "comment": "A partial removal renders as 'bob left' at every client while one of bob's leaves — a stolen or ghost device, chosen by whoever authored the record — keeps decrypting.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        },
+        {
+          "leafIndex": 2,
+          "keyRef": "z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb",
+          "signaturePublicKey": "URw0oaLLUh3xa7JGuN6OeZfOI1x-drIqPXUDokgZ3Yo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RxZFhReGJYVmxORmhTVjBSeVRtdDJSWFY0WXpKTlRIVkNPV05PT0V4d1dHRTFUR1pMT0RkWE5VcExZaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TTNKMVNETnBVa0p3T1d0QmJrZFpRbUpPVVZkU1dGWndiVEU1VVU1NFdsVjFaVTEyVUd0dGQyNUJiMVUzUzFONmMyNVVlbHBWWWtWNlNEVndWRnBJZGpSNVZGRnVZV0psTjNwYVJVMUZZbk14TjB4TFpuTmhWaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jb2lDWHBaWXdLYnRZZ2F2eUNRZ0F1dXF3MVNoaEJUeXFtQ2FDV3RMdWFNRA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcoiCXpZYwKbtYgavyCQgAuuqw1ShhBTyqmCaCWtLuaMD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "zWKPDNB44pHCqy3Zcgf5MwNcT3wBhJomdBdnpfkwwiCMuK5PLm6AqYQFwRcJNMbes3CX5UJLTNGkLj97S2xx2UVr"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "incomplete_removal"
+      }
+    },
+    {
+      "name": "uncovered Add — a second added leaf no named record covers",
+      "rule": "1 (minimality, every proposal covered)",
+      "comment": "The covered Add is legitimate; the second one rides along on it. Every Add and Remove must be covered by a named record, which is what makes 'an uncovered leaf cannot enter the group' true.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          },
+          {
+            "keyRef": "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+            "signaturePublicKey": "-kg0FH9uaQw2k-_2EzYEZAPNiuKhTzGzxAc1hWkjlWU",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWMkZyZUZGcU1VeHRka0ZCVUUwMGFrVkxkemhGZWpWUVVHaFFSV0ZqY0hCcWFsbEdaRkpFYlU0M1duWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QzU2tad2RrcFdSbVV4TlhsblIyZFpURlJaZFdsUWQyWm9hMnRFVW10TlJ6UmxTMUZHVkRobk5qVjVSU0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TWtSb05HcHFNMlIzVG5oT2NFYzFWVGt5VnpWNVdqVldRazVSUVVoeGIwdFpVbHAxWWxKTVpFMDBSSGhHZFhKWmVESm5XRzl2VkVORFdrUkZPVFZZY0hGdWNGaGtSbGRPTldGb1IxWlhNVlpsZWxVNFRHNW1ReUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "uncovered_add"
+      }
+    },
+    {
+      "name": "uncovered Remove — a second removed leaf no named record covers",
+      "rule": "1 (minimality, every proposal covered)",
+      "comment": "The mirror of the uncovered Add: an unauthorized eviction riding a legitimate one.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        },
+        {
+          "leafIndex": 2,
+          "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+          "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jeWdNZG1Yb1FvaldTWm5GeHFLblkyUGZtTHJ3Q0dFZFU1TWlrOWpGV0pKRA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          },
+          {
+            "leafIndex": 2,
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcygMdmXoQojWSZnFxqKnY2PfmLrwCGEdU5Mik9jFWJJD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z2ozdFFuXsFm5xSG6R612tEn2CAo3GRFc8ZuPgUDEQ7tA8HPzbPHAP7E1B9Ap6HK8fRxdFhDDfGnfV2rCsTnw8bAb"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "uncovered_remove"
+      }
+    },
+    {
+      "name": "over-full binding — a named record covering no proposal in this commit",
+      "rule": "1 (minimality, every entry used)",
+      "comment": "Minimality runs both ways. Without the unused-entry rule the binding is a covert channel in cleartext on every commit — attacker-chosen bytes in a field 'fully specified shape' would happily admit.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "QGAvelFtTnFyOUIySkVKYmdyTTZub2t5YWsybmR5NDJ1bkptNEZ2QkpmYjRqZzVVcFovelFtY0xjV3BpU3hUdktxRlJhaGk2ODhpYXlhOGlxaHc2MkxqVHI5OXN1bmJOc2I",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        },
+        {
+          "digest": "zQmNqr9B2JEJbgrM6nokyak2ndy42unJm4FvBJfb4jg5UpZ",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-add",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z3XXJeSWQu8cHoh2uTdpWqpQWqTahzpqbLqKDusNFcYFpBYTygDfogRGgxc6kcaDKQdQNn6W8X2PG9Mkm3cvtJXA7"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "binding_entry_covers_no_proposal"
+      }
+    },
+    {
+      "name": "non-empty binding on a commit that changes no membership",
+      "rule": "1 (empty binding) / 5",
+      "comment": "The covert-channel case in its purest form: a PCS commit with a binding. The digest names a real record, and the commit still must not carry it.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1OcXI5QjJKRUpiZ3JNNm5va3lhazJuZHk0MnVuSm00RnZCSmZiNGpnNVVwWg",
+        "adds": [],
+        "removes": [],
+        "updatesPath": true,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmNqr9B2JEJbgrM6nokyak2ndy42unJm4FvBJfb4jg5UpZ",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "device-add",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6Mkjut1mue4XRWDrNkvEuxc2MLuB9cN8LpXa5LfK87W5JKb"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z3XXJeSWQu8cHoh2uTdpWqpQWqTahzpqbLqKDusNFcYFpBYTygDfogRGgxc6kcaDKQdQNn6W8X2PG9Mkm3cvtJXA7"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "binding_not_empty_on_update_commit"
+      }
+    },
+    {
+      "name": "binding — `authenticated_data` that is not a well-formed PNCommitBinding",
+      "rule": "1 (binding encoding)",
+      "comment": "Trailing bytes after the length-prefixed body. The binding must have exactly one byte-form, so the codec fails closed on trailing bytes, non-minimal lengths, unsorted entries and duplicates alike.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AAA",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "binding_malformed"
+      }
+    },
+    {
+      "name": "epoch — an old `add` re-cited at a later epoch",
+      "rule": "1 (same point in history)",
+      "comment": "Without the one-shot an authorization is replayable forever: an old `add` could be re-cited to force a departed participant back in. Epoch *equality*, never a lower bound — a bound leaves the rejoin-then-replay window open.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1idlU4czVNY0dzZENRaVQ5NTM2b2Y3QXBqTjNpbVlHc3F2N1J2QnNlaHpveQ",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aRGFUTk9jRXhYWTB3eVRGa3ljamxpWkV4WFVuUnBObTFDUW5jemFFVjVVSFJZTW05aU5GaE9RMFZvWlhObk9GWjFhV2xpZWtWdVZYUkhZVXREZDA1MldFUk1ibGxSTVRseVRFSm1aR0ZIZEhwRVIzZHBjeUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmbvU8s5McGsdCQiT9536of7ApjN3imYGsqv7RvBsehzoy",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "4",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z2R9VCpnP5G1rU3qWkxcTunpHHZqgrdQfRV8x4kYZA8Kq93W8xAVvkPY1soooP37BwnsQL3zeNsmpFNEQS81Lcoas"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "evidence_epoch_mismatch"
+      }
+    },
+    {
+      "name": "epoch — a self-`remove` re-cited after the participant rejoined",
+      "rule": "1 (same point in history)",
+      "comment": "bob authorized their own departure at epoch 5 and was later re-added. Re-citing that record at epoch 9 would make a member's own past departure a permanent eviction warrant in anyone's hands.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "9",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jb2lDWHBaWXdLYnRZZ2F2eUNRZ0F1dXF3MVNoaEJUeXFtQ2FDV3RMdWFNRA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcoiCXpZYwKbtYgavyCQgAuuqw1ShhBTyqmCaCWtLuaMD",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "zWKPDNB44pHCqy3Zcgf5MwNcT3wBhJomdBdnpfkwwiCMuK5PLm6AqYQFwRcJNMbes3CX5UJLTNGkLj97S2xx2UVr"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "evidence_epoch_mismatch"
+      }
+    },
+    {
+      "name": "cross-conversation replay — a record authorizing a change in another conversation",
+      "rule": "1 (same conversation)",
+      "comment": "Without the conversation check a record travels between groups: a departure from one conversation would evict its author from every other, and a `device-add` harvested anywhere would insert that leaf here.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1idkFIc0hmdkxKQWpUb1pONG00YnhBVkZwc3J0NWlrTjVFcVVodnI1N290cA",
+        "adds": [],
+        "removes": [
+          {
+            "leafIndex": 1,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmbvAHsHfvLJAjToZN4m4bxAVFpsrt5ikN5EqUhvr57otp",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmTPYbkeuXdT14XvhwWvqtKTtjzrQwgGHVMt7ULEmgJxAT",
+            "kind": "remove",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4BKTTamNyfLG33qweHoYeXj5g8uJfMxeqHbXHkoW4w39i2fimhYkYCWBQWc56GFiRm4uyhSovfFs3zoxb4KpoBGL"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "evidence_wrong_conversation"
+      }
+    },
+    {
+      "name": "update path — rotating the committer's leaf signature key",
+      "rule": "4 (key preservation)",
+      "comment": "RFC 9420 permits an UpdatePath to install a new signature key; this profile does not. Rotating a device's signature key is a `device-remove` + `device-add` pair with its own evidence — which is what removes the contradiction between 'Updates are valid from any leaf' and 'added or updated leaves must be covered by evidence'.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AA",
+        "adds": [],
+        "removes": [],
+        "updatesPath": true,
+        "pathSignatureKeyChanged": true,
+        "pathLeaf": {
+          "keyRef": "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ",
+          "signaturePublicKey": "C1E62bSSQBXKCQLtB5BE06xdvsIwbwaUjBDajrbjny0",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RtUkZOT1VuTXlhVGxUTmt4YU5YWmtORkppY0ZvMk56VTBTRGRTTTJKMFJIRlNWR1ZJYUdGdGNYWjFTaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TlhaU1YxbGhaV1Z4T1V3MGJYRlFXbk42U0dobFZUUTBRMkp4UXpaQ1ZGRXhkMVZxUTFkWWFXMVhRM2R5ZFVoSU1XTmhlRm8xT1dWUVlXbENSMEl5ZVhKRlRtdGtTMEU0VlhkNWNIRnpXbGxCT0RSSFJXWk5TeUpkZlYw"
+        }
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "path_rotates_signature_key"
+      }
+    },
+    {
+      "name": "update path — re-crediting the committer's own leaf to another participant",
+      "rule": "4 (subject continuity)",
+      "comment": "The credential is structurally perfect: self-issued, `e2ee`-only, empty caveats, audience equal to this leaf's unchanged signature key. Only the subject moved. Rule 3 excludes signature verification from validity, so without subject continuity every member would uniformly render the committer's device as the named participant's — forging exactly the device-set surface §Custody makes a MUST.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AA",
+        "adds": [],
+        "removes": [],
+        "updatesPath": true,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": {
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWMkZyZUZGcU1VeHRka0ZCVUUwMGFrVkxkemhGZWpWUVVHaFFSV0ZqY0hCcWFsbEdaRkpFYlU0M1duWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TkZZeWQwSm5iMFZJUm5kelNrNU1OVkJsYW1jek1XWkZRbEpHTVhoUU0wSlpUVFpSY2xkRFVreGFXR1kxYnpoWVFYSXlkbEZ3U0V4MVdIZzViWE5UZUVocE5XRTJTazB5ZUhGbGVEWnZPVzl4UlhoTVdEVm5hU0pkZlYw"
+        }
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "path_changes_credential_subject"
+      }
+    },
+    {
+      "name": "founding commit — a non-empty binding",
+      "rule": "founding commit",
+      "comment": "The founding commit's coverage is the Conversation record; its binding is empty.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": {
+        "members": [
+          "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"
+        ]
+      },
+      "preCommitLeaves": [],
+      "commit": {
+        "epoch": "0",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1Sa001aGU2azF5WjRvOXp6ZVFWOHI1dThlcG96S3NkMWMxRUtHTFl3Zm94bg",
+        "adds": [
+          {
+            "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+          },
+          {
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmRkM5he6k1yZ4o9zzeQV8r5u8epozKsd1c1EKGLYwfoxn",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"],
+            "leaves": ["z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "0",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z3VKKGpT7DVpwAki8ebaHQw3gMdFW4mpoVWsrovJmKfvvmmS5qF4ytB3RHnWr1SxkAEkbDvNpp81Ls5GTuxX2suiH"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "founding_binding_not_empty"
+      }
+    },
+    {
+      "name": "founding commit — a leaf whose subject is not a founding participant",
+      "rule": "founding commit",
+      "comment": "The record's `participants` is the only thing standing between the founding branch and an unconditional accept of any added leaf.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": {
+        "members": [
+          "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"
+        ]
+      },
+      "preCommitLeaves": [],
+      "commit": {
+        "epoch": "0",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AA",
+        "adds": [
+          {
+            "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+          },
+          {
+            "keyRef": "z6MkwJFpvJVFe15ygGgYLTYuiPwfhkkDRkMG4eKQFT8g65yE",
+            "signaturePublicKey": "-kg0FH9uaQw2k-_2EzYEZAPNiuKhTzGzxAc1hWkjlWU",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWMkZyZUZGcU1VeHRka0ZCVUUwMGFrVkxkemhGZWpWUVVHaFFSV0ZqY0hCcWFsbEdaRkpFYlU0M1duWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QzU2tad2RrcFdSbVV4TlhsblIyZFpURlJaZFdsUWQyWm9hMnRFVW10TlJ6UmxTMUZHVkRobk5qVjVSU0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TWtSb05HcHFNMlIzVG5oT2NFYzFWVGt5VnpWNVdqVldRazVSUVVoeGIwdFpVbHAxWWxKTVpFMDBSSGhHZFhKWmVESm5XRzl2VkVORFdrUkZPVFZZY0hGdWNGaGtSbGRPTldGb1IxWlhNVlpsZWxVNFRHNW1ReUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "founding_add_outside_participants"
+      }
+    },
+    {
+      "name": "founding commit — removing a leaf",
+      "rule": "founding commit",
+      "comment": "There is nothing to remove from a group that does not exist yet.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": {
+        "members": [
+          "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+          "pk_zQmU9Uif32FZVjRXeSemoYHujH7XpofVVtkH37fFcdaKxGf"
+        ]
+      },
+      "preCommitLeaves": [],
+      "commit": {
+        "epoch": "0",
+        "committerLeafIndex": 0,
+        "authenticatedData": "AA",
+        "adds": [
+          {
+            "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+            "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+          }
+        ],
+        "removes": [
+          {
+            "leafIndex": 0,
+            "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+            "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+          }
+        ],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "founding_commit_removes_a_leaf"
+      }
+    },
+    {
+      "name": "credential — a chain link carrying an ability outside the `e2ee` namespace",
+      "rule": "3 (structural)",
+      "comment": "The `e2ee`-only rule is a validity rule, not policy: it is what makes a credential grant nothing exercisable, which is in turn what justifies publishing credentials to strangers and exempting them from `caveats.aud`. The rule is over EVERY link — this chain's leaf is impeccable and its root is not.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "RMQxOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVmRoYTNoUmFqRk1iWFpCUVZCTk5HcEZTM2M0UlhvMVVGQm9VRVZoWTNCd2FtcFpSbVJTUkcxT04xcDJJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpvaWVsRnRXWGh5ZW0welVXTnBOSGRXYjNkMGNUVXpVekp1Y1dOWWNqSTRTRXBHV1hSSFVFMVNWa1ZGYTJGcFRITWlMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5aVU9VeFdUakZMUWtNeGFGRTRkVzlqUVdOWFIzQkVVVkZTUVdjNVFsWTNXa0phZFhkWFkwSXlZWEZtY2xaWllXbDJibFZxU0dsTlprUkZTR2R3YUZWVU5FNTNjVTVDWTJ0MFlscHBTMUF5TnpKMWFVRjROeUpkZlN4N0luTjFZbXBsWTNSSlpDSTZJbkJyWDNwUmJWRkNOV2xqVjJWbGVtaEhVRnBSYUdadWIybHhjbWRVVlRoMFNFc3lkbkp0ZGxwd2NtTktVVUYxYjJGRklpd2lhWE56ZFdWeVNXUWlPaUp3YTE5NlVXMVJRalZwWTFkbFpYcG9SMUJhVVdobWJtOXBjWEpuVkZVNGRFaExNblp5YlhaYWNISmpTbEZCZFc5aFJTSXNJbUYxWkdsbGJtTmxTV1FpT2lKd2ExOTZVVzFYWVd0NFVXb3hURzEyUVVGUVRUUnFSVXQzT0VWNk5WQlFhRkJGWVdOd2NHcHFXVVprVWtSdFRqZGFkaUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsSWl3aWJYTm5MM05sYm1RaVhTd2lZMkYyWldGMGN5STZlMzBzSW5CeWIyOW1JanB1ZFd4c0xDSnBjM04xWldSQmRDSTZJakl3TWpZdE1EZ3RNVFpVTURBNk1EQTZNREF1TURBd1dpSXNJbVY0Y0dseVpYTkJkQ0k2SWpJd01qWXRNRGd0TWpOVU1EQTZNREE2TURBdU1EQXdXaUlzSW5OcFoyNWhkSFZ5WlNJNld5SjZXazFRV0cwNFRrcHFkVWhXUVdKUlMxcE5TR3AzWW1SdlRUTTNibXR4WWtKSVRFMVFXSEUxU0hKVmJWWmlWMUpTWTNnNWNXZFJOR2RFV1dzM1JXSjFaRGhtV2xGYU5YRjZWWHBFTTJoUVZEbGllSFZuUkZCbUlsMTlYUQ"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "credential_ability_outside_e2ee"
+      }
+    },
+    {
+      "name": "credential — a link carrying a caveat",
+      "rule": "3 (structural)",
+      "comment": "A caveat a verifier cannot evaluate fails closed, and in a group a fail-closed rejection is a permanent split. The reference implementation rejects this one before the ability/caveat rules even run — the empty-caveats requirement is enforced by the Grant schema, so the chain does not decode at all. The verdict is what matters and it is the same: an added leaf carrying a caveated credential cannot enter the group.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "Qo4xOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3RwZUhOSGFqTk5Wa2RMVFhWbk1sWk5RekpLWW5SNldETlZhbUZCWTJaU2N6ZEhNVkpxWWxOdVdrcGhTQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZXlKaGRXUWlPaUp3YTE5NlVXMVZPVlZwWmpNeVJscFdhbEpZWlZObGJXOVpTSFZxU0RkWWNHOW1WbFowYTBnek4yWkdZMlJoUzNoSFppSjlMQ0p3Y205dlppSTZiblZzYkN3aWFYTnpkV1ZrUVhRaU9pSXlNREkyTFRBNExURTJWREF3T2pBd09qQXdMakF3TUZvaUxDSmxlSEJwY21WelFYUWlPaUl5TURJMkxUQTRMVEl6VkRBd09qQXdPakF3TGpBd01Gb2lMQ0p6YVdkdVlYUjFjbVVpT2xzaWVqUlVTa1YyWlc5emVGQXhZVkZZUjNWVGF6TllRMUo1WXpoblJtRllVM1YwTkdkeVIxZFhlVFl5YVdaU2FtNUxOMHhFV0c5dmFYTm9iM2RGYVhSVVNtOHlSbUpJWkZSbWNXcEdObmxXU2s1RVRrd3hOa3hvUkhBaVhYMWQ"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "credential_malformed"
+      }
+    },
+    {
+      "name": "credential — the leaf audience is not this leaf's signature key",
+      "rule": "3 (structural)",
+      "comment": "The leaf binding is what ties a credential to the key that signs in the group. A chain naming someone else's key would let a valid credential be lifted onto an attacker's leaf.",
+      "conversation": {
+        "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+        "creator": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+        "creatorIsMember": true
+      },
+      "founding": null,
+      "preCommitLeaves": [
+        {
+          "leafIndex": 0,
+          "keyRef": "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "signaturePublicKey": "Zr5-Myx6RTMyvZ0Kf32wVfXF7xoGraZtmLOftoEMRzo",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVekV5WTNJMVEyRmxkVnB2YmpOYWRqSlNlVlYxVjFZME5HRlViVmR3VG5kMlNuZEVVVzlHVlZOV1N6a2lMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVk14TW1OeU5VTmhaWFZhYjI0elduWXlVbmxWZFZkV05EUmhWRzFYY0U1M2RrcDNSRkZ2UmxWVFZrczVJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3R0VGt3MmVHdHpaRVZLUlU1SGF6bGFNWEZ4UjNOWk5XNXFTMUZrYWxVeFZXaHVWVVZWZGxkNVVWVldXQ0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2Tkc1Vk5HSjBOMlY2YW1aVlRIRllhR3B1WTI5YVFWbEtlazVXWTI5UVdYaEJiVGxaVTBoNE5HWXlWa1ZuVWxORmRWSlZjelJDV0U1MVRVNUVVMXBXZWxKSFlua3lObTVsVkd0dVZFWkNWRmx0UTFGNk1rUnpheUpkZlYw"
+        },
+        {
+          "leafIndex": 1,
+          "keyRef": "z6MktojHN9D8obak7C9wjpTzCRrdE5zC6cxt5ANUFnQskgbs",
+          "signaturePublicKey": "1UIH2hlJd9z0atv-wrwudbUtWopCGE_t_cAAJPDj6No",
+          "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRWVGxWYVdZek1rWmFWbXBTV0dWVFpXMXZXVWgxYWtnM1dIQnZabFpXZEd0SU16ZG1SbU5rWVV0NFIyWWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVlU1VldsbU16SkdXbFpxVWxobFUyVnRiMWxJZFdwSU4xaHdiMlpXVm5SclNETTNaa1pqWkdGTGVFZG1JaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QwYjJwSVRqbEVPRzlpWVdzM1F6bDNhbkJVZWtOU2NtUkZOWHBETm1ONGREVkJUbFZHYmxGemEyZGljeUlzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TW5RNFREbHZSREpEZERWWlprSjJXR2RrYUdsaU9WRjFOVEYwWjBSVGR6ZFlha0Z2T0ZWaFlrTXlOR1JxZG5kVmFrRmFaa0pOVkZsbU9IcGhOa1ZuVVVzelpFRmxlVXRuUW5GMVZIaENibEpwVnpGelluQkJkaUpkZlYw"
+        }
+      ],
+      "commit": {
+        "epoch": "5",
+        "committerLeafIndex": 0,
+        "authenticatedData": "MC96UW1jTGNXcGlTeFR2S3FGUmFoaTY4OGlheWE4aXFodzYyTGpUcjk5c3VuYk5zYg",
+        "adds": [
+          {
+            "keyRef": "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "signaturePublicKey": "QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "credential": "QkExOlczc2ljM1ZpYW1WamRFbGtJam9pY0d0ZmVsRnRVVUkxYVdOWFpXVjZhRWRRV2xGb1ptNXZhWEZ5WjFSVk9IUklTekoyY20xMlduQnlZMHBSUVhWdllVVWlMQ0pwYzNOMVpYSkpaQ0k2SW5CclgzcFJiVkZDTldsalYyVmxlbWhIVUZwUmFHWnViMmx4Y21kVVZUaDBTRXN5ZG5KdGRscHdjbU5LVVVGMWIyRkZJaXdpWVhWa2FXVnVZMlZKWkNJNklubzJUV3QzU2tad2RrcFdSbVV4TlhsblIyZFpURlJaZFdsUWQyWm9hMnRFVW10TlJ6UmxTMUZHVkRobk5qVjVSU0lzSW1GaWFXeHBkR2xsY3lJNld5SmxNbVZsTDJ4bFlXWWlYU3dpWTJGMlpXRjBjeUk2ZTMwc0luQnliMjltSWpwdWRXeHNMQ0pwYzNOMVpXUkJkQ0k2SWpJd01qWXRNRGd0TVRaVU1EQTZNREE2TURBdU1EQXdXaUlzSW1WNGNHbHlaWE5CZENJNklqSXdNall0TURndE1qTlVNREE2TURBNk1EQXVNREF3V2lJc0luTnBaMjVoZEhWeVpTSTZXeUo2TldwTGFVUkxZbkpPWWtwaFZVVnZaVk5JVmxsRVptWnRZVXgyTmtkQ1JFUm1kVU41ZW5CRVlUTmxlbHB0T1hveVVWWlFlSFIyUzB4Q2RGSmxja1JYZERKaFJXRTFjR2hPVmtzelEzVTFhbmR2YzBOU2F6TkZieUpkZlYw"
+          }
+        ],
+        "removes": [],
+        "updatesPath": false,
+        "pathSignatureKeyChanged": false,
+        "pathLeaf": null
+      },
+      "evidence": [
+        {
+          "digest": "zQmcLcWpiSxTvKqFRahi688iaya8iqhw62LjTr99sunbNsb",
+          "verified": true,
+          "record": {
+            "conversationId": "zQmc4ubun5LbexJLninxgf6uZ2mYVYsqtbXcGfoWTv5kWR8",
+            "kind": "add",
+            "members": ["pk_zQmQB5icWeezhGPZQhfnoiqrgTU8tHK2vrmvZprcJQAuoaE"],
+            "leaves": ["z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH"],
+            "actor": "pk_zQmS12cr5CaeuZon3Zv2RyUuWV44aTmWpNwvJwDQoFUSVK9",
+            "epoch": "5",
+            "createdAt": "2026-08-16T00:00:00.000Z",
+            "signature": [
+              "z4ZyxetE6Akodcqr4FfXQhKX1UVrKCarMcmyxm98m2y2sqXGowk4qmA2b9Ru9M54Bd9FeJsAR8MR96Xt6CVJk2wc"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "verdict": "invalid",
+        "reason": "credential_leaf_audience_mismatch"
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+packages:
+  - packages/a2a
+  - packages/crypto
+  - packages/protocol
+  - packages/trust
+  - packages/verify

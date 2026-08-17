@@ -1,0 +1,54 @@
+{
+  "name": "@kinnet/trust",
+  "version": "0.6.1",
+  "private": true,
+  "description": "Trust resolver for Kinnet: represents-chain, claim, relationship, and UCAN-aligned grant-chain verification (specs 008/009), offline-capable from committed bytes.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "kinnet",
+    "trust",
+    "verifiable-credentials",
+    "ucan",
+    "delegation"
+  ],
+  "homepage": "https://github.com/HumanMeetsAi/kinnet#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HumanMeetsAi/kinnet.git",
+    "directory": "packages/trust"
+  },
+  "bugs": {
+    "url": "https://github.com/HumanMeetsAi/kinnet/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.typecheck.json"
+  },
+  "dependencies": {
+    "@kinnet/crypto": "workspace:^",
+    "@kinnet/protocol": "workspace:^",
+    "zod": "^4.4.3"
+  }
+}

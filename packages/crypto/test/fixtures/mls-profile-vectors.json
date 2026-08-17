@@ -1,0 +1,154 @@
+{
+  "varint": {
+    "encode": [
+      {
+        "value": 0,
+        "hex": "00"
+      },
+      {
+        "value": 63,
+        "hex": "3f"
+      },
+      {
+        "value": 64,
+        "hex": "4040"
+      },
+      {
+        "value": 16383,
+        "hex": "7fff"
+      },
+      {
+        "value": 16384,
+        "hex": "80004000"
+      },
+      {
+        "value": 1073741823,
+        "hex": "bfffffff"
+      }
+    ],
+    "rejectEncode": [
+      {
+        "value": 1073741824,
+        "reason": "RFC 9420 §2.1.2 rejects the 8-byte form, so 2^30 - 1 is the maximum"
+      }
+    ],
+    "rejectDecode": [
+      {
+        "hex": "4000",
+        "reason": "non-minimal: 0 fits in the 1-byte form"
+      },
+      {
+        "hex": "403f",
+        "reason": "non-minimal: 63 fits in the 1-byte form"
+      },
+      {
+        "hex": "80000040",
+        "reason": "non-minimal: 64 fits in the 2-byte form"
+      },
+      {
+        "hex": "80003fff",
+        "reason": "non-minimal: 16383 fits in the 2-byte form"
+      },
+      {
+        "hex": "c000000040000000",
+        "reason": "the \"11\" (8-byte) form is invalid in MLS"
+      },
+      {
+        "hex": "40",
+        "reason": "truncated: a 2-byte header with only 1 byte present"
+      }
+    ]
+  },
+  "credential": {
+    "note": "A schema-valid chain under @kinnet/protocol's current grantSchema.",
+    "chain": [
+      {
+        "subjectId": "pk_z6MkAceParticipantAaa",
+        "issuerId": "z6MkAceSessionKeyBbb",
+        "audienceId": "z6MkAceDeviceEdKeyCcc",
+        "abilities": ["e2ee/leaf"],
+        "caveats": {},
+        "proof": "zQmWUcqpK35MVBTy6EKK9cXGEhTxAdjbcrq1krYkBawmFxZ",
+        "issuedAt": "2026-08-01T00:00:00.000Z",
+        "expiresAt": "2026-08-08T00:00:00.000Z",
+        "signature": ["z3AceLeafSignatureBbb"]
+      },
+      {
+        "subjectId": "pk_z6MkAceParticipantAaa",
+        "issuerId": "pk_z6MkAceParticipantAaa",
+        "audienceId": "z6MkAceSessionKeyBbb",
+        "abilities": ["e2ee"],
+        "caveats": {},
+        "proof": null,
+        "issuedAt": "2026-08-01T00:00:00.000Z",
+        "expiresAt": "2026-08-08T00:00:00.000Z",
+        "signature": ["z3AceRootSignatureAaa"]
+      }
+    ],
+    "hex": "4325313a5733736963335669616d566a64456c6b496a6f6963477466656a5a4e6130466a5a564268636e527059326c7759573530515746684969776961584e7a64575679535751694f694a364e6b317251574e6c5532567a63326c76626b746c65554a6959694973496d46315a476c6c626d4e6c535751694f694a364e6b317251574e6c5247563261574e6c5257524c5a586c4459324d694c434a68596d6c73615852705a584d694f6c73695a544a6c5a5339735a57466d496c3073496d4e68646d566864484d694f6e74394c434a77636d39765a694936496e70526256645659334677537a4d3154565a4356486b325255744c4f574e595230566f564868425a47706959334a784d5774795757744359586474526e68614969776961584e7a6457566b515851694f6949794d4449324c5441344c544178564441774f6a41774f6a41774c6a41774d466f694c434a6c65484270636d567a515851694f6949794d4449324c5441344c544134564441774f6a41774f6a41774c6a41774d466f694c434a7a6157647559585231636d55694f6c7369656a4e425932564d5a57466d55326c6e626d463064584a6c516d4a69496c31394c48736963335669616d566a64456c6b496a6f6963477466656a5a4e6130466a5a564268636e527059326c7759573530515746684969776961584e7a64575679535751694f694a77613139364e6b317251574e6c5547467964476c6a61584268626e5242595745694c434a68645752705a57356a5a556c6b496a6f69656a5a4e6130466a5a564e6c63334e706232354c5a586c43596d49694c434a68596d6c73615852705a584d694f6c73695a544a6c5a534a644c434a6a59585a6c5958527a496a70376653776963484a76623259694f6d353162477773496d6c7a6333566c5a454630496a6f694d6a41794e6930774f4330774d5651774d446f774d446f774d4334774d444261496977695a58687761584a6c63304630496a6f694d6a41794e6930774f4330774f4651774d446f774d446f774d4334774d4442614969776963326c6e626d463064584a6c496a7062496e6f7a51574e6c556d397664464e705a323568644856795a55466859534a64665630"
+  },
+  "credentialEmptyCaveats": {
+    "note": "The shape spec 014 mandates (empty caveats, e2ee-only abilities). Encode-only: it becomes decodable once 011's aud exemption lands in grantSchema.",
+    "chain": [
+      {
+        "subjectId": "pk_z6MkAceParticipantAaa",
+        "issuerId": "pk_z6MkAceParticipantAaa",
+        "audienceId": "z6MkAceDeviceEdKeyCcc",
+        "abilities": ["e2ee/leaf"],
+        "caveats": {},
+        "proof": null,
+        "issuedAt": "2026-08-01T00:00:00.000Z",
+        "expiresAt": "2026-08-08T00:00:00.000Z",
+        "signature": ["z3AceRootSignatureAaa"]
+      }
+    ],
+    "hex": "417d313a5733736963335669616d566a64456c6b496a6f6963477466656a5a4e6130466a5a564268636e527059326c7759573530515746684969776961584e7a64575679535751694f694a77613139364e6b317251574e6c5547467964476c6a61584268626e5242595745694c434a68645752705a57356a5a556c6b496a6f69656a5a4e6130466a5a55526c646d6c6a5a55566b5332563551324e6a4969776959574a7062476c306157567a496a7062496d55795a575576624756685a694a644c434a6a59585a6c5958527a496a70376653776963484a76623259694f6d353162477773496d6c7a6333566c5a454630496a6f694d6a41794e6930774f4330774d5651774d446f774d446f774d4334774d444261496977695a58687761584a6c63304630496a6f694d6a41794e6930774f4330774f4651774d446f774d446f774d4334774d4442614969776963326c6e626d463064584a6c496a7062496e6f7a51574e6c556d397664464e705a323568644856795a55466859534a64665630"
+  },
+  "commitBinding": {
+    "empty": {
+      "digests": [],
+      "sorted": [],
+      "hex": "00"
+    },
+    "single": {
+      "digests": ["zQmUA6a1eiH2pBK3piEinqDCoruoonXHRgZToCitTbtk8bW"],
+      "sorted": ["zQmUA6a1eiH2pBK3piEinqDCoruoonXHRgZToCitTbtk8bW"],
+      "hex": "302f7a516d55413661316569483270424b33706945696e7144436f72756f6f6e584852675a546f4369745462746b386257"
+    },
+    "threeUnsortedInput": {
+      "digests": [
+        "zQmUA6a1eiH2pBK3piEinqDCoruoonXHRgZToCitTbtk8bW",
+        "zQmbXSTcrH3TZgAvBnYP8gee1EwbrHq9W2DLduqYfoG7iMf",
+        "zQmQAKGZHJxeJqT6xw1BoHsJCjDXPXCG6UEdMxv9LupHzHZ"
+      ],
+      "sorted": [
+        "zQmQAKGZHJxeJqT6xw1BoHsJCjDXPXCG6UEdMxv9LupHzHZ",
+        "zQmUA6a1eiH2pBK3piEinqDCoruoonXHRgZToCitTbtk8bW",
+        "zQmbXSTcrH3TZgAvBnYP8gee1EwbrHq9W2DLduqYfoG7iMf"
+      ],
+      "hex": "40902f7a516d51414b475a484a78654a715436787731426f48734a436a445850584347365545644d7876394c7570487a485a2f7a516d55413661316569483270424b33706945696e7144436f72756f6f6e584852675a546f4369745462746b3862572f7a516d6258535463724833545a674176426e59503867656531457762724871395732444c64757159666f4737694d66"
+    },
+    "rejectDecode": [
+      {
+        "hex": "40302f7a516d55413661316569483270424b33706945696e7144436f72756f6f6e584852675a546f4369745462746b386257",
+        "reason": "non-minimal outer length header"
+      },
+      {
+        "hex": "302f7a516d55413661316569483270424b33706945696e7144436f72756f6f6e584852675a546f4369745462746b38625700",
+        "reason": "one trailing byte after the structure"
+      },
+      {
+        "hex": "40602f7a516d55413661316569483270424b33706945696e7144436f72756f6f6e584852675a546f4369745462746b3862572f7a516d51414b475a484a78654a715436787731426f48734a436a445850584347365545644d7876394c7570487a485a",
+        "reason": "entries are not sorted by codepoint"
+      },
+      {
+        "hex": "40602f7a516d51414b475a484a78654a715436787731426f48734a436a445850584347365545644d7876394c7570487a485a2f7a516d51414b475a484a78654a715436787731426f48734a436a445850584347365545644d7876394c7570487a485a",
+        "reason": "duplicate entry"
+      }
+    ]
+  },
+  "groupId": {
+    "conversationId": "zQmW3ubn3FGrQ9uysAEWzZZqLmWcpNgknm77L5QwqikBF1M",
+    "groupIdHex": "12207293757557267fae2c94daa9d70fde76e2bbc7d43928675d3ddf838ed6c863ec"
+  }
+}

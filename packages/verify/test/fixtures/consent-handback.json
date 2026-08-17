@@ -1,0 +1,46 @@
+{
+  "note": "Worked-example fixture for the OAuth -> chain handback of the OAuth chain-access-token profile — one self-issued, audience-bound, attenuated grant link presented as a bearer credential — as the resource server sees it. A human consents through an OIDC provider that mints chain access tokens and the relying party receives `accessToken` as its bearer credential — a `pnc1.` string that IS the delegation `chain`: one self-issued root grant (subjectId === issuerId === the human), audience-bound to the resource server's participant id, attenuated to exactly the `consentedScopes`, expiring at `expiresAt`. There is no introspection endpoint; the resource server reads the token and verifies it from the bytes alone. Everything needed to do that OFFLINE is bundled: `subjectKeyLog` is the human's key-event log, which a verifier replays to recover the issuer's keys. The resource server is only the AUDIENCE — verifiers replay ISSUER logs only — so the resource server's key log is deliberately absent and `resourceParticipantId` appears purely as a string. `grantDigest` is `canonicalDigest(chain[0])`, the spec-008 marker the resource server logs for the session and matches a revocation against. `expectedVerdict` is the result of verifyGrantChain(chain, createStaticTrustView({ keyLogs: [subjectKeyLog] }), { verifierId: resourceParticipantId, requireAud: true, purpose: 'request', now: new Date(verifyAt) }). `verifyAt` is a fixed instant inside [issuedAt, expiresAt]: the chain carries a fixed expiry, so a verifier MUST evaluate it at verifyAt (not the wall clock) or the fixture expires and the check flips to grant_expired. The identity is minted from fixed seeds and the grant carries fixed timestamps, so re-running the generator yields a byte-identical file. Regenerate with packages/verify/scripts/generate-consent-handback-fixture.ts.",
+  "subject": "pk_zQmXAnrX8UgzTu1wkKHcm2Fiu8atC5qGVreh4rkpzbnBY5j",
+  "subjectKeyLog": [
+    {
+      "seq": "0",
+      "kind": "icp",
+      "keys": ["z6MktULudTtAsAhRegYPiZ6631RV3viv12qd4GQF8z1xB22S"],
+      "threshold": "1",
+      "next": "zQmRRZfhWWVXDGc8W7LyvG8pwN1L98PeXJw4ac52eskGJAg",
+      "id": "pk_zQmXAnrX8UgzTu1wkKHcm2Fiu8atC5qGVreh4rkpzbnBY5j",
+      "prior": null,
+      "signature": [
+        "z34Lhym686ewmcCKuXbVEh46Ztx1SqTrFnKXDe8vSey9gc4cZD46K2Jox1BA6BQLt9snchCh3bM1HZB38bXM8xmx"
+      ]
+    }
+  ],
+  "resourceParticipantId": "pk_zQmbstH8D9qS8rZ4rvmgCz2yC2HhCGvRoAdgvA8mNTGRiMv",
+  "consentedScopes": ["photos/read", "photos/write"],
+  "chain": [
+    {
+      "subjectId": "pk_zQmXAnrX8UgzTu1wkKHcm2Fiu8atC5qGVreh4rkpzbnBY5j",
+      "issuerId": "pk_zQmXAnrX8UgzTu1wkKHcm2Fiu8atC5qGVreh4rkpzbnBY5j",
+      "audienceId": "pk_zQmbstH8D9qS8rZ4rvmgCz2yC2HhCGvRoAdgvA8mNTGRiMv",
+      "abilities": ["photos/read", "photos/write"],
+      "caveats": {
+        "aud": "pk_zQmbstH8D9qS8rZ4rvmgCz2yC2HhCGvRoAdgvA8mNTGRiMv"
+      },
+      "proof": null,
+      "issuedAt": "2026-08-14T00:00:00.000Z",
+      "expiresAt": "2026-08-14T01:00:00.000Z",
+      "signature": [
+        "zufVM7W7sssw7kX3n8duko68DGpMQhBgvZLrvzHru7eUuMa6xypZ3Rc1CWr3Bi4gb7V31ZnErthzTBLH5UwjWBgb"
+      ]
+    }
+  ],
+  "accessToken": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtWEFuclg4VWd6VHUxd2tLSGNtMkZpdThhdEM1cUdWcmVoNHJrcHpibkJZNWoiLCJpc3N1ZXJJZCI6InBrX3pRbVhBbnJYOFVnelR1MXdrS0hjbTJGaXU4YXRDNXFHVnJlaDRya3B6Ym5CWTVqIiwiYXVkaWVuY2VJZCI6InBrX3pRbWJzdEg4RDlxUzhyWjRydm1nQ3oyeUMySGhDR3ZSb0FkZ3ZBOG1OVEdSaU12IiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtYnN0SDhEOXFTOHJaNHJ2bWdDejJ5QzJIaENHdlJvQWRndkE4bU5UR1JpTXYifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwMDowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQwMTowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInp1ZlZNN1c3c3NzdzdrWDNuOGR1a282OERHcE1RaEJndlpMcnZ6SHJ1N2VVdU1hNnh5cFozUmMxQ1dyM0JpNGdiN1YzMVpuRXJ0aHpUQkxINVV3aldCZ2IiXX1d",
+  "grantDigest": "zQmYvffev6MSEbnUsHrruSby78m5AxkdDqUqbAmh47xwokz",
+  "issuedAt": "2026-08-14T00:00:00.000Z",
+  "expiresAt": "2026-08-14T01:00:00.000Z",
+  "verifyAt": "2026-08-14T00:00:00.000Z",
+  "expectedVerdict": {
+    "valid": true,
+    "subjectId": "pk_zQmXAnrX8UgzTu1wkKHcm2Fiu8atC5qGVreh4rkpzbnBY5j"
+  }
+}
