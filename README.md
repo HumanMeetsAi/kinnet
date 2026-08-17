@@ -100,7 +100,7 @@ flowchart TB
     ORG -. "Revocation — one record, by digest" .-> AGENT
   end
   DISC[("Discovery — public records only<br/>a cache, never a trusted party")]
-  SVC["🏢 Your service — @kinnet/verify<br/>→ { actor, abilities: [...] }<br/>or 401 with a reason"]
+  SVC["🏢 Your service — @kinnet/verify<br/>→ verified: represents the organization,<br/>abilities [...] — or 401 with a reason"]
   records -. "publish" .-> DISC
   DISC -. "key logs · edges · grants · revocations" .-> SVC
   AGENT == "signed HTTPS request (RFC 9421)" ==> SVC
@@ -119,7 +119,7 @@ sequenceDiagram
   Agent->>Svc: POST /quote — HTTP Message Signature (RFC 9421)
   Svc->>Disc: fetch key logs, edges, grants, revocations (cached)
   Note over Svc: replay the agent's key log · verify the signature<br/>walk represents + grant chains · check expiry and revocation<br/>— every step locally, from signed bytes
-  Svc-->>Agent: 200 with { actor, abilities } — or 401 { reason }
+  Svc-->>Agent: 200 — represents verified, abilities known — or 401 { reason }
 ```
 
 - **Identity** — a `ParticipantId` is derived from the inception key event of an Ed25519 key
@@ -146,16 +146,23 @@ import { createVerifier } from "@kinnet/verify";
 import "@kinnet/verify/express"; // opt-in: types `req.verifiedAgent`
 
 const app = express();
-const kinnet = createVerifier({ discoveryUrl: "https://discovery.example.com" });
+const kinnet = createVerifier({
+  discoveryUrl: "https://discovery.example.com",
+  requireRepresents: "pk_z…" // the organization whose agents you accept
+});
 
 app.use(express.raw({ type: "*/*" })); // the middleware needs the raw body bytes
 app.use(kinnet.middleware());
 app.post("/quote", (req, res) => res.json({ agent: req.verifiedAgent }));
 ```
 
-An accepted request carries `req.verifiedAgent = { agentId, actor, delegated, abilities, … }`; a
-rejected one ends in `401 { error: "unauthorized_agent", reason }` naming exactly what failed.
-Nothing here calls the organization, and discovery is only ever a cache. See
+An accepted request carries `req.verifiedAgent = { agentId, actor, delegated, abilities, … }` —
+`actor` is the signing principal, and the request only got here because a `represents` edge for
+the organization you named was found, issued and signed by that organization, unexpired and
+unrevoked. A rejected one ends in `401 { error: "unauthorized_agent", reason }` naming exactly
+what failed. There is deliberately no "which organization?" lookup — anyone can publish edges
+about an agent, so you name the organization and the verifier proves the claim. Nothing here
+calls the organization, and discovery is only ever a cache. See
 [`@kinnet/verify`](./packages/verify) for the full surface, including edge runtimes.
 
 ## For people: an identity that is yours, and agents that stay in bounds

@@ -46,6 +46,32 @@ request structurally, so it behaves identically without the import — only the
 `req.verifiedAgent` property access needs it. Consumers that prefer not to augment a global
 can read the value through their own cast or wrapper instead.
 
+## Explain a participant from the command line
+
+This package ships one bin, so `npx` resolves it without naming it:
+
+```bash
+npx @kinnet/verify pk_zQm…
+npx @kinnet/verify pk_zQm… --grants ./chain.json
+npx @kinnet/verify pk_zQm… --tamper
+```
+
+It replays the participant's key log from its inception event, checks every record it finds
+against its **issuer's** own resolved key state, and exits non-zero if any check failed —
+discovery is asked for bytes, never trusted, so a lying host fails a line rather than passing
+one. `--discovery <url>` points it at another discovery service, `--grants` verifies a presented
+grant chain (a file, or an https URL serving one) alongside the identity, and `--tamper` flips a
+byte of the fetched profile so you can watch the signature check fail.
+
+The same checks are available as data, for a dashboard or a health check:
+
+```ts
+import { explainParticipant } from "@kinnet/verify";
+
+const { lines, ok } = await explainParticipant("pk_z...");
+// one line per check: { ok: true | false | null, text } — `null` is informational
+```
+
 ## Composing a whole request
 
 `verify()` keeps its own normalized per-operation allowance. A handler that performs more

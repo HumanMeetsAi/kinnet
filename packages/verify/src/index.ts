@@ -60,6 +60,21 @@ export {
   type DiscoveryView,
   type DiscoveryViewOptions
 } from "./discovery-view.js";
+/**
+ * Every check the `kinnet-verify` bin makes about a participant, as data: one line per check,
+ * each with its own verdict (`true` passed, `false` failed, `null` informational), plus an
+ * overall `ok` that is true only when nothing failed. It prints nothing and reads no argv, so a
+ * dashboard, a health check or a test can run the same checks the command-line tool runs and
+ * render them however it likes. Discovery is asked for bytes and never trusted: the key log is
+ * replayed locally and every record is checked against its ISSUER's own resolved key state.
+ */
+export {
+  explainParticipant,
+  DEFAULT_EXPLAIN_DISCOVERY_URL,
+  type ExplainLine,
+  type ExplainOptions,
+  type ExplainResult
+} from "./explain.js";
 export {
   isVerifyAuthReason,
   isVerifyCapacityReason,

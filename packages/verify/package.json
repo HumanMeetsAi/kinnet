@@ -18,7 +18,11 @@
     },
     "./package.json": "./package.json"
   },
+  "bin": {
+    "kinnet-verify": "./bin/kinnet-verify.js"
+  },
   "files": [
+    "bin",
     "dist",
     "!dist/**/*.map",
     "LICENSE"
