@@ -1,13 +1,153 @@
+<p align="center">
+  <img src=".github/assets/banner.png" alt="kinnet — The Participant Network" width="100%" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/HumanMeetsAi/kinnet/actions/workflows/check.yml"><img src="https://github.com/HumanMeetsAi/kinnet/actions/workflows/check.yml/badge.svg" alt="check" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="Apache-2.0" /></a>
+  <a href="./packages/protocol/spec/README.md"><img src="https://img.shields.io/badge/protocol-pre--wire--freeze-orange.svg" alt="protocol: pre-wire-freeze" /></a>
+</p>
+
 # Kinnet
 
-Kinnet is the reference implementation of the
-[Participant Network](./packages/protocol/spec/README.md): an open communication and
-relationship layer for humans, organizations, applications, and AI agents.
+**Kinnet** is the reference implementation of the
+[**Participant Network**](./packages/protocol/spec/README.md): an open identity, relationship,
+and authority layer for humans, organizations, applications, and AI agents.
 
-The question this protocol answers is **does this agent really act for that organization, and
-what is it allowed to do?** Identities are self-certifying public keys with append-only key
-history; representation and delegation are signed records that anyone can verify offline; a
-directory is a convenience, never a trusted party. Every check runs locally from signed bytes.
+It answers one question that nothing else on the internet answers today:
+
+> **Does this agent really act for that organization — and what is it allowed to do, right now?**
+
+Identities are self-certifying public keys with an append-only key history. "This agent
+represents us" and "it may do these things, until then" are signed records the organization
+itself issues, and can withdraw with one more record. Anyone can verify all of it offline, from
+the bytes, without calling the organization, without trusting a registry, without a blockchain,
+and without opening an account anywhere. A directory is a convenience, never a trusted party.
+
+## The problem
+
+Businesses are starting to receive real traffic from AI agents — placing orders, requesting
+quotes, booking services, negotiating, operating on someone's behalf. Before it acts on a
+request, the receiving side needs to know **who this agent acts for and what it is authorised
+to do**. Nothing the agent can present today answers that:
+
+- **An API key** proves a billing account.
+- **An OAuth token** proves a login to some platform.
+- **An A2A agent card** advertises capabilities — unsigned, with no issuer behind the claims.
+- **Enterprise IAM** (Entra, Okta, …) says what an agent may do _inside_ the organization that
+  runs it, and nothing at all to the counterparty receiving its requests.
+- **The agent's own profile** saying "I work for Acme" is worth exactly nothing.
+
+So businesses fall back on allowlists, shared secrets, and hope — the conditions under which
+agent impersonation and over-claiming thrive. And the moment an agent is decommissioned, a key is
+lost, or a contractor's mandate ends, there is no way to tell every counterparty at once.
+
+What would actually answer the question is **Acme itself, over its own signature**, stating that
+this agent represents it and holds these specific abilities until this date; a way to **withdraw**
+that at any moment that every verifier sees; and a way for **any** counterparty — one that has
+never heard of Acme, on infrastructure Acme does not run — to check all of it from the records
+alone.
+
+That is what the Participant Network specifies, and what this repository implements.
+
+## How it works
+
+Every participant — a person, an organization, an application, an agent — is a keypair with an
+append-only **key log** (rotation and recovery without a registrar). Everything else is a signed
+record between participants:
+
+```mermaid
+flowchart LR
+  subgraph records["Signed records — verifiable offline by anyone"]
+    direction LR
+    ORG["🏛️ Organization<br/>ParticipantId · key log"]
+    AGENT["🤖 Agent<br/>ParticipantId · key log"]
+    ORG -- "Relationship: represents<br/>signed by the organization — no self-issue" --> AGENT
+    ORG -- "Grant: quotes/read, orders/create<br/>scoped · expiring · attenuating" --> AGENT
+    ORG -. "Revocation<br/>one record, by digest" .-> AGENT
+  end
+  DISC[("Discovery<br/>public records · a cache,<br/>never a trusted party")]
+  records -. "publish" .-> DISC
+  AGENT == "HTTPS request, signed<br/>RFC 9421" ==> SVC["🏢 Your service<br/>@kinnet/verify"]
+  DISC -. "key logs · edges · grants<br/>revocations" .-> SVC
+  SVC --> OK["✅ { actor: Organization,<br/>abilities: [...] }<br/>or 401 with a reason"]
+```
+
+A request is verified end to end without trusting anyone in the middle:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Org as Organization
+  participant Agent
+  participant Disc as Discovery (untrusted)
+  participant Svc as Your service (@kinnet/verify)
+  Org->>Disc: publish key log, represents edge, grant
+  Agent->>Svc: POST /quote — HTTP Message Signature (RFC 9421)
+  Svc->>Disc: fetch key logs, edges, grants, revocations (cached)
+  Note over Svc: replay the agent's key log · verify the signature<br/>walk represents + grant chains · check expiry and revocation<br/>— every step locally, from signed bytes
+  Svc-->>Agent: 200 with { actor: Org, abilities } — or 401 { reason }
+```
+
+- **Identity** — a `ParticipantId` is derived from the inception key event of an Ed25519 key
+  log with pre-rotation (KERI-style): a stolen active key cannot take over the identity, and
+  rotation and recovery need no registrar.
+- **Representation** — a `Relationship` (`represents`, `operates`, `member-of`, …) is a signed
+  edge; only the represented party's signature counts. `Claim`s are signed attributes about a
+  participant. Both are one-hop, public, expiring, revocable.
+- **Authority** — a `Grant` delegates scoped abilities (UCAN-aligned). Chains attenuate hop by
+  hop and never amplify; a verifier walks them by digest.
+- **Revocation** — one `Revocation` record, naming the revoked record's digest, withdraws
+  authority; verification flips everywhere within a cache window.
+- **Requests** — every request carries an RFC 9421 HTTP Message Signature over method, URL,
+  body digest, and time. Verifying it is a middleware.
+- **Discovery** — a directory of public records only. It can withhold or delay, but it cannot
+  forge a record or bind your id to a key you did not sign — so you can run your own, use
+  anyone's, or cache one, and the guarantees do not change.
+
+The same records also underpin **private communication** between participants — signed
+message envelopes, conversations, realtime delivery, and an end-to-end-encrypted lane built on
+MLS — specified in [010–014](./packages/protocol/spec/README.md). The node that hosts those is
+not part of this repository yet.
+
+## Verify an agent request in a few lines
+
+```ts
+import express from "express";
+import { createVerifier } from "@kinnet/verify";
+import "@kinnet/verify/express"; // opt-in: types `req.verifiedAgent`
+
+const app = express();
+const kinnet = createVerifier({ discoveryUrl: "https://discovery.example.com" });
+
+app.use(express.raw({ type: "*/*" })); // the middleware needs the raw body bytes
+app.use(kinnet.middleware());
+app.post("/quote", (req, res) => res.json({ agent: req.verifiedAgent }));
+```
+
+An accepted request carries `req.verifiedAgent = { agentId, actor, delegated, abilities, … }`; a
+rejected one ends in `401 { error: "unauthorized_agent", reason }` naming exactly what failed.
+Nothing here calls the organization, and discovery is only ever a cache. See
+[`@kinnet/verify`](./packages/verify) for the full surface, including edge runtimes.
+
+## Design principles
+
+- **Verify from bytes.** Every guarantee is checked locally from signed records. No trusted
+  party, no phone-home, no chain.
+- **One participant model.** Humans, organizations, applications, and agents are the same kind of
+  thing — first-class peers in one graph — so an agent can represent a person as easily as a
+  company, and an organization can be a member of another.
+- **Compose, don't invent.** JCS canonicalization, Ed25519, multibase/multihash, RFC 9421
+  signatures, RFC 9530 content digests, UCAN-shaped delegation, MLS for encryption. The protocol
+  fixes how they fit; it does not mint new cryptography.
+- **Interop, not competition.** A2A agent cards, MCP servers, and enterprise IAM are peers to
+  bridge, not rivals — Kinnet supplies the identity, relationship, and authority layer those
+  rails assume but do not provide. [`@kinnet/a2a`](./packages/a2a) is the first bridge.
+- **Brand-neutral wire.** Everything an independent implementation must emit or match uses the
+  neutral `pn` prefix, never a product name; the protocol outlives its first implementer.
+- **Thin and evolving.** Spec [000](./packages/protocol/spec/000-protocol-scope.md) admits only
+  what two independent implementations must agree on, and — before the wire freeze — prefers
+  replacing a flawed primitive over accreting compatibility on top.
 
 ## What is what
 
