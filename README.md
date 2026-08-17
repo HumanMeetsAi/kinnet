@@ -57,20 +57,20 @@ append-only **key log** (rotation and recovery without a registrar). Everything 
 record between participants:
 
 ```mermaid
-flowchart LR
-  subgraph records["Signed records — verifiable offline by anyone"]
+flowchart TB
+  subgraph records["Signed records — anyone can verify them offline"]
     direction LR
     ORG["🏛️ Organization<br/>ParticipantId · key log"]
     AGENT["🤖 Agent<br/>ParticipantId · key log"]
-    ORG -- "Relationship: represents<br/>signed by the organization — no self-issue" --> AGENT
+    ORG -- "Relationship: represents<br/>only the organization can sign it" --> AGENT
     ORG -- "Grant: quotes/read, orders/create<br/>scoped · expiring · attenuating" --> AGENT
-    ORG -. "Revocation<br/>one record, by digest" .-> AGENT
+    ORG -. "Revocation — one record, by digest" .-> AGENT
   end
-  DISC[("Discovery<br/>public records · a cache,<br/>never a trusted party")]
+  DISC[("Discovery — public records only<br/>a cache, never a trusted party")]
+  SVC["🏢 Your service — @kinnet/verify<br/>→ { actor: Organization, abilities: [...] }<br/>or 401 with a reason"]
   records -. "publish" .-> DISC
-  AGENT == "HTTPS request, signed<br/>RFC 9421" ==> SVC["🏢 Your service<br/>@kinnet/verify"]
-  DISC -. "key logs · edges · grants<br/>revocations" .-> SVC
-  SVC --> OK["✅ { actor: Organization,<br/>abilities: [...] }<br/>or 401 with a reason"]
+  DISC -. "key logs · edges · grants · revocations" .-> SVC
+  AGENT == "signed HTTPS request (RFC 9421)" ==> SVC
 ```
 
 A request is verified end to end without trusting anyone in the middle:
