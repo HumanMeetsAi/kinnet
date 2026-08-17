@@ -49,6 +49,8 @@ A presented Grant is valid iff, walking `proof` digests from the leaf to the roo
 2. The root link is self-issued: `issuerId == subjectId`.
 3. Each non-root link's `issuerId` equals its parent's `audienceId` — authority is exercised
    only by the one it was granted to.
+   _Amended by 011: `issuerId` and `audienceId` were participant ids; 011 widened both to
+   `Principal` (a participant or a bare key) and added the key-issuer branch to rule 1 above._
 4. `subjectId` is constant along the chain.
 5. Each link's `abilities` are covered by its parent's (path-prefix cover: `directory` covers
    `directory/curate`), and each link's `caveats` only narrow the parent's — attenuation,
@@ -127,7 +129,7 @@ not a primitive (#4).
 - **Caveat vocabulary.** Caveat semantics are defined per ability namespace; the first standard
   entry exists — `aud`, an audience-narrowing caveat defined in 011 — and whether a further
   standard set (rate, resource pattern) earns a place in the spec stays open until running
-  code shows recurrence.
+  code shows recurrence. _Amended by 011: `aud` is the first standard caveat; 011 defines it._
 - **M-of-N grant issuers.** The record carries `Signature[]` per the issuer's threshold and 015
   fixes how such a set is counted, but an implementation may support only threshold `"1"` at
   first, matching the 004 write-auth restriction; the limit is lifted when organization chains

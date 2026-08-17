@@ -20,7 +20,9 @@ participant's current key.
   and a `nonce` — plus `pn-grants` when a spec-011 grant chain is presented (the header
   MUST then be covered).
 - **`keyid`:** the participant ID (002) or, per spec 011, a bare `KeyRef` (005) — nothing
-  else.
+  else. _Amended by 011: the bare-`KeyRef` form of `keyid` and the `pn-grants` covered
+  component above are 011's additions for delegated requests; 011 also removed a `DeviceKey`
+  record from the list of records discovery accepts._
 - **Verification:** discovery resolves the claimed participant's **current key set** from the
   key-history log (003) and verifies the HTTP signature against it. Unsigned or wrongly-signed
   writes are rejected. This protocol version restricts request signing to **threshold-1 key

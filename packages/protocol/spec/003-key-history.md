@@ -290,7 +290,8 @@ The custody profile is therefore part of the spec, not a deployment detail:
 
 - **Identity/root keys** live in this log. **Device subkeys** do **not**: device subkeys are
   key-audience grants (011), revocable on their own, and are not a rotation event. Losing a
-  device revokes its grant; it does not rotate the identity.
+  device revokes its grant; it does not rotate the identity. _Amended by 011: device
+  subkeys were a `DeviceKey` record; 011 replaced them with key-audience grants._
 - **Organization ownership transfer** is a rotation to the new owner's key set at the threshold
   the outgoing owner **committed** for it (_The committed next key state_) — identity, members,
   and history persist. The outgoing state is what sets the bar: a transfer cannot be authorized

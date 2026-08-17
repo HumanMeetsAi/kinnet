@@ -16,6 +16,8 @@ record makes "revoked" checkable from bytes.
 The only revocation in the protocol today is `DeviceKey.revokedAt` — a mutable field _inside_ a
 signed record, so revoking means re-signing and replacing the record, and every future record
 type would need its own copy of the field. Per 000, replace that with the general form.
+_Amended by 011: the device example above (a lost device's key-audience grant) is 011's;
+`DeviceKey` itself no longer exists — see the note under_ Replaces `DeviceKey.revokedAt`.
 
 ## Decision
 
@@ -55,8 +57,9 @@ Revocation {
 DeviceKey's digest. One mechanism for every record type, and DeviceKey records become
 immutable like everything else that is signed.
 
-_(011 later removed the `DeviceKey` record entirely: a device subkey is now a key-audience
-grant, revoked like any other grant by naming its digest.)_
+_Amended by 011: the `DeviceKey` record is removed entirely; a device subkey is a key-audience
+grant, revoked like any other grant by naming its digest, so this section describes a record
+that no longer exists and the mechanism it introduced is what survives._
 
 ## Why a digest registry, not a status list
 
