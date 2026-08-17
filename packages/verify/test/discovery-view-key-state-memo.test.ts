@@ -14,9 +14,9 @@
  *
  * Every test below was watched to FAIL before it was trusted — against the pre-change code
  * where the memo does not exist, or with the mutation named in its own comment applied to the
- * memo. The T14–T17 ids name the four planned cases for this memo — hit costs zero, changed
- * bytes miss, a rejected log is never memoized, a hit never stretches a budget — plus the
- * participant-binding case the key-log binding change established and this memo must not weaken.
+ * memo. The four cases for this memo — a hit costs zero, changed bytes miss, a rejected log is
+ * never memoized, a hit never stretches a budget — plus the participant-binding case the key-log
+ * binding change established and this memo must not weaken.
  */
 import {
   createIdentity,
@@ -88,7 +88,7 @@ function refetchingView(impl: typeof fetch) {
 
 const budget = (remaining = DEFAULT_VERIFY_MAX_SIGNATURE_VERIFICATIONS) => ({ remaining });
 
-describe("T14 — a memo hit performs zero signature verifications", () => {
+describe("a memo hit performs zero signature verifications", () => {
   it("replays once for two lookups of an unchanged log, re-fetching both times", async () => {
     // WATCHED TO FAIL against the pre-change code, where the second call replays the log again
     // and spends `log.length` a second time.
@@ -153,7 +153,7 @@ describe("T14 — a memo hit performs zero signature verifications", () => {
   });
 });
 
-describe("T15 — changed bytes are never answered from the memo", () => {
+describe("changed bytes are never answered from the memo", () => {
   it("returns the NEW key state after the participant publishes a rotation", async () => {
     // WATCHED TO FAIL with the mutation "drop the digest comparison from the hit condition
     // (`if (memo)`), keying the memo by participant id alone" — under which this returns the
@@ -197,7 +197,7 @@ describe("T15 — changed bytes are never answered from the memo", () => {
   });
 });
 
-describe("T16 — a rejected log is never memoized", () => {
+describe("a rejected log is never memoized", () => {
   /** A schema-valid log whose last event carries another event's signature, so replay rejects
    * it on the signature check rather than on its shape. */
   function forged(identity: Identity): KeyEvent[] {
@@ -271,7 +271,7 @@ describe("T16 — a rejected log is never memoized", () => {
   });
 });
 
-describe("T17 — the memo does not launder the budget", () => {
+describe("the memo does not launder the budget", () => {
   it("charges every alternation in full and never gives allowance back", async () => {
     // The hostile shape: one id, two valid logs, alternated so that no lookup can be answered
     // from the memo. WATCHED TO FAIL under two mutations, each named because they fail
