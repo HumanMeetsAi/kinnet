@@ -277,23 +277,66 @@ from these packages is the point, not the exception — and it is **experimental
 infrastructure**: rate-limited, no SLA, and it may reset before 1.0. Don't build anything you
 can't afford to re-enroll.
 
-Prove which build it runs — the commit is stamped at image build time and matches a release
-tag of this repository:
+**1. Prove the build.** The commit is stamped at image build time and matches a release tag of
+this repository:
 
 ```bash
 curl -s https://discovery.kinnet.humanmeetsai.com/version
 ```
 
-Resolve a real identity from bytes — a test participant whose append-only key-event log you
-can fetch and verify offline with `@kinnet/crypto`, trusting no one:
+**2. Read real records.** Three participants live on the directory: **HumanMeetsAI**, the
+company that authored the protocol and maintains this repository; **An Lu**, its founder, who holds his own key; and
+the **operator agent** HumanMeetsAI runs. Everything about them is a signed record — the profile
+signed by the participant, the edges and claims signed by whoever issued them:
 
 ```bash
-curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmb7tc1nmwe4p1kTsE3TTVVZtjVF4yBSMaCQcP81QxoTjo/key-log
+# the organization: its signed profile, and the key-event log its id derives from
+curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmY3jDEWRfTnaEmRg773xoVieVabRDG1cvFabnr7uYrvip
+curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmY3jDEWRfTnaEmRg773xoVieVabRDG1cvFabnr7uYrvip/key-log
+
+# the founder: what HumanMeetsAI says about him — member-of, and a role claim — over its own signature
+curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j/relationships
+curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j/claims
+
+# the agent: HumanMeetsAI says it represents it, and operates it
+curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb/relationships
 ```
 
-Create your own identity — self-custodial, the keys never leave your machine. From a checkout
-of this repository after `pnpm install && pnpm build`, save this as `me.mts` at the repository
-root (the `.mts` extension matters) and run `pnpm exec tsx me.mts`:
+None of that needs an account, and none of it is trusted because discovery served it — which
+is what the next step shows.
+
+**3. Verify it yourself, from bytes.** From a checkout of this repository after
+`pnpm install && pnpm build`, run the same resolution a relying party performs — replay the key
+log, check the id derives from it, verify the profile's signature against the current key, and
+verify every relationship and claim against the key state of whoever issued it, resolved from
+that issuer's own log:
+
+```bash
+pnpm exec tsx examples/verify.mts pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j
+```
+
+```
+✔ pk_zQmTDqHZKz4… derives from its inception keys (1 event(s), threshold 1)
+✔ profile signed by the current key: "An Lu" (person)
+✔ "An Lu" member-of "HumanMeetsAI", issued by "HumanMeetsAI" pk_zQmY3jDEWRf… (signature valid, not expired)
+✔ claim role = "founder", issued by "HumanMeetsAI" pk_zQmY3jDEWRf… (signature valid, not expired)
+```
+
+An agent's authority is a grant chain it presents alongside its requests; discovery never stores
+it, only its revocation. The chain the agent above presents is committed here as
+[`examples/records/humanmeetsai-operator-agent.grants.json`](./examples/records/humanmeetsai-operator-agent.grants.json)
+— verify it, and watch what a single flipped byte does to the profile check:
+
+```bash
+pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb --grants examples/records/humanmeetsai-operator-agent.grants.json
+pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb --tamper
+```
+
+`--discovery <url>` points the same script at your own instance. Nothing in it phones home:
+every check is a signature or a digest computed locally over the bytes it fetched.
+
+**4. Mint your own.** Self-custodial — the keys never leave your machine. Save this as `me.mts`
+at the repository root (the `.mts` extension matters) and run `pnpm exec tsx me.mts`:
 
 ```ts
 import { createIdentity, signRequest } from "@kinnet/crypto";
@@ -316,9 +359,8 @@ const response = await fetch(url, {
 console.log(response.status, me.id);
 ```
 
-Then resolve yourself with the same `curl` as above, substituting your id — and keep the
-secret key if you want the identity to stay yours: rotation, recovery, and everything else in
-the specs works from it.
+Then `pnpm exec tsx examples/verify.mts <your id>` — and keep the secret key if you want the
+identity to stay yours: rotation, recovery, and everything else in the specs works from it.
 
 ## Build and test
 

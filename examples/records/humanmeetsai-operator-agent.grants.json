@@ -1,0 +1,15 @@
+[
+  {
+    "subjectId": "pk_zQmY3jDEWRfTnaEmRg773xoVieVabRDG1cvFabnr7uYrvip",
+    "issuerId": "pk_zQmY3jDEWRfTnaEmRg773xoVieVabRDG1cvFabnr7uYrvip",
+    "audienceId": "pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb",
+    "abilities": ["quotes/read", "orders/create"],
+    "caveats": {},
+    "proof": null,
+    "issuedAt": "2026-08-17T12:00:00Z",
+    "expiresAt": "2027-08-17T12:00:00Z",
+    "signature": [
+      "z4ayR1Lu4BSV1PBifKR9stiYCfoA4ovbUQgW3KcniPnChyFJqsoVqapSXnBg22Qb44MPPMPKeZEtPTFwn1PrCN7EY"
+    ]
+  }
+]
