@@ -140,6 +140,10 @@ sequenceDiagram
 
 ## For services: verify an agent request in a few lines
 
+```bash
+npm install @kinnet/verify
+```
+
 ```ts
 import express from "express";
 import { createVerifier } from "@kinnet/verify";
@@ -254,8 +258,9 @@ public issue.
 | [`@kinnet/verify`](./packages/verify)     | Inbound-request verification for services receiving agent traffic (Node/Express and edge runtimes)     |
 | [`@kinnet/a2a`](./packages/a2a)           | Bridge between Kinnet participant records and A2A agent cards                                          |
 
-The packages are `0.x` and carry `"private": true` until the protocol substrate has been
-through external security review; consume them from source for now.
+All five are on npm — `npm install @kinnet/verify` (or `crypto`, `trust`, `protocol`, `a2a`) —
+as `0.x` early-adopter releases: the wire freezes at 1.0, not before, so record shapes may still
+change between minors. Track the spec, and pin versions.
 
 ## Specs and interoperability
 
@@ -273,8 +278,10 @@ wrong, underspecified, or missing, that is a protocol issue and exactly the kind
 repository wants.
 
 The protocol is pre-wire-freeze: the specs may still change, and spec 000 defines what a change
-requires (an RFC, a reference implementation, and reference tests, together). After the wire
-freeze the discipline becomes additive-only.
+requires (an RFC, a reference implementation, and reference tests, together). The freeze is
+declared, not triggered — it is marked by the 1.0 release of these packages, no earlier than the
+first independent implementation that passes the vectors — and from then on the discipline is
+additive-only. Everything published before that is `0.x`, for early adopters, and may change.
 
 ## Try it live
 
@@ -312,11 +319,17 @@ curl -s https://discovery.kinnet.humanmeetsai.com/participants/pk_zQmUd4qFEDUSjq
 None of that needs an account, and none of it is trusted because discovery served it — which
 is what the next step shows.
 
-**3. Verify it yourself, from bytes.** From a checkout of this repository after
-`pnpm install && pnpm build`, run the same resolution a relying party performs — replay the key
-log, check the id derives from it, verify the profile's signature against the current key, and
-verify every relationship and claim against the key state of whoever issued it, resolved from
-that issuer's own log:
+**3. Verify it yourself, from bytes.** Run the same resolution a relying party performs — replay
+the key log, check the id derives from it, verify the profile's signature against the current
+key, and verify every relationship and claim against the key state of whoever issued it, resolved
+from that issuer's own log. No checkout needed:
+
+```bash
+npx @kinnet/verify pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j
+```
+
+or, from a checkout of this repository after `pnpm install && pnpm build`, the same thing as a
+readable script:
 
 ```bash
 pnpm exec tsx examples/verify.mts pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j
@@ -339,11 +352,12 @@ pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip
 pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb --tamper
 ```
 
-`--discovery <url>` points the same script at your own instance. Nothing in it phones home:
-every check is a signature or a digest computed locally over the bytes it fetched.
+`--discovery <url>` points either at your own instance. Nothing in them phones home: every check
+is a signature or a digest computed locally over the bytes fetched.
 
 **4. Mint your own.** Self-custodial — the keys never leave your machine. Save this as `me.mts`
-at the repository root (the `.mts` extension matters) and run `pnpm exec tsx me.mts`:
+(in a checkout, at the repository root; or anywhere after `npm install @kinnet/crypto`) and run
+`npx tsx me.mts`:
 
 ```ts
 import { createIdentity, signRequest } from "@kinnet/crypto";
@@ -366,8 +380,8 @@ const response = await fetch(url, {
 console.log(response.status, me.id);
 ```
 
-Then `pnpm exec tsx examples/verify.mts <your id>` — and keep the secret key if you want the
-identity to stay yours: rotation, recovery, and everything else in the specs works from it.
+Then `npx @kinnet/verify <your id>` — and keep the secret key if you want the identity to stay
+yours: rotation, recovery, and everything else in the specs works from it.
 
 ## Build and test
 

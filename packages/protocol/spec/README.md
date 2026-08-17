@@ -76,9 +76,12 @@ repository, which ships them.
 
 The protocol is pre-wire-freeze. 000 defines the stages: today (Stage 0) any spec, Accepted or
 not, may still change without a deprecation cycle when a cleaner design has the rationale for
-it; the wire-freeze (Stage 1) is triggered by the first external implementation or the first
-network carrying third-party-signed data, and from then on change is additive-only. Until then,
-implementations should track the spec, not the code, and should expect record shapes to move.
+it; the wire-freeze (Stage 1) is declared by the maintainers and marked by the 1.0 release of
+the reference packages — no earlier than the first independent implementation that passes the
+conformance vectors — and from then on change is additive-only. Reference packages published
+before that are `0.x` early-adopter releases, and identities enrolled on a hosted network before
+the freeze may need re-enrollment. Until then, implementations should track the spec, not the
+code, and should expect record shapes to move.
 
 ## Changing the protocol
 

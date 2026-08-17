@@ -1,7 +1,6 @@
 {
   "name": "@kinnet/a2a",
-  "version": "0.3.3",
-  "private": true,
+  "version": "0.3.4",
   "description": "Bridge between Kinnet participant records and A2A agent cards (.well-known/agent.json): serve and consume signed participant records alongside agent cards.",
   "license": "Apache-2.0",
   "type": "module",

@@ -1,7 +1,6 @@
 {
   "name": "@kinnet/crypto",
   "version": "0.6.2",
-  "private": true,
   "description": "Identity, signing, and verification for Kinnet: Ed25519, JCS canonicalization, participant-ID derivation, key-event logs with pre-rotation, and RFC 9421 HTTP Message Signatures.",
   "license": "Apache-2.0",
   "type": "module",

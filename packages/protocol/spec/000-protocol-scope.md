@@ -62,18 +62,23 @@ cleaner is encouraged, and is judged by the same test plus the strength of its r
 Rigidity is **earned, not default.** The permanence warnings in 001–005 describe the
 post-freeze world; they do not bind the protocol now.
 
-- **Stage 0 — Unstable (today).** No external implementers; live signed data is first-party
-  only. Optimize purely for correct and clean. Breaking changes, removals, and replacements are
-  free and expected. 001–005 are Accepted and, at this stage, still replaceable with rationale.
-- **Stage 1 — Wire-freeze (v1).** Triggered by the first external implementation, or by the
-  first production network carrying third-party participants or third-party-signed data. A
-  first-party network — one whose participants are all operated by the reference implementer,
-  who can migrate its own data — is Stage 0. From here: additive-only, capability-negotiated,
-  with migrations and deprecation cycles for anything that must change. _This_ is where "a
-  record's bytes are forever" starts to bind.
+- **Stage 0 — Unstable (today).** Optimize purely for correct and clean. Breaking changes,
+  removals, and replacements are free and expected. 001–005 are Accepted and, at this stage,
+  still replaceable with rationale. Reference packages are published in this stage as `0.x`
+  **early-adopter releases**: their consumers, and any participant enrolled on a hosted network
+  before the freeze, are told that record shapes may still change and that re-enrollment may be
+  required. Early-adopter data does not end Stage 0.
+- **Stage 1 — Wire-freeze (v1).** Begins when the maintainers **declare** it, marked by the
+  1.0 release of the reference packages. The declaration is made no earlier than the first
+  independent implementation that passes the committed conformance vectors, and it is preceded
+  by a published migration for any live first-party or early-adopter data. From here:
+  additive-only, capability-negotiated, with migrations and deprecation cycles for anything
+  that must change. _This_ is where "a record's bytes are forever" starts to bind.
 
-The discipline flips at the freeze. Before it, conservatism is the enemy; reversibility is a
-Stage-0 asset to spend deliberately.
+The freeze is a decision with a version number on it, not a side effect of adoption: an
+independent implementation or a stranger's signed record is the _reason_ to declare it, never a
+trigger that fires on its own. The discipline flips at the declaration. Before it, conservatism
+is the enemy; reversibility is a Stage-0 asset to spend deliberately.
 
 ## Wire identifiers are brand-neutral
 
@@ -137,6 +142,9 @@ These show the _placement_ discipline; all remain revisable at Stage 0:
   (`pn`), never a product, so a rename can never become a protocol revision.
 - 2026-08-16 — Stage-1 trigger sharpened so a first-party network does not trip the wire-freeze;
   017 and 018 named as the specs for the four record kinds.
+- 2026-08-17 — Stage 1 made a declared transition marked by the 1.0 release, not an event
+  triggered by the first external implementation or third-party record; Stage 0 admits `0.x`
+  early-adopter package releases and early-adopter data on hosted networks.
 
 ## References
 

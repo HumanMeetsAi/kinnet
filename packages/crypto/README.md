@@ -182,8 +182,10 @@ The full index is at
 
 ## Status
 
-Pre-1.0, pre-wire-freeze: record shapes and profiles may still change. Track the spec, not any
-one version of this package — the conformance vectors above are the compatibility contract.
+Pre-1.0, pre-wire-freeze: `0.x` releases are for early adopters, and record shapes and profiles
+may still change between them. The wire freezes at 1.0, when the maintainers declare it — not
+before. Track the spec, not any one version of this package — the conformance vectors above are
+the compatibility contract.
 
 ## License
 
