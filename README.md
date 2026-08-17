@@ -14,22 +14,32 @@
 [**Participant Network**](./packages/protocol/spec/README.md): an open identity, relationship,
 and authority layer for humans, organizations, applications, and AI agents.
 
-It answers one question that nothing else on the internet answers today:
+It answers a question that nothing else on the internet answers today:
 
-> **Does this agent really act for that organization — and what is it allowed to do, right now?**
+> **Does this agent really act for that organization — or that person — and what is it
+> allowed to do, right now?**
 
-Identities are self-certifying public keys with an append-only key history. "This agent
-represents us" and "it may do these things, until then" are signed records the organization
-itself issues, and can withdraw with one more record. Anyone can verify all of it offline, from
-the bytes, without calling the organization, without trusting a registry, without a blockchain,
-and without opening an account anywhere. A directory is a convenience, never a trusted party.
+Every participant — a person, a company, an application, an agent — has an identity that is a
+self-certifying public key with an append-only key history, held by nobody but them. "This agent
+represents me" and "it may do these things, until then" are signed records the represented
+party issues, and can withdraw with one more record. Anyone can verify all of it offline, from
+the bytes, without calling the issuer, without trusting a registry, without a blockchain, and
+without opening an account anywhere. A directory is a convenience, never a trusted party.
 
 ## The problem
 
-Businesses are starting to receive real traffic from AI agents — placing orders, requesting
-quotes, booking services, negotiating, operating on someone's behalf. Before it acts on a
-request, the receiving side needs to know **who this agent acts for and what it is authorised
-to do**. Nothing the agent can present today answers that:
+AI agents now act on behalf of both **businesses** and **people** — placing orders, requesting
+quotes, booking, negotiating, answering, paying. Whoever receives an agent's request needs to
+know **who it acts for and what it is allowed to do, right now** — and whoever sends one needs
+a way to say so that strangers can check. Neither side has that today. The two cases look
+different and share one root cause.
+
+### The business case
+
+Your API, shop, or service is starting to receive real traffic from agents. Before you act on a
+request — quote a price, accept an order, release data — you need to know which organization
+stands behind the agent and what that organization allows it to do. Nothing the agent can
+present answers that:
 
 - **An API key** proves a billing account.
 - **An OAuth token** proves a login to some platform.
@@ -42,32 +52,55 @@ So businesses fall back on allowlists, shared secrets, and hope — the conditio
 agent impersonation and over-claiming thrive. And the moment an agent is decommissioned, a key is
 lost, or a contractor's mandate ends, there is no way to tell every counterparty at once.
 
-What would actually answer the question is **Acme itself, over its own signature**, stating that
-this agent represents it and holds these specific abilities until this date; a way to **withdraw**
-that at any moment that every verifier sees; and a way for **any** counterparty — one that has
-never heard of Acme, on infrastructure Acme does not run — to check all of it from the records
-alone.
+The same organization has the mirror-image problem when it _sends_ agents out: it wants to tell
+every counterparty "this agent is ours, it may do these things, until this date" — without an
+integration project per counterparty, and with a way to take it back.
+
+### The personal case
+
+You send an agent to book a table, buy a ticket, negotiate a repair, or reply to your mail. You
+want to say _"this one is mine, and this is all it may do"_ in a way the other side can check —
+so instead the agent gets your full login to every platform it touches, and each of those
+becomes a place it can be impersonated or over-reach. You cannot scope it, and you cannot revoke
+it everywhere at once.
+
+Underneath that: you have no identity of your own on the network. You have accounts — each
+issued and owned by a platform, none able to vouch for anything outside that platform. Nobody
+who knows you — an employer, a professional body, a community — can say so in a form you carry
+with you and a stranger can verify. Losing a phone means losing access to your identity, not
+just a device. And private conversation between people is readable by whoever runs the server in
+the middle.
+
+### What would answer both
+
+**The represented party itself — company or person — over its own signature**, stating that
+this agent represents it and holds these specific abilities until this date; a way to
+**withdraw** that at any moment that every verifier sees; and a way for **any** counterparty —
+one that has never heard of the issuer, on infrastructure the issuer does not run — to check all
+of it from the records alone. Underneath, an identity that belongs to its holder and not to any
+platform.
 
 That is what the Participant Network specifies, and what this repository implements.
 
 ## How it works
 
-Every participant — a person, an organization, an application, an agent — is a keypair with an
-append-only **key log** (rotation and recovery without a registrar). Everything else is a signed
-record between participants:
+Every participant — a person, an organization, an application, an agent — is the same kind of
+thing: a keypair with an append-only **key log** (rotation and recovery without a registrar).
+Everything else is a signed record between participants. The diagram shows an organization or a
+person standing behind an agent; the records are identical either way:
 
 ```mermaid
 flowchart TB
   subgraph records["Signed records — anyone can verify them offline"]
     direction LR
-    ORG["🏛️ Organization<br/>ParticipantId · key log"]
+    ORG["🏛️ Organization or 🧑 person<br/>ParticipantId · key log"]
     AGENT["🤖 Agent<br/>ParticipantId · key log"]
-    ORG -- "Relationship: represents<br/>only the organization can sign it" --> AGENT
+    ORG -- "Relationship: represents<br/>only the represented party can sign it" --> AGENT
     ORG -- "Grant: quotes/read, orders/create<br/>scoped · expiring · attenuating" --> AGENT
     ORG -. "Revocation — one record, by digest" .-> AGENT
   end
   DISC[("Discovery — public records only<br/>a cache, never a trusted party")]
-  SVC["🏢 Your service — @kinnet/verify<br/>→ { actor: Organization, abilities: [...] }<br/>or 401 with a reason"]
+  SVC["🏢 Your service — @kinnet/verify<br/>→ { actor, abilities: [...] }<br/>or 401 with a reason"]
   records -. "publish" .-> DISC
   DISC -. "key logs · edges · grants · revocations" .-> SVC
   AGENT == "signed HTTPS request (RFC 9421)" ==> SVC
@@ -78,7 +111,7 @@ A request is verified end to end without trusting anyone in the middle:
 ```mermaid
 sequenceDiagram
   autonumber
-  participant Org as Organization
+  participant Org as Organization or person
   participant Agent
   participant Disc as Discovery (untrusted)
   participant Svc as Your service (@kinnet/verify)
@@ -86,7 +119,7 @@ sequenceDiagram
   Agent->>Svc: POST /quote — HTTP Message Signature (RFC 9421)
   Svc->>Disc: fetch key logs, edges, grants, revocations (cached)
   Note over Svc: replay the agent's key log · verify the signature<br/>walk represents + grant chains · check expiry and revocation<br/>— every step locally, from signed bytes
-  Svc-->>Agent: 200 with { actor: Org, abilities } — or 401 { reason }
+  Svc-->>Agent: 200 with { actor, abilities } — or 401 { reason }
 ```
 
 - **Identity** — a `ParticipantId` is derived from the inception key event of an Ed25519 key
@@ -105,12 +138,7 @@ sequenceDiagram
   forge a record or bind your id to a key you did not sign — so you can run your own, use
   anyone's, or cache one, and the guarantees do not change.
 
-The same records also underpin **private communication** between participants — signed
-message envelopes, conversations, realtime delivery, and an end-to-end-encrypted lane built on
-MLS — specified in [010–014](./packages/protocol/spec/README.md). The node that hosts those is
-not part of this repository yet.
-
-## Verify an agent request in a few lines
+## For services: verify an agent request in a few lines
 
 ```ts
 import express from "express";
@@ -130,13 +158,42 @@ rejected one ends in `401 { error: "unauthorized_agent", reason }` naming exactl
 Nothing here calls the organization, and discovery is only ever a cache. See
 [`@kinnet/verify`](./packages/verify) for the full surface, including edge runtimes.
 
+## For people: an identity that is yours, and agents that stay in bounds
+
+Nothing above is specific to companies. A person on the network holds their own identity — a
+key they generate, keep, rotate, and recover themselves, with no account and no issuer — and
+the same records work for them:
+
+- **Your agents act for you, within limits.** A `Grant` from you to your agent says exactly what
+  it may do and until when; a counterparty checks it the same way it checks a company's. Revoke
+  it and every verifier sees that within a cache window.
+- **Your devices are not your identity.** A browser or phone holds a short-lived session key
+  under a scoped grant ([011](./packages/protocol/spec/011-device-key-grants.md)); losing the
+  device is one revocation, not identity loss, and the root key never lives in the least
+  trustworthy runtime you touch.
+- **Others can vouch for you** — an employer, a professional body, a community you belong to —
+  as signed `Claim`s and `Relationship`s you carry with you, checkable by strangers, expiring
+  and revocable, without the issuer being on the path.
+- **Private conversation stays private.** Messaging between participants
+  ([010–014](./packages/protocol/spec/README.md)) has a machine lane that is authenticated
+  plaintext, and a human lane that is end-to-end encrypted with MLS — unreadable by any node
+  operator, and surviving you adding a second device.
+- **Communities are first-class.** A node run for a community — an organization, an interest
+  group, a neighbourhood — hosts a member directory, events, a library, boards
+  ([006](./packages/protocol/spec/006-module-config.md)); membership is a signed edge, and what
+  a member discloses to whom is the member's decision, not the operator's.
+
+The node that hosts messaging and communities is not part of this repository yet; the specs
+are.
+
 ## Design principles
 
 - **Verify from bytes.** Every guarantee is checked locally from signed records. No trusted
   party, no phone-home, no chain.
 - **One participant model.** Humans, organizations, applications, and agents are the same kind of
   thing — first-class peers in one graph — so an agent can represent a person as easily as a
-  company, and an organization can be a member of another.
+  company, a person can vouch for an organization, and an organization can be a member of
+  another. Nobody is a "user" of somebody else's system.
 - **Compose, don't invent.** JCS canonicalization, Ed25519, multibase/multihash, RFC 9421
   signatures, RFC 9530 content digests, UCAN-shaped delegation, MLS for encryption. The protocol
   fixes how they fit; it does not mint new cryptography.
