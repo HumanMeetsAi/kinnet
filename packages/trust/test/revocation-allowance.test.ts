@@ -72,8 +72,8 @@ type WideIdentity = { id: ParticipantId; log: KeyEvent[]; states: KeyPair[][] };
  * A conforming 1-of-K identity — `threshold: "1"` over `MAX_KEY_EVENT_KEYS` keys, which is
  * schema-valid, publishes to discovery and authenticates. The real signing key is LAST in each
  * event, the honest worst case: nothing about key order is normative and no verifier may assume
- * a cheap one. The twin of `apps/node/test/wide-identity.ts`, kept local because a test helper
- * cannot be imported across package boundaries.
+ * a cheap one. A wide-identity helper, kept local because a test helper cannot be imported
+ * across package boundaries.
  */
 function wideIdentity(events: number): WideIdentity {
   const refs = (keyPairs: KeyPair[]): string[] =>
@@ -550,8 +550,8 @@ describe("the chain cost arithmetic", () => {
    * THE THIRD CASE. A candidate that parses, targets the right digest and comes from a requested
    * issuer but FAILS its signature check costs `E * K`, the lookup returns null, and the chain
    * CARRIES ON — so the rejection adds to the chain's cost instead of replacing part of it, and
-   * the verdict is still `valid: true`. Every earlier version of this derivation said the
-   * revocation search and the rest were alternatives ("never both"); they are not.
+   * the verdict is still `valid: true`. The revocation search and the rest are NOT alternatives:
+   * reading them as "never both" understates the cost.
    *
    * WATCHED TO FAIL: assert `spent` equals the no-revocation cost `L * 2 * E * K`, which is what
    * "never both" implies. It fails by `L * E * K` = 4096.

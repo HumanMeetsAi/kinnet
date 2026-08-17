@@ -97,9 +97,9 @@ export type RecordUnitVerifyOptions = {
  * A log refused for COST is not a forged unit, and it is not an absent one either: spec 003
  * makes a verification-work ceiling a local resource policy rather than a validity rule, so the
  * publisher's record may be perfectly good and the thing that has run short is here. Naming the
- * subset lets a surface report that distinctly — `apps/node` answers 503 rather than 401 — while
- * the wait RULE below is untouched: every cost reason is still a wait, and adding one to this
- * list adds it to {@link UNIT_WAIT_REASONS} too. That is a change in MEMBERSHIP, not in
+ * subset lets a surface report that distinctly — a node surface answers 503 rather than 401 —
+ * while the wait RULE below is untouched: every cost reason is still a wait, and adding one to
+ * this list adds it to {@link UNIT_WAIT_REASONS} too. That is a change in MEMBERSHIP, not in
  * semantics — the list went from six entries to seven when
  * `chain_invalid:grant_signature_check_too_expensive` was classified, which is the fix rather
  * than a side effect of it.
@@ -108,7 +108,7 @@ export type RecordUnitVerifyOptions = {
  * A hand-written copy of the resolver's chain reasons is what this list used to be, and it
  * named one of the two: `grant_signature_check_too_expensive` was missing, so a chain refused at
  * the signature-search exit matched neither this list nor {@link UNIT_WAIT_REASONS} and fell
- * through to `apps/node`'s malformed-record branch — a 400 telling a publisher to fix a record
+ * through to a node surface's malformed-record branch — a 400 telling a publisher to fix a record
  * that was perfectly good and, on the spec-014 path, a discard where the rules require a WAIT.
  *
  * Both halves of the guarantee are compile-time. {@link UnitCostReason} is derived from
@@ -191,12 +191,11 @@ export function isUnitCostReason(reason: string): boolean {
  *
  * That second requirement is not local to this module. A verdict produced ANYWHERE and then fed
  * to {@link isUnitCostReason} or {@link isUnitWaitReason} needs a reason type, or the same
- * literal walks in from another package. `@kinnet/sdk`'s three positions —
- * `ConversationRecordVerifier`, the `verdict` binding in `joinE2eeConversation`, and
- * `createConversationRecordVerifier`'s return — name {@link UnitReason} for exactly that reason,
- * and `@kinnet/trust`'s own statement verifiers name `StatementReason`. Every verdict position in
- * the repo names its set; since `Verification` has no default, one that did not would not
- * compile.
+ * literal walks in from another package. A client SDK's own verdict positions — its conversation
+ * record verifier, the verdict it binds while joining an E2EE conversation, and the verifier
+ * factory's return — name {@link UnitReason} for exactly that reason, and `@kinnet/trust`'s own
+ * statement verifiers name `StatementReason`. Every verdict position names its set; since
+ * `Verification` has no default, one that did not would not compile.
  *
  * `chain_invalid:${ResolverReason}` is the forwarding arm: `verifyUnit` re-spells whatever
  * `verifyGrantChain` returns, so the union follows the resolver's own type and cannot fall
@@ -232,17 +231,13 @@ type Assert<T extends true> = T;
  *    every check here. `@kinnet/verify`'s request verifier does exactly that on purpose and
  *    classifies with a suffix match, which is the right tool there — it needs the cost/invalid
  *    split and no per-reason handling.
- *  - a consumer that RE-SPELLS a reason on its way out. `apps/node` passes these through
- *    verbatim, so nothing is lost today; a future surface that rewrote them would need its own
- *    proof of the same shape, exactly as this module carries one for the `chain_invalid:`
- *    prefix it adds.
+ *  - a consumer that RE-SPELLS a reason on its way out. A node surface that passes these through
+ *    verbatim loses nothing; a surface that rewrote them would need its own proof of the same
+ *    shape, exactly as this module carries one for the `chain_invalid:` prefix it adds.
  *  - a position that names `Verification<string>` EXPLICITLY. `Verification`'s reason parameter
  *    no longer has a default, so omitting it does not compile and nothing opts out by accident;
  *    writing `string` still does, but it is now a visible choice in the signature rather than
- *    the silent shape of every unannotated return. An earlier version of this bullet said
- *    removing the default was too invasive because consumers hold wider reason sets. That was
- *    not measured and is not true: no consumer did, and removing it was a zero-error change
- *    across the repo.
+ *    the silent shape of every unannotated return.
  */
 export type UnitCostReasonsAreClassified = Assert<
   Extract<UnitReason, `${string}_too_expensive`> extends
@@ -523,7 +518,7 @@ async function verifyUnit<R extends { signature: string[] }>(
  * The `device-remove` variant of the same threat — a record naming every leaf its actor holds —
  * is deliberately **not** decided here: whether a removal takes the actor's *last* leaf is a
  * question about group state, and this verifier is bytes-alone. It is closed one layer up, at
- * commit validity (`device_removes_last_leaf` in the SDK's evaluator; spec 014, amended
+ * commit validity (`device_removes_last_leaf` in a client's commit evaluator; spec 014, amended
  * 2026-08-03), where every member reads the same pre-commit tree and so reaches the same verdict.
  */
 export function isSelfDeparture(record: ConversationUpdate): boolean {

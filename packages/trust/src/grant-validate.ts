@@ -2,15 +2,13 @@
  * Mint-side Grant validation: a legible projection of `grantSchema` for the party ISSUING a
  * grant, rather than the party verifying one.
  *
- * The two sides had very different tools. A verifier that meets a malformed grant rejects the
- * chain with `grant_malformed` and is done. A minter had nothing: `@kinnet/sdk`'s `issueGrant`
- * signed whatever fields it was handed and returned it cast to `Grant`, so a grant that
- * `grantSchema` rejects — a key-audience link with no `expiresAt`, an `e2ee` credential carrying
- * caveats, a key-audience link with no `aud` — was minted, signed, stored, and shipped to a
- * counterparty, and the first party to learn it was invalid was the VERIFIER, at request time,
- * with no way to say which field was wrong. `apps/custody` had already worked this out and
- * validates after signing (`signRootGrant`); this is that check, lifted out of the app so every
- * minter gets it.
+ * The two sides have very different tools. A verifier that meets a malformed grant rejects the
+ * chain with `grant_malformed` and is done. A minter has nothing: a minter that signs whatever
+ * fields it is handed will mint grants `grantSchema` rejects — a key-audience link with no
+ * `expiresAt`, an `e2ee` credential carrying caveats, a key-audience link with no `aud` — and
+ * such a grant is signed, stored and shipped to a counterparty before anyone notices, so the
+ * first party to learn it is invalid is the VERIFIER, at request time, with no way to say which
+ * field was wrong. This module gives the minting side the same verdict, before the grant ships.
  *
  * `grantSchema` remains the single source of cross-field truth. Nothing here re-implements a
  * rule; this module only turns the schema's rejection into something a caller can act on.

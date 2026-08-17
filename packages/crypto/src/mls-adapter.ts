@@ -1,13 +1,12 @@
 /**
- * The MLS runtime adapter contract — spec 014, decision I11.
+ * The MLS runtime adapter contract — spec 014.
  *
- * Spec 014 puts MLS only in clients and pins a *profile*, not a library: "OpenMLS, mls-rs,
- * or a successor are interchangeable behind RFC 9420 plus the profile". This file is that
- * seam in code. It is pure types plus one error class — no MLS runtime is imported here,
- * and nothing in this package depends on one. The `ts-mls`-backed implementation lives in
- * `@kinnet/mls`; the SDK's E2EE flows accept an {@link MlsRuntime} and never name a
- * concrete implementation, so replacing the runtime is a contained change (I11's condition
- * 1: no `ts-mls` type crosses into `apps/*`, `packages/sdk`, or the node).
+ * Spec 014 puts MLS only in clients and pins a *profile*, not a library: "Any MLS
+ * implementation is interchangeable behind RFC 9420 plus the profile above." This file is
+ * that seam in code. It is pure types plus one error class — no MLS runtime is imported
+ * here, and nothing in this package depends on one. An implementation supplies an
+ * {@link MlsRuntime}, and no runtime-specific type crosses this seam, so replacing the
+ * runtime is a contained change.
  *
  * Byte conventions, pinned here because both sides of the seam must agree:
  *
@@ -26,13 +25,14 @@
  *    encryption at rest.
  *
  * Profile enforcement lives on the implementation side of this seam wherever the check is
- * mechanical (I11's condition 2 among them): the pinned ciphersuite and credential type,
- * PrivateMessage-only framing, rejection of standalone proposals and every out-of-profile
- * MLS feature, `required_capabilities` validation *before* committing an Add, the
+ * mechanical: the pinned ciphersuite and credential type, PrivateMessage-only framing,
+ * rejection of standalone proposals and every out-of-profile MLS feature,
+ * `required_capabilities` validation *before* committing an Add, the
  * multiple-of-256 padding precondition on application plaintext, and empty
  * `authenticated_data` on application messages. Checks that need records, key logs, or
  * judgment — evidence coverage, credential-chain verification, the wait-not-reject rules —
- * live above the seam, in the SDK; that is why commits are inspect-then-apply here.
+ * live above this seam, in the client that runs MLS; that is why commits are
+ * inspect-then-apply here.
  */
 
 /** A device's MLS leaf signature keypair. `secretKey`'s encoding is runtime-defined. */
@@ -55,7 +55,7 @@ export type MlsKeyPackage = {
   privateKeyPackage: Uint8Array;
 };
 
-/** One leaf of the ratchet tree, as the SDK renders and validates it (spec 014 rule 3). */
+/** One leaf of the ratchet tree, as a client renders and validates it (spec 014 rule 3). */
 export type MlsLeafView = {
   /** The RFC 9420 leaf index — stable across removals, unlike compacted member arrays. */
   leafIndex: number;
@@ -66,7 +66,7 @@ export type MlsLeafView = {
 };
 
 /**
- * What a commit would do, read without applying it. The SDK validates 014's commit rules
+ * What a commit would do, read without applying it. The client validates 014's commit rules
  * (evidence coverage, authorization, complete removal, credential structure) against this
  * view, then either applies the commit or waits — a missing evidence record is a wait
  * condition, never a rejection, so inspection MUST NOT advance group state, and inspecting
@@ -194,7 +194,7 @@ export interface MlsGroupSession {
 
   /**
    * Applies a commit previously returned by {@link receive} — the same bytes, after the
-   * SDK's validity rules passed. Idempotence is the caller's job via the epoch check.
+   * caller's validity rules passed. Idempotence is the caller's job via the epoch check.
    */
   applyCommit(mlsMessage: Uint8Array): Promise<MlsAppliedCommit>;
 
@@ -202,8 +202,8 @@ export interface MlsGroupSession {
    * Creates a commit adding the given KeyPackages (proposals by value, spec 014), with
    * `authenticatedData` as its `authenticated_data` (the encoded `PNCommitBinding`).
    * Validates each KeyPackage against the group's `required_capabilities` and the pinned
-   * profile BEFORE committing (I11 condition 2) — throws {@link MlsProfileViolation} on
-   * failure, since the runtime skips this check for the committer's own Adds. Returns the
+   * profile BEFORE committing — throws {@link MlsProfileViolation} on failure, since the
+   * runtime skips this check for the committer's own Adds. Returns the
    * commit message and the Welcome (with `ratchet_tree`) for the added leaves. The commit
    * is applied to this session immediately (the committer advances per RFC 9420); the
    * returned bytes are what every other member receives.

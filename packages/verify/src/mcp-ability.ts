@@ -4,8 +4,8 @@
  * Spec 009 abilities are `^[a-z0-9-]+(/[a-z0-9-]+)*$`: lower-case, hyphen-separated, `/` for
  * hierarchy. MCP tool names are conventionally snake_case and frequently carry capitals. The two
  * vocabularies therefore do not overlap, and the collision is not hypothetical — a grant naming
- * `tool_call` is rejected by `grantSchema` at mint time, which reads as "the SDK is broken"
- * rather than as "that is not a legal ability".
+ * `tool_call` is rejected by `grantSchema` at mint time, which reads as "the client library is
+ * broken" rather than as "that is not a legal ability".
  *
  * The charset is NOT the thing to change. It is what makes `abilityCovers` a segment-boundary
  * test rather than a string-prefix one, it is frozen at the protocol layer, and widening it to

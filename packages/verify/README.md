@@ -262,24 +262,24 @@ wrapper that instruments one.
 
 ## Signing a request (the agent side)
 
-Both signer inputs come from the agent's identity file — the one the Kinnet CLI's
-`identity:create` command writes (the CLI is not part of this repository): `keyId` is the
-participant id (`id`, the `pk_…` string),
-and the signing key is `currentKeys[0].secretKey`, a multibase string that `fromMultibase`
-decodes to the raw bytes `signRequest` expects.
+Both signer inputs come from the agent's identity — the `Identity` that `createIdentity()` from
+`@kinnet/crypto` returns, however the agent persists it between runs: `keyId` is the participant
+id (`id`, the `pk_…` string), and the signing key is `currentKeys[0].secretKey`, the raw bytes
+`signRequest` expects. (If the identity is stored with its keys as multibase strings,
+`fromMultibase` from `@kinnet/crypto` decodes them back to bytes.)
 
 ```ts
-import { readFileSync } from "node:fs";
-import { fromMultibase, signRequest } from "@kinnet/crypto";
+import { signRequest } from "@kinnet/crypto";
+import type { Identity } from "@kinnet/crypto";
 
-const identity = JSON.parse(readFileSync("agent.json", "utf8"));
+const identity: Identity = loadIdentity(); // however this agent persists its createIdentity() result
 
 const headers = signRequest({
   method,
   url, // the full URL the server will see — scheme, host, and path are all signed
   body,
   keyId: identity.id,
-  secretKey: fromMultibase(identity.currentKeys[0].secretKey)
+  secretKey: identity.currentKeys[0].secretKey
 });
 await fetch(url, { method, headers: { "content-type": "application/json", ...headers }, body });
 ```

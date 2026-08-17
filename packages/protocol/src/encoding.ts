@@ -17,10 +17,9 @@
  *
  * This module is hand-rolled because `@kinnet/protocol` has no dependency but `zod` and takes
  * none to get a decoder: the substrate every implementation validates against cannot be the
- * package that drags in a codec. It is also the **shared** source for the house base64url codec —
- * `@kinnet/sdk` re-exports `encodeBase64Url`/`decodeBase64Url` from here rather than keeping its
- * own copy, because the halves of a codebase disagreeing about what a valid encoding is was
- * itself the finding (2026-08 review, 6b): the node accepted what the SDK's decoder refused.
+ * package that drags in a codec. It is also the single source for the house base64url codec, so
+ * that no two components of an implementation can disagree about which textual forms are valid —
+ * a disagreement an external security review (2026-08) found in practice.
  */
 
 /**

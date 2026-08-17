@@ -1,8 +1,8 @@
 # 013 — Realtime delivery
 
 **Status:** Accepted
-**Blocks:** the live surfaces of the interaction plane, and the seam every later
-push/notification transport hangs off
+**Blocks:** live delivery from a node — every client that shows a message as it arrives — and
+the seam every later push/notification transport hangs off
 **Amended by:** 014, 017
 
 ## 1. Context
@@ -167,7 +167,7 @@ reserved envelope type MUST NOT be named such that the rule produces `msg/subscr
 `msg/read`, `msg/cursor`, or `msg/consent`. A `pn/subscribe` envelope type would generate
 `msg/subscribe` and silently give a _delivery_ ability the meaning of a read-side one — a
 delegate granted the authority to deliver a payload would acquire the authority to stream.
-This is a forward constraint on later interaction-plane specs, not a change to 012;
+This is a forward constraint on later specs that mint reserved envelope types, not a change to 012;
 012's rule is correct as written, and this reservation is what keeps it correct as the
 vocabulary grows.
 
@@ -771,8 +771,8 @@ ignoring them produces a surface that silently doesn't work:
 - `heartbeatInterval` MUST be shorter than the shortest intermediary idle timeout, or every
   stream dies at that timeout with no diagnosis.
 - A proxy that rewrites the path or drops the query string breaks signature verification at
-  open. That is the right failure (loud, immediate) but it must be in the deployment runbook,
-  not a mystery.
+  open. That is the right failure (loud, immediate) but it must be stated in the node's
+  deployment documentation, not left as a mystery.
 
 **Browser clients cannot use `EventSource`.** The `EventSource` API cannot set request headers,
 so it cannot carry `Signature-Input`, `Signature`, or `PN-Grants`. Browser clients MUST use
@@ -965,7 +965,7 @@ contentless events tell the operator strictly less than the plaintext it already
   and consent index (012): never signed, never relayed, never re-verified, never in discovery,
   and — with resumption dropped — not addressable by clients at all.
 - **One node's view.** All ordering is per-inbox and per-node. Two members of one conversation
-  on two nodes have unrelated streams. Cross-node realtime is the federation spec's problem
+  on two nodes have unrelated streams. Cross-node realtime is a future federation spec's problem
   (012's boundary, unchanged).
 - **012 is untouched.** No ability changes meaning, membership rules are unchanged, consent
   states are unchanged, and the generative ability rule is unchanged. This spec reads 012's
@@ -988,7 +988,7 @@ contentless events tell the operator strictly less than the plaintext it already
 - **Presence, typing indicators, and read receipts to other participants.** 012 makes these a
   non-goal and realtime makes them tempting; they stay out. The `cursor` and `consent` events
   go only to subscribers of the _same_ inbox, never to other conversation members.
-- **Cross-node / federated event streams.** Deferred to the federation spec.
+- **Cross-node / federated event streams.** Deferred to a future federation spec.
 - **Server-signed events or delivery attestation.** Deferred with 008/011's sign-time
   anchoring question; note that if attestation ever lands it would give a subscriber something
   worth verifying, which would reopen §2.2's contentless decision.
@@ -1098,7 +1098,10 @@ profile rather than as a property of streams.
   request, and streams remain its only consumer); the consent-visibility open question deferred with
   012 as owner, and the `consent`-event rule marked unexercisable until 012 defines the
   reject/discard and block-list routes. The scalar satisfying key recorded in Design notes as a
-  consequence of the single-signature request-auth profile. ## 9. References
+  consequence of the single-signature request-auth profile.
+
+## 9. References
+
 - Spec 003 (current-key resolution), 004 (RFC 9421 request auth, covered components), 008
   (revocation), 009 (grant chains, path-prefix cover, fail-closed caveats), 010 (inbox
   surface, per-inbox `seq`, operator-visible plaintext), 011 (delegated requests,

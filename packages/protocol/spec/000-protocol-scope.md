@@ -117,7 +117,7 @@ These show the _placement_ discipline; all remain revisable at Stage 0:
 - **Reputation** — out; derived from relationships and claims (test #4).
 - **Governance (single / quorum / weighted / DAO)** — the protocol holds key-rotation and
   thresholds (mechanism); the policy is pluggable and lives above (test #3).
-- **Directory** — mostly an application, and one community module among others; at most
+- **Directory** — mostly an application, and one node-hosted module among others (006); at most
   `DirectoryEntry` / `ModuleConfig` / `InviteToken` are thin primitives, and even the schema and
   roles are _configured_, not hardcoded (tests #2, #3). Of the three, only `ModuleConfig` has a
   spec (006).

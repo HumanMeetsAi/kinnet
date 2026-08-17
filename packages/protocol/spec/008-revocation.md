@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** the trust resolver — "not expired or revoked" needs a checkable meaning
+**Amended by:** 011
 
 ## Context
 

@@ -9,9 +9,9 @@
  *
  * It reads the package's own exports at runtime instead of a hand-kept list, so a constant added
  * tomorrow is covered on arrival. Identifiers owned by packages downstream of this one are
- * guarded next to them — `pn-grants` in `@kinnet/crypto`, `pn.discovery.participant-export/1` in
- * `@kinnet/storage`, the `pn` SSE event name in the participant node — since importing them here
- * would invert the dependency graph.
+ * guarded next to them — `pn-grants` in `@kinnet/crypto`, an implementation's
+ * `pn.discovery.participant-export/1` export-format id, the `pn` SSE event name a node surface
+ * emits — since importing them here would invert the dependency graph.
  */
 import { describe, expect, it } from "vitest";
 

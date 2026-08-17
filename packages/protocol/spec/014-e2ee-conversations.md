@@ -1,8 +1,8 @@
 # 014 — Two-lane conversations: the E2EE lane
 
 **Status:** Accepted
-**Blocks:** human-private conversations — the interaction plane's encryption fork, and the
-membership-change mechanism 012 deferred here
+**Blocks:** human-private conversations — the encrypted lane beside 010's authenticated
+plaintext, and the membership-change mechanism 012 deferred here
 
 ## Context
 
@@ -706,7 +706,7 @@ Therefore:
 ### KeyPackages live on the participant's node
 
 Adding a member — at creation or later — requires a fresh MLS KeyPackage per device of the
-added participant. KeyPackages are consumable pre-key material, private-plane data with a short
+added participant. KeyPackages are consumable pre-key material, private node data with a short
 life; they belong on the participant's node, not in discovery's public, permanent records:
 
 - **`PUT /participants/:id/keypackages`** — replaces/replenishes the caller's pool. Owner mode,
@@ -1140,7 +1140,7 @@ These amendments to other specs take effect when this spec is implemented:
 - **Federation must not be precluded, and is not solved.** Everything here is per-node state plus
   records designed to travel: evidence records are self-contained and order-free, so a receiving
   node needs no history to validate one, and `(record, chain)` units re-verify per 011.
-  Cross-node relay of MLS traffic and cross-node KeyPackage claiming are the federation spec's
+  Cross-node relay of MLS traffic and cross-node KeyPackage claiming are a future federation spec's
   problems, explicitly inherited by it — as is machine-lane membership change, which waits on
   federation's ordering work.
 - **Custody's signing list stays closed**: issuing an `e2ee/leaf` credential is a grant

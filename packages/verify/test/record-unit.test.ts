@@ -1,7 +1,7 @@
 /**
  * Unit tests for spec 014's pinned `(record, chain)` verification profile
  * (§"What verifies a unit — the profile, pinned"). Everything here is about the
- * PROFILE — the node's route-level behavior lives under apps/node/test.
+ * PROFILE — a node's route-level behavior is that surface's own to test.
  */
 import {
   canonicalDigest,
@@ -644,7 +644,7 @@ describe("substituted key logs — a view serving another participant's valid lo
 /**
  * `UNIT_COST_REASONS` names the WAIT reasons that mean "this verifier declined to spend enough
  * to judge the log" rather than "this verifier has not seen it yet", so a surface can report
- * the two differently — `apps/node` answers 503 for the first and 401 for the second.
+ * the two differently — a node surface answers 503 for the first and 401 for the second.
  */
 describe("UNIT_COST_REASONS is a strict subset of the wait reasons", () => {
   it("keeps every cost reason a WAIT, so spec 014's semantics are untouched", () => {
@@ -662,13 +662,14 @@ describe("UNIT_COST_REASONS is a strict subset of the wait reasons", () => {
    * Every exhaustion exit `verifyGrantChain` has is classified here, derived from the
    * resolver's own export rather than transcribed. This is the assertion that would have
    * caught the shipped defect: `chain_invalid:grant_signature_check_too_expensive` was
-   * produced by the resolver, matched neither list, and reached `apps/node` as a malformed
+   * produced by the resolver, matched neither list, and reached a node surface as a malformed
    * record — a 400 for a record whose only problem was this verifier's ceiling.
    *
    * WATCHED TO FAIL: replace the `...GRANT_CHAIN_COST_REASONS.map(...)` spread in
    * `UNIT_COST_REASONS` with the single literal
    * `"chain_invalid:grant_issuer_key_log_too_expensive"` — the list as it shipped. This test
-   * then fails on the signature-check reason, and so do the route-level tests in `apps/node`.
+   * then fails on the signature-check reason, as does any route-level test of a surface
+   * built on it.
    */
   it("classifies every cost reason the trust resolver's chain verifier can return", () => {
     expect(GRANT_CHAIN_COST_REASONS.length).toBeGreaterThan(1);

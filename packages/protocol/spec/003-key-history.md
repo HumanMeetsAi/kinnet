@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** rotation, recovery, and ID→current-key resolution
+**Amended by:** 011
 
 ## Context
 

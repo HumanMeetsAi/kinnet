@@ -139,11 +139,10 @@ A record admitted under the state current at its write therefore continues to ve
 under S5, which is exactly the intended relationship between the two checks.
 
 The `signature` field is a **scalar**, not an array. It is nonetheless a signature set of one
-member and 015 governs it: a verifier MUST lift it into a one-member set and apply 015 in full.
-015 §Scope enumerates the scalar-signature records it had in view when it was written and does
-not name `ParticipantNode`; the rule it states is not conditional on that enumeration — every
-scalar-signature record is lifted the same way. The consequence of 015's `m = t` is stated
-plainly under _Open questions_: a one-member set satisfies only a threshold of 1.
+member and 015 governs it: a verifier MUST lift it into a one-member set and apply 015 in full
+(015 §Scope names `ParticipantProfile` and `ParticipantNode` among the scalar-signature records
+it covers). The consequence of 015's `m = t` is stated plainly under _Open questions_: a
+one-member set satisfies only a threshold of 1.
 
 A record's **digest identity** is 003's digest rule: the multihash of the JCS of the
 **complete signed record**, `signature` included. That digest is what a Revocation (008) names.
@@ -250,9 +249,7 @@ Landing with this spec, the 011 and 014 pattern:
   is unchanged and is the reason for the removal; only the statement of the present situation
   needs revising.
 
-No other spec's normative text is affected. 015 §Scope's enumeration of scalar-signature records
-does not name `ParticipantNode`; that is an omission in an illustrative list rather than a rule,
-and the rule's application here is stated above.
+No other spec's normative text is affected.
 
 ## Boundaries
 

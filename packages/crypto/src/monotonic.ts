@@ -1,8 +1,8 @@
 /**
  * The monotonic clock seam.
  *
- * Two clocks answer two different questions, and conflating them is what produced every
- * clock-related defect on this branch:
+ * Two clocks answer two different questions, and conflating them is a recurring source of
+ * clock-related defects:
  *
  * - **Wall time** answers "what time does the world think it is". It is the ONLY legitimate
  *   input when comparing against a value another party stamped — an RFC 9421 `created`

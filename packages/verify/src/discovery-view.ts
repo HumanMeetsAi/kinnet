@@ -77,16 +77,16 @@ export type DiscoveryViewOptions = {
    * exactly as soon as it did before.
    *
    * DECIDED, NOT OVERLOOKED — the value is a security trade, not only a freshness one.
-   * `apps/node` runs the default 60 s against `recheckIntervalMs` = 15 s, and spec 013 §2.4.4
-   * SHOULDs a refresh "no coarser than `recheckInterval`", so the view term dominates the
-   * rotation window by 4x today. Lowering it to 15 s was deliberately deferred rather than done
-   * here, because it would cost two things at once: it would quadruple the discovery fetch
+   * A node running this view at the 60 s default against a `recheckInterval` of 15 s hits the
+   * trade squarely: spec 013 §2.4.4 SHOULDs a refresh "no coarser than `recheckInterval`", so
+   * the view term dominates the rotation window by 4x. Lowering it to 15 s is deliberately not
+   * done here, because it would cost two things at once: it would quadruple the discovery fetch
    * volume, and it would remove an accidental ~4x mitigation. An attacker who rotates a key log
    * misses the memo by construction and buys a fresh full replay for each rotation — and this
    * TTL is what caps how often they can make this process fetch, and therefore replay, at all.
    * So tightening freshness would also quadruple the rate at which that attacker can force
    * replays. Both sides belong on the table together, which makes it its own decision rather
-   * than a knob to turn in passing; nothing about it changed here.
+   * than a knob to turn in passing.
    */
   cacheTtlSeconds?: number;
   /**
@@ -292,9 +292,9 @@ export const DEFAULT_MAX_RESPONSE_BYTES = 1_048_576;
 /**
  * Issuer ids this client puts in one issuer-targeted revocation request.
  *
- * It MIRRORS the discovery route's own per-request bound (`MAX_REVOCATION_ISSUERS` in
- * apps/discovery-api), which answers 400 rather than truncating an over-sized ask. This
- * package must not depend on the discovery app, so the number is duplicated here — **the two
+ * It MIRRORS the discovery service's own per-request bound, which answers 400 rather than
+ * truncating an over-sized ask. This package must not depend on a discovery service, so the
+ * number is duplicated here — **the two
  * must move together, and this one may only ever be lowered relative to the route's.** Set
  * higher than the route's and a large ask becomes a thrown 400 instead of a split.
  *
@@ -987,7 +987,7 @@ export function createDiscoveryView(options: DiscoveryViewOptions): DiscoveryVie
         // returned `KeyState.id` is self-derived from the log's own inception event: it is a
         // claim the log makes about itself, and the host that chose which bytes to serve at
         // `id`'s path is untrusted — that is this module's premise. `createVerifier` and
-        // `@kinnet/a2a` do compare and are therefore already safe; `apps/node`'s owner-mode
+        // `@kinnet/a2a` do compare and are therefore already safe; a node surface's owner-mode
         // envelope check and `reauthorizeStream`'s current-state checks do not, and a host
         // answering V's id with an attacker's valid log would have let the attacker's keys
         // satisfy a check about V. Binding here closes every caller at once, which is the
@@ -1013,7 +1013,7 @@ export function createDiscoveryView(options: DiscoveryViewOptions): DiscoveryVie
         // A refusal on COST is not "no key log resolves", and reporting it as one sends the
         // caller to fix a log that may be perfectly good — the rule this change exists to
         // keep. So it is rethrown for a caller that opted into the budget protocol by passing
-        // one, and left as `null` for callers that did not (`@kinnet/a2a`, `@kinnet/sdk`),
+        // one, and left as `null` for callers that did not (`@kinnet/a2a`, a client SDK),
         // whose contract here is `KeyState | null` and whose behaviour must not change.
         if ((budget || operation) && error instanceof VerificationBudgetExceeded) {
           throw error;

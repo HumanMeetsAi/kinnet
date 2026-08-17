@@ -6,16 +6,16 @@
  * "this record is invalid". That only works while the list of cost reasons is the whole list,
  * and while every entry on it is a reason something actually returns. It was not whole:
  * `@kinnet/verify`'s copy named one of `verifyGrantChain`'s two exhaustion exits, and the
- * missing one reached `apps/node` as a malformed record.
+ * missing one reached a node surface as a malformed record.
  *
  * COMPLETENESS is a compile-time guarantee and deliberately not tested here.
  * `ChainCostReasonsAreClassified` / `CostReasonsAreClassified` in `src/resolver.ts` fail to
  * compile if a cost-shaped member of the reason union is missing from its list, and `invalid`
  * plus the narrowed verdict types mean a new reason cannot be produced without joining that
- * union — by a literal, a bare `{ valid: false, reason }` object, or a template string. An
- * earlier version of this file tried to do that job with a regex over one file's source, which
- * three separate evasions walked through (string concatenation, a bare object literal, and
- * moving the literal to another file); the type system does not have that hole.
+ * union — by a literal, a bare `{ valid: false, reason }` object, or a template string. A regex
+ * over one file's source cannot do that job — three separate evasions walk through it (string
+ * concatenation, a bare object literal, and moving the literal to another file); the type system
+ * does not have that hole.
  *
  * SOUNDNESS is what these tests check, because no type can: every listed reason is DRIVEN out
  * of a real verification. A list entry that nothing produces is dead classification — it makes

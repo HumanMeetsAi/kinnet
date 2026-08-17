@@ -69,9 +69,9 @@ export type TrustView = {
    * What "treated like unreachable" means is the CALLER's policy, and it is fail-closed for
    * every authorization consumer: `verifyClaim` / `verifyRelationship` / `verifyGrantChain`
    * propagate the rejection, and the surfaces above them deny. The designed exception is
-   * `@kinnet/sdk`'s `createLeafCredentialVerifier`, which catches and renders the device
-   * UNVERIFIED — there the answer is a label on a UI, not an authorization, and refusing a
-   * commit the rest of the group applied would split the group (see its own doc).
+   * a leaf-credential verifier on the E2EE lane, which catches and renders the device UNVERIFIED
+   * rather than refusing (spec 014, rule 3) — there the answer is a label on a UI, not an
+   * authorization, and refusing a commit the rest of the group applied would split the group.
    */
   getRevocations(revokesDigest: string, issuerIds: readonly string[]): Promise<Revocation[]>;
 };
@@ -246,7 +246,7 @@ export type ResolverReason = GrantChainReason | StatementReason | RepresentsOwnR
  * `Promise<Verification>` accepted any reason at all, so a bare
  * `{ valid: false, reason: "..._too_expensive" }` compiled clean and reached a consumer's
  * cost/wait classification unclassified. That is not hypothetical — it is how the hole was found,
- * twice, once inside `@kinnet/verify` and once across the package boundary in `@kinnet/sdk`.
+ * twice, once inside this package's own consumers and once across a package boundary.
  * Without the default, omitting the parameter does not compile, so the choice has to be written
  * down at every position that produces a verdict.
  */
@@ -381,10 +381,9 @@ type SignerStateCache = Map<ParticipantId, Promise<SignerStatesResult>>;
  * chain replays a log per distinct issuer, so a per-log ceiling would multiply by the link
  * count; sharing one means the ceiling is what the call costs.
  *
- * SCOPE, stated precisely because an earlier version of this comment overstated it: a bare
- * caller-owned budget bounds one operation. A {@link VerificationContext} adds a distinct outer
- * allowance spanning every operation the request handler passes it to; each operation keeps its
- * own local meter as well.
+ * SCOPE, stated precisely because it is easy to overstate: a bare caller-owned budget bounds one
+ * operation. A {@link VerificationContext} adds a distinct outer allowance spanning every
+ * operation the request handler passes it to; each operation keeps its own local meter as well.
  */
 export type VerificationBudget = { remaining: number };
 
@@ -754,28 +753,24 @@ function asSignatureSet<T extends { signature: string }>(
  * two derivations must not be read as agreeing. A rejected candidate costs `E * K` and leaves
  * the chain running, so a view that puts one on every link adds `L * E * K` = 4096 to a chain
  * that already costs 8192 — 13,312 once the leaf replay is counted. That exact generated shape
- * is what `apps/node`'s re-derived per-tick default now admits. This constant bounds what ONE
- * LOOKUP may spend; whether the composition fits is the caller's ceiling to state.
+ * is what a node's re-derived per-tick default admits. This constant bounds what ONE LOOKUP may
+ * spend; whether the composition fits is the caller's ceiling to state.
  *
- * THE `S > 1` CAVEAT IS SPENT, and the paragraphs it used to occupy are replaced rather than
- * deleted because the reversal is the interesting part. This comment said: "a candidate carrying
- * `MAX_RECORD_SIGNATURES` signatures costs `E * K * S` = 8192 and this refuses it", so a genuine
- * multi-signature revocation was refused on cost, and it went on to establish — correctly, against
- * an earlier claim that such a record could not be published — that `revocationSchema` admits one
- * and that `apps/discovery-api` would store it.
- *
- * Spec 015 removes both halves of that. A record is now validly signed against a state only if it
- * carries EXACTLY that state's threshold in members, so:
+ * MULTI-SIGNATURE CANDIDATES DO NOT MULTIPLY IT, and that is worth stating because the shape is
+ * real: `revocationSchema` admits a revocation carrying up to `MAX_RECORD_SIGNATURES` members,
+ * and a conforming discovery service would store it. Spec 015 is what keeps the cost flat — a
+ * record is validly signed against a state only if it carries EXACTLY that state's threshold in
+ * members, so:
  *
  * - a GENUINE multi-signature revocation carries `t` members against a `t`-of-N issuer and its
- *   search costs at most `E * K` = 1024, inside this allowance. The shape this bound could not
- *   cover is now the shape it covers like any other, and nothing was raised to achieve it.
- * - a PADDED candidate — `MAX_RECORD_SIGNATURES` members against a `threshold: "1"` issuer, the
- *   shape the old note was about — is refused by S1's length check before any curve work and
- *   costs ZERO. Measured: a hostile view padding every one of a chain's `L(L+1)/2` slots leaves
- *   the chain's spend at exactly `L * 2E * K` = 8192, its own work and not one verification more.
+ *   search costs at most `E * K` = 1024, inside this allowance — covered like any other shape,
+ *   with nothing raised to achieve it.
+ * - a PADDED candidate — `MAX_RECORD_SIGNATURES` members against a `threshold: "1"` issuer — is
+ *   refused by S1's length check before any curve work and costs ZERO. Measured: a hostile view
+ *   padding every one of a chain's `L(L+1)/2` slots leaves the chain's spend at exactly
+ *   `L * 2E * K` = 8192, its own work and not one verification more.
  *
- * So padding is now the CHEAP answer and a conforming member count is the expensive one, which
+ * So padding is the CHEAP answer and a conforming member count is the expensive one, which
  * is what `revocation-allowance.test.ts` sends.
  *
  * The exact candidate term for one link is therefore `min(R, u*A)`, never blindly `R`; summing
@@ -868,8 +863,8 @@ async function findRevocation(
       // Propagated, not swallowed: a revocation lookup that ran out of allowance established
       // nothing, and "nothing" must not read as "not revoked".
       //
-      // REACHABLE, and an earlier version of this comment claimed the opposite. The authorized
-      // revokers for a link are the issuers of that link and every link ABOVE it, and
+      // REACHABLE, and it must not be assumed otherwise. The authorized revokers for a link are
+      // the issuers of that link and every link ABOVE it, and
       // `verifyGrantChain` walks the chain leaf first — so at the leaf this asks about issuers
       // whose logs no iteration has replayed yet, and the first replay of one of them happens
       // HERE. That replay can exhaust the shared allowance like any other. Both this branch and

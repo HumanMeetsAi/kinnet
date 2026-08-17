@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** the trust resolver — represents chains, and "what may this agent do"
+**Amended by:** 011
 
 ## Context
 

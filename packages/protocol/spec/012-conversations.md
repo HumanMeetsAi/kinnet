@@ -371,7 +371,7 @@ Three things this rule buys, each answering a way the obvious alternative fails:
 - **Sending is not creating.** 009 cover is path-prefix, so `msg/send` does not cover
   `msg/conversation`: a grant that lets an agent send messages cannot silently confer the
   authority to open threads in its principal's name.
-- **It generalizes.** Every reserved payload the interaction plane adds — `task`, `proposal`,
+- **It generalizes.** Every reserved payload a later spec adds — `task`, `proposal`,
   `approval-request` — arrives as a `pn/` envelope on this same route, and each gets its
   ability by the rule (`pn/task` → `msg/task`) rather than by a fresh negotiation. `msg`
   keeps meaning "all messaging authority".
@@ -447,7 +447,7 @@ completed act at a point in time, judged against the key state and chain valid t
   retroactively unmake completed acts.
 - **One node's view.** All ordering here is 010's per-inbox `seq`; a conversation spanning
   nodes has one view per node. Cross-node ordering, and what "the conversation" means when
-  members' nodes disagree, is the federation spec's problem — deliberately not solved here.
+  members' nodes disagree, is a future federation spec's problem — deliberately not solved here.
 
 ## Non-goals
 
@@ -489,7 +489,7 @@ completed act at a point in time, judged against the key state and chain valid t
 
 - **Conversation-scoped retention.** 010's retention open question, now per conversation.
 - **Very large memberships.** Sender-side fan-out is O(members) signatures per message;
-  whether the federation spec wants a relay/queue answer or the protocol wants nothing.
+  whether a future federation spec wants a relay/queue answer or the protocol wants nothing.
 
 ## History
 

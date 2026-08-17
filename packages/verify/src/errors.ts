@@ -232,8 +232,9 @@ type SameSet<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
  *
  * WHAT IT DOES NOT COVER: a reason produced by a surface layered ON TOP of this package.
  * `VerifyError` is generic in its reason precisely so such a surface can carry its own
- * vocabulary (`apps/node` throws `envelope_signature_too_expensive`), and nothing here reaches
- * into it. Those surfaces answer for their own classification; `isVerifyCapacityReason` still
+ * vocabulary (a node surface may throw, say, `envelope_signature_too_expensive`), and nothing
+ * here reaches into it. Those surfaces answer for their own classification;
+ * `isVerifyCapacityReason` still
  * catches theirs when it is cost-shaped.
  */
 export type VerifyReasonsAreClassified = Assert<
@@ -280,9 +281,10 @@ export function isVerifyAuthReason(reason: string): boolean {
  * which told a consumer nothing and let a typo reach a response body.
  *
  * The parameter exists because the set is genuinely OPEN one level up. A surface composing this
- * package adds verification stages of its own and needs reasons for them — `apps/node` throws
- * `envelope_signature_too_expensive` for a stage that lives entirely in that app — and a closed
- * type would force it to either misreport under a borrowed reason or stop using these classes.
+ * package adds verification stages of its own and needs reasons for them — a node surface may
+ * throw, say, `envelope_signature_too_expensive` for a stage that lives entirely in it — and a
+ * closed type would force it to either misreport under a borrowed reason or stop using these
+ * classes.
  * Widening the property back to `string` to accommodate that would give up the vocabulary for
  * everyone; a type parameter keeps the default closed and lets the exception name itself.
  *

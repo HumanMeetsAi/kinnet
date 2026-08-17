@@ -38,9 +38,9 @@ export function sign(message: Uint8Array, secretKey: Uint8Array): Uint8Array {
  * and 015 name this pin as the prerequisite for their own guarantees.
  *
  * `verify` below takes no options parameter, deliberately: the mode is not a caller's choice,
- * so a new call site cannot silently inherit the library default. `eslint.config.mjs`
- * restricts direct `@noble/curves/ed25519` imports to this file so a new site cannot reach
- * around it either.
+ * so a new call site cannot silently inherit the library default. Keep direct
+ * `@noble/curves/ed25519` imports confined to this file so a new site cannot reach around it
+ * either (the reference implementation's repository enforces this with a lint rule).
  *
  * SCOPE, stated precisely, because `{zip215: false}` is not the whole of RFC 8032 strictness.
  * Against `@noble/curves` 2.2.0 it changes exactly two things: public keys and `R` must use

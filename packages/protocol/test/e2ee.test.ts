@@ -174,7 +174,7 @@ describe("Conversation lane and groupNonce (spec 014)", () => {
     expect(groupNonceSchema.safeParse(GROUP_NONCE).success).toBe(true);
   });
 
-  it("rejects textually-valid nonces that do not decode to 32 bytes (finding 6b)", () => {
+  it("rejects textually-valid nonces that do not decode to 32 bytes", () => {
     // THIS TEST USED TO ASSERT THE OPPOSITE. `z` + 44 "z"s matches the alphabet and the length
     // window and was pinned as accepted; it decodes to 33 bytes. The window is a necessary
     // condition on a 32-byte encoding, never a sufficient one, and pinning it as sufficient is
@@ -184,14 +184,14 @@ describe("Conversation lane and groupNonce (spec 014)", () => {
     expect(groupNonceSchema.safeParse(`z${"2".repeat(32)}`).success).toBe(false); // 23 bytes
   });
 
-  it("rejects a canonical nonce perturbed by one trailing character (finding 6b)", () => {
+  it("rejects a canonical nonce perturbed by one trailing character", () => {
     // The boundary, stated as a pair: one accepted value, and the same value one character
     // shorter — 43 characters, still inside the textual window, and 31 bytes. Nothing but the
     // decoded-length check rejects it.
     //
     // Base58btc admits no SECOND textual form of a given byte string (the leading-"1" rule
     // makes the mapping injective both ways), so the non-canonicity that bit here is length;
-    // the pad-bit half of finding 6b belongs to base64url and is pinned on the `pn/mls`
+    // the pad-bit half of the problem belongs to base64url and is pinned on the `pn/mls`
     // payloads below.
     expect(groupNonceSchema.safeParse(GROUP_NONCE).success).toBe(true);
     const shortened = GROUP_NONCE.slice(0, -1);
@@ -779,7 +779,7 @@ describe("E2EE reserved types and payloads (spec 014)", () => {
     expect(mlsPayloadSchema.safeParse({ mlsMessage: "AAEC", epoch: "1" }).success).toBe(false);
   });
 
-  it("rejects non-canonical base64url in a pn/mls payload (finding 6b)", () => {
+  it("rejects non-canonical base64url in a pn/mls payload", () => {
     // The canonical form, and the two deviations the alphabet check let through. "AA" is the
     // one encoding of the byte 0x00; "AB" carries four bits past that byte, which a permissive
     // decoder folds onto the same 0x00 — one payload, two textual forms, inside a digest-
@@ -787,8 +787,8 @@ describe("E2EE reserved types and payloads (spec 014)", () => {
     expect(mlsPayloadSchema.safeParse({ mlsMessage: "AA" }).success).toBe(true);
     expect(mlsPayloadSchema.safeParse({ mlsMessage: "AB" }).success).toBe(false);
     expect(mlsPayloadSchema.safeParse({ mlsMessage: "A" }).success).toBe(false);
-    // The same rejections `@kinnet/sdk`'s decoder has always made. The two halves of the
-    // codebase now agree about what a valid encoding is, which finding 6b was: they did not.
+    // The same rejections this package's own base64url decoder makes, so a schema check and a
+    // decode agree about what a valid encoding is rather than each holding its own opinion.
     expect(() => decodeBase64Url("AB")).toThrow(/non-zero trailing bits/);
     expect(() => decodeBase64Url("A")).toThrow(/truncated final quantum/);
     expect(decodeBase64Url("AA")).toEqual(Uint8Array.of(0));

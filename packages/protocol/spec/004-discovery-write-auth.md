@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** authenticated discovery writes
+**Amended by:** 011
 
 ## Context
 

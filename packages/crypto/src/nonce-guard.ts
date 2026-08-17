@@ -39,13 +39,13 @@
  * monotonic clock removes that entirely: retention is a duration since we saw the nonce, and
  * a duration has no business on a clock that can be stepped.
  *
- * Retention deliberately carries NO wall-clock component. An earlier revision stored a wall
- * deadline alongside and reclaimed only when both had passed, intending to cover backward
- * jumps too. It reintroduced a permanent wedge through the other door: during a forward
- * spike the wall deadline is written far in the future, so after the clock is corrected those
- * entries can never be reclaimed, they accumulate to the ceiling, and the guard fails closed
- * forever — while `sweepCouldFree` (which only ever saw the monotonic deadline) kept
- * believing a sweep would help, restoring the O(n)-per-refusal cost as well.
+ * Retention deliberately carries NO wall-clock component. Storing a wall deadline alongside
+ * and reclaiming only when both had passed would cover backward jumps too, and it would
+ * reintroduce a permanent wedge through the other door: during a forward spike the wall
+ * deadline is written far in the future, so after the clock is corrected those entries can
+ * never be reclaimed, they accumulate to the ceiling, and the guard fails closed forever —
+ * while `sweepCouldFree` (which sees only the monotonic deadline) would keep believing a
+ * sweep would help, restoring the O(n)-per-refusal cost as well.
  *
  * ## The residual this does NOT close — and it is silent, not loud
  *
@@ -61,8 +61,8 @@
  * is accepted. Generally, a rewind of `d` seconds re-opens a `d`-wide band of captured
  * signatures for about `d` seconds.
  *
- * An earlier version of this comment claimed the exposure coincides with a total outage
- * because the clock must be more than `maxSkew` wrong. That is FALSE and has been removed: at
+ * The exposure does NOT coincide with a total outage, and it must not be read as requiring the
+ * clock to be more than `maxSkew` wrong. At
  * `d = 1` a signer minting a fresh signature at real time `c + S + 1` still verifies
  * (`|c + S - (c + S + 1)| = 1 <= S`), so legitimate traffic flows normally throughout. The
  * condition is silent.

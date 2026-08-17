@@ -1,6 +1,7 @@
 /**
  * Unit tests for the spec 013 §2.4.1 re-authorization contract. Everything here is
- * about the CONTRACT — the SSE route's route-level tests live under apps/node/test.
+ * about the CONTRACT — the route-level behavior of an SSE endpoint is a node
+ * surface's own to test.
  */
 import {
   canonicalBytes,

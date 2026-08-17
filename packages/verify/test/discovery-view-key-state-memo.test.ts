@@ -9,7 +9,7 @@
  * HOW COST IS COUNTED HERE. Every assertion reads `budget.remaining`, which
  * `replayKeyLogFor`'s `onSignatureVerifications` hook decrements by the exact number of
  * Ed25519 verifications the replay performed. That is instrumentation of the primitive's own
- * counter, not timing, and it is the same instrument `apps/node`'s re-check budget tests use.
+ * counter, not timing, and it is the same instrument a node surface's re-check budget tests use.
  * A delta of zero therefore means zero curve operations, not "fast".
  *
  * Every test below was watched to FAIL before it was trusted — against the pre-change code
@@ -134,7 +134,7 @@ describe("T14 — a memo hit performs zero signature verifications", () => {
   });
 
   it("memoizes for a caller carrying no budget at all", async () => {
-    // The client-side contract (`@kinnet/a2a`, `@kinnet/sdk`) passes no budget, so there is no
+    // The client-side contract (`@kinnet/a2a`, a client SDK) passes no budget, so there is no
     // counter to read. The instrument here is object IDENTITY: a replay constructs a fresh
     // `KeyState`, and only a memo can hand back the one it is holding. WATCHED TO FAIL against
     // the pre-change code, which returns a newly built state every time; also fails under the

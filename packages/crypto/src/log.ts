@@ -560,8 +560,7 @@ export class KeyLogParticipantMismatch extends Error {
  * Throws {@link KeyLogParticipantMismatch} when the replayed id is not `expectedId`, and
  * everything {@link replayKeyLog} throws otherwise. Bare `replayKeyLog` remains correct for the
  * one legitimate unbound case: deriving a participant id FROM a submitted log, where there is
- * no expected id to bind against (`apps/discovery-api/src/write-auth.ts`, spec 004's first-write
- * bootstrap).
+ * no expected id to bind against (a discovery service's first-write bootstrap, spec 004).
  */
 export function replayKeyLogFor(
   expectedId: ParticipantId,

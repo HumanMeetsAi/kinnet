@@ -44,9 +44,9 @@ describe("multibase(base58btc)", () => {
     expect(multibaseBase58btc.decode("z0OIl")).toBeNull(); // 0, O, I, l are outside the alphabet
   });
 
-  it("separates the length requirement from the encoding (finding 6b)", () => {
-    // The review's exact case: alphabet-valid, inside the 32..44 character window a 32-byte
-    // value falls in, and 23 bytes. Canonical — just not a nonce.
+  it("separates the length requirement from the encoding", () => {
+    // The security review's exact case: alphabet-valid, inside the 32..44 character window a
+    // 32-byte value falls in, and 23 bytes. Canonical — just not a nonce.
     const twentyThreeBytes = `z${"2".repeat(32)}`;
     expect(isCanonical(twentyThreeBytes, multibaseBase58btc, { minBytes: 1 })).toBe(true);
     expect(decodeCanonical(twentyThreeBytes, multibaseBase58btc)!.length).toBe(23);
@@ -67,7 +67,7 @@ describe("unpadded base64url", () => {
     }
   });
 
-  it("refuses the three non-canonical forms, and refuses them identically to @kinnet/sdk", () => {
+  it("refuses the three non-canonical forms", () => {
     // "A" ends no quantum; "AB" carries bits past its one byte, which a permissive decoder
     // folds onto the byte "AA" gives; "=" padding is outside the house alphabet.
     for (const text of ["A", "AB", "AA==", "AA=", "A+A", "A/A"]) {

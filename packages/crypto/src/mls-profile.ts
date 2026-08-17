@@ -168,7 +168,7 @@ export function decodeCommitBinding(bytes: Uint8Array): string[] {
  *
  * This is caller-side padding, deliberately: the adopted runtime's padding option is a
  * floor ("pad until length N"), not a multiple, so the profile's quantization is applied
- * here before the plaintext is handed to MLS (decision I11, condition 2). The minimum
+ * here before the plaintext is handed to MLS. The minimum
  * output is one 256-byte block — empty content is a valid frame.
  */
 export function padApplicationContent(content: Uint8Array): Uint8Array {

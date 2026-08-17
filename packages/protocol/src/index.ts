@@ -806,8 +806,7 @@ export const KNOWN_RESERVED_TYPES = new Set<string>([
  * The alphabet regex is a prefilter; canonicity is decided by {@link decodeCanonical}. Alphabet
  * alone accepted `"A"` — a lone character encodes no whole byte — and `"AB"`, whose four bits
  * past the single byte a permissive decoder folds onto the byte `"AA"` gives, so one payload had
- * two textual forms inside a signed, digest-identified envelope. `@kinnet/sdk`'s decoder has
- * refused both since it was written; this is the schema catching up to it.
+ * two textual forms inside a signed, digest-identified envelope.
  *
  * No maximum: an MLS message is as large as its group, and the bound that matters is the
  * transport's body limit rather than a number invented here. The canonicity check is linear in
