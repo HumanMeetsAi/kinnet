@@ -1,6 +1,6 @@
 {
   "name": "@kinnet/verify",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Inbound-request verification for services receiving agent traffic: verify an RFC 9421 HTTP Message Signature and the caller's represents chain in ~5 lines (Node/Express + edge runtimes).",
   "license": "Apache-2.0",
   "type": "module",

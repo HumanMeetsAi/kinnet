@@ -122,3 +122,10 @@ export {
   type RotateIdentityOptions,
   type ReplayKeyLogOptions
 } from "./log.js";
+export {
+  fromIdentityFile,
+  parseIdentityFile,
+  toIdentityFile,
+  type IdentityFile,
+  type StoredKeyPair
+} from "./identity-file.js";

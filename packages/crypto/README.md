@@ -127,6 +127,23 @@ participant id is known — it rejects a log that replays validly but for a _dif
 which a host serving the wrong bytes at the right path would otherwise pass off as your key
 state.
 
+## Save and load an identity
+
+`toIdentityFile` / `parseIdentityFile` are the on-disk form of an `Identity` — the file the CLI
+writes and every Kinnet tool loads. It contains secret key material, so treat it as a root key
+(mode 600, never published; only the signed key log goes to discovery). Loading re-replays the
+log, checks the id, and checks the stored keys against the log's current state and its
+pre-rotation commitment, so a tampered file is refused rather than trusted:
+
+```ts
+import { createIdentity, parseIdentityFile, toIdentityFile } from "@kinnet/crypto";
+
+const me = createIdentity();
+const text = JSON.stringify(toIdentityFile(me)); // write this to disk, mode 600
+const back = parseIdentityFile(text); // strict JSON, replayed and checked
+console.log(back.id === me.id); // true
+```
+
 ## Also in this package
 
 `multibase`/`multihash` helpers (`toMultibase`, `fromMultibase`, `encodeKeyRef`, `decodeKeyRef`,
