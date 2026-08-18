@@ -86,6 +86,20 @@ participantProfileSchema.safeParse(withStrayKey).success; // false — "Unrecogn
 open schemas that each strip what they don't define would let one object parse as both kinds
 under one signature. Two record kinds must never both accept the same bytes.
 
+## The record anchor
+
+`Revocation`, `Grant`, `Conversation` and `ConversationUpdate` are verified against a
+participant's key state, and each names the state it was signed under: `anchor`, the digest of
+one event in the issuer's key log (spec 016). A verifier resolves that one state and tries no
+other, which is what makes an edited signature set unmoveable onto a state that would accept it.
+
+Where the field is required is a property of the issuer, and the schemas enforce it: a
+`Revocation` always carries one; a `Grant` carries one exactly when `issuerId` is a participant
+id and never when it is a bare `KeyRef`; a `Conversation` or `ConversationUpdate` carries one in
+owner mode and not in delegated mode, where the chain's leaf key is the only candidate. In a
+`(record, chain)` unit the two must agree — anchor present if and only if `chain` is absent —
+so the mode is decided by the unit rather than inferred from a failed verification.
+
 ## Encoding helpers
 
 Bytes that will become a record — an HTTP body, a stored blob, anything read from outside the
@@ -124,8 +138,8 @@ the schemas are backed by committed fixtures a third party can check without thi
 - `test/fixtures/conversation-update-vectors.json` — accept/reject cases for
   `conversationUpdateSchema`'s well-formedness rules (spec 014).
 - `test/fixtures/conversation-unit-vectors.json` — the `(record, chain)` payload wrapper accept/
-  reject cases, and the digest-identity property that the chain travels alongside the record
-  without changing its id.
+  reject cases, including spec 016's anchor/chain agreement, and the digest-identity property
+  that the chain travels alongside the record without changing its id.
 - `test/fixtures/commit-validity-vectors.json` — spec 014's membership-change commit-validity
   rules (apply / wait / invalid) over full evidence sets.
 
@@ -141,6 +155,7 @@ the schemas are backed by committed fixtures a third party can check without thi
 - [012 — Conversations](https://github.com/HumanMeetsAi/kinnet/blob/main/packages/protocol/spec/012-conversations.md)
 - [014 — Two-lane conversations (E2EE)](https://github.com/HumanMeetsAi/kinnet/blob/main/packages/protocol/spec/014-e2ee-conversations.md)
 - [015 — Canonical signature sets](https://github.com/HumanMeetsAi/kinnet/blob/main/packages/protocol/spec/015-signature-sets.md)
+- [016 — Record anchoring](https://github.com/HumanMeetsAi/kinnet/blob/main/packages/protocol/spec/016-record-anchoring.md)
 - [017 — Participant profile & node](https://github.com/HumanMeetsAi/kinnet/blob/main/packages/protocol/spec/017-participant-profile-and-node.md)
 - [018 — Claims & relationships](https://github.com/HumanMeetsAi/kinnet/blob/main/packages/protocol/spec/018-claims-and-relationships.md)
 

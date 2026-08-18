@@ -160,6 +160,16 @@ describe("committed delegated-chain conformance fixture (spec 011)", () => {
     expect(serviceGrant.issuerId).toBe(delegated.expect.sessionKeyRef);
   });
 
+  it("carries an anchor on the participant-issued links and none on the key-issued one", () => {
+    // Spec 016's placement rule, as BYTES: the anchor tracks the ISSUER's shape. The two
+    // user-issued links name the key event whose state signed them; the session key has no key
+    // log and exactly one constructive state, so the link it issues carries no anchor at all —
+    // and `grantSchema` rejects either half of that written the other way round.
+    expect(typeof rootGrant.anchor).toBe("string");
+    expect(sessionGrant.anchor).toBe(rootGrant.anchor);
+    expect("anchor" in serviceGrant).toBe(false);
+  });
+
   it("verifies the user → session key → service chain from bytes alone", async () => {
     const verdict = await verifyGrantChain(delegated.grants, delegatedView(), {
       now,

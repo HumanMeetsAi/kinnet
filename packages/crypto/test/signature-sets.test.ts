@@ -25,7 +25,6 @@ import {
   checkSignatureSet,
   decodeKeyRef,
   decodeSignature,
-  quorumViolation,
   verify,
   verifyThresholdRecord
 } from "../src/index.js";
@@ -43,16 +42,9 @@ type Vector = {
   matrix: boolean[][];
 };
 
-type LogRuleVector = {
-  name: string;
-  why: string;
-  legal: boolean;
-  states: { keys: string[]; threshold: string }[];
-};
-
 const fixture = JSON.parse(
   readFileSync(new URL("./fixtures/signature-set-vectors.json", import.meta.url), "utf8")
-) as { note: string; vectors: Vector[]; logRuleNote: string; logRuleVectors: LogRuleVector[] };
+) as { note: string; vectors: Vector[] };
 
 const vectors = fixture.vectors;
 const byName = (name: string): Vector => {
@@ -288,92 +280,4 @@ describe("spec 015 signature-set conformance vectors", () => {
       expect(verdict.message.length).toBeGreaterThan(20);
     }
   );
-});
-
-/**
- * Spec 003's "no two states may share a quorum" rule — the interim measure that closes the
- * cross-state routes until record anchoring lands.
- *
- * These vectors constrain log SHAPE rather than any record's signature set, so they carry key
- * states and no signatures at all. As with the vectors above, this file checks that the
- * fixture's `legal` labels are exactly what the rule yields; the replay-side enforcement lands
- * with the implementation change.
- */
-describe("spec 003 log-rule conformance vectors (no two states share a quorum)", () => {
-  const logRuleVectors = fixture.logRuleVectors;
-
-  /** |keys(A) ∩ keys(B)| < min(t_A, t_B) for EVERY pair, not merely consecutive ones. */
-  function logIsLegal(states: LogRuleVector["states"]): boolean {
-    for (let i = 0; i < states.length; i += 1) {
-      for (let j = i + 1; j < states.length; j += 1) {
-        const a = states[i]!;
-        const b = states[j]!;
-        const bKeys = new Set(b.keys);
-        const shared = a.keys.filter((key) => bKeys.has(key)).length;
-        if (shared >= Math.min(Number(a.threshold), Number(b.threshold))) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  it("is not vacuous: distinct names, both verdicts represented, every state well-formed", () => {
-    expect(logRuleVectors.length).toBeGreaterThanOrEqual(6);
-    expect(new Set(logRuleVectors.map((vector) => vector.name)).size).toBe(logRuleVectors.length);
-    expect(logRuleVectors.some((vector) => vector.legal)).toBe(true);
-    expect(logRuleVectors.some((vector) => !vector.legal)).toBe(true);
-    for (const vector of logRuleVectors) {
-      expect(vector.why.length).toBeGreaterThan(40);
-      expect(vector.states.length).toBeGreaterThanOrEqual(2);
-      for (const state of vector.states) {
-        // S0: each state must itself be well-formed, or the vector would be testing two rules.
-        expect(new Set(state.keys).size).toBe(state.keys.length);
-        expect(Number(state.threshold)).toBeLessThanOrEqual(state.keys.length);
-      }
-    }
-  });
-
-  it.each(logRuleVectors.map((vector) => [vector.name, vector] as const))(
-    "%s — the verdict is what the rule yields",
-    (_name, vector) => {
-      expect(logIsLegal(vector.states)).toBe(vector.legal);
-      // And the SHIPPED check agrees with the rule written out here. `logIsLegal` above is a
-      // deliberate second implementation, so this line is what stops the fixture and the
-      // production rule drifting apart while both stay self-consistent.
-      expect(quorumViolation(vector.states) === null).toBe(vector.legal);
-    }
-  );
-
-  it("rejects variant P, which subset and permutation rules both accept", () => {
-    // The case that decided the rule's shape: neither key set is a subset or a permutation of
-    // the other, so a rule phrased over key-list containment accepts this log — and it is a
-    // working attack. Pinned so the more permissive rule cannot be reintroduced by accident.
-    const variantP = logRuleVectors.find((vector) => vector.name.includes("variant P"));
-    expect(variantP).toBeDefined();
-    const [a, b] = variantP!.states as [
-      LogRuleVector["states"][number],
-      LogRuleVector["states"][number]
-    ];
-    const setA = new Set(a.keys);
-    const setB = new Set(b.keys);
-    const subset = (x: Set<string>, y: Set<string>) => [...x].every((v) => y.has(v));
-
-    expect(subset(setB, setA)).toBe(false);
-    expect(subset(setA, setB)).toBe(false);
-    expect(logIsLegal(variantP!.states)).toBe(false);
-  });
-
-  it("checks all pairs, not just consecutive ones", () => {
-    const nonAdjacent = logRuleVectors.find((vector) => vector.name.includes("non-adjacent"));
-    expect(nonAdjacent).toBeDefined();
-    const states = nonAdjacent!.states;
-
-    // Every CONSECUTIVE pair is fine on its own...
-    for (let i = 0; i + 1 < states.length; i += 1) {
-      expect(logIsLegal([states[i]!, states[i + 1]!])).toBe(true);
-    }
-    // ...and the log is still illegal, because states 0 and 2 share a quorum.
-    expect(logIsLegal(states)).toBe(false);
-  });
 });

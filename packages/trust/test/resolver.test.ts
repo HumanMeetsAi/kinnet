@@ -8,6 +8,7 @@ import {
   encodeSignature,
   eventDigest,
   generateKeyPair,
+  keyLogAnchor,
   rotateIdentity,
   sign,
   signRecord,
@@ -105,18 +106,41 @@ type GrantFields = {
   proof: string | null;
   caveats?: Record<string, unknown>;
   expiresAt?: string;
+  /**
+   * Spec 016's anchor. Defaulted by {@link makeGrant} to the SIGNER's log tip, which is the
+   * honest value whenever signer and issuer are the same participant; a test that signs one
+   * participant's grant with another's keys passes the issuer's anchor explicitly, so the
+   * verdict it pins is a signature failure rather than an unknown anchor.
+   *
+   * Left out entirely for a bare-key issuer: 016 forbids the field there and `grantSchema`
+   * rejects a key-issued link that carries one.
+   */
+  anchor?: string;
 };
+
+function isParticipantId(principal: Principal): boolean {
+  return principal.startsWith("pk_");
+}
 
 function signGrant(fields: GrantFields, secretKeys: Uint8Array[]): Grant {
   return signThresholdRecord({ caveats: {}, issuedAt: ISSUED_AT, ...fields }, secretKeys) as Grant;
 }
 
 function makeGrant(signer: Identity, fields: GrantFields): Grant {
-  return signGrant(fields, [signer.currentKeys[0]!.secretKey]);
+  const anchored: GrantFields =
+    fields.anchor !== undefined || !isParticipantId(fields.issuerId)
+      ? fields
+      : { ...fields, anchor: keyLogAnchor(signer.log) };
+  return signGrant(anchored, [signer.currentKeys[0]!.secretKey]);
 }
 
-function revoke(signer: Identity, issuerId: ParticipantId, digest: string): Revocation {
-  return signThresholdRecord({ revokes: digest, issuerId, revokedAt: PAST }, [
+function revoke(
+  signer: Identity,
+  issuerId: ParticipantId,
+  digest: string,
+  anchor = keyLogAnchor(signer.log)
+): Revocation {
+  return signThresholdRecord({ revokes: digest, issuerId, anchor, revokedAt: PAST }, [
     signer.currentKeys[0]!.secretKey
   ]) as Revocation;
 }
@@ -656,6 +680,7 @@ describe("chain verification allowance", () => {
         audienceId: issuer.id,
         abilities: ["directory"],
         caveats: {},
+        anchor: keyLogAnchor(issuer.log),
         proof: null,
         issuedAt: PAST,
         ...overrides
@@ -681,6 +706,7 @@ describe("chain verification allowance", () => {
         audienceId: c.id,
         abilities: ["directory"],
         caveats: {},
+        anchor: keyLogAnchor(b.log),
         proof: canonicalDigest(root),
         issuedAt: PAST
       },
@@ -693,6 +719,7 @@ describe("chain verification allowance", () => {
         audienceId: a.id,
         abilities: ["directory/curate"],
         caveats: {},
+        anchor: keyLogAnchor(c.log),
         proof: canonicalDigest(mid),
         issuedAt: PAST
       },
@@ -768,24 +795,19 @@ describe("chain verification allowance", () => {
   // shared mutable flag for a later lookup to inherit. A test that mutates the code back to a
   // latch would be testing a shape that no longer exists.
 
-  it("refuses a log that re-lists a key set, so the state de-duplication is unreachable", async () => {
-    // THIS TEST REPLACES "de-duplicates identical key states, so a repeated set is not paid for
-    // twice", whose premise spec 003 has since made unbuildable.
+  it("accepts a log that re-lists a key set, and judges each record at its own anchor", async () => {
+    // THIS TEST REPLACES "refuses a log that re-lists a key set", whose premise spec 016 has
+    // retired. 003's interim "No two states may share a quorum" required
+    // `|keys(A) n keys(B)| < min(t_A, t_B)` for every pair of committed states, so a log that
+    // re-revealed its own key set was rejected. 016 removes the rule: the keyless cross-state
+    // edits it protected against are closed by anchoring instead — a signature-set record names
+    // the ONE state it is judged against — so a re-listed state costs a verifier nothing and the
+    // rotation flexibility comes back.
     //
-    // `resolveSignerStates` still de-duplicates repeated key states (the `seen` fingerprint
-    // set), and the old test drove that path with the log built below: five events, two
-    // distinct key sets, the last four re-listing one of them. Spec 003's "No two states may
-    // share a quorum" now rejects exactly that log — it requires
-    // `|keys(A) n keys(B)| < min(t_A, t_B)` for EVERY pair of committed states, and two events
-    // listing the same single key share one key against `min(t) = 1`. 003 names the case
-    // explicitly: "A log that re-reveals its own current key set is likewise now illegal."
-    //
-    // So a replay-valid log can no longer contain a repeated state, the de-duplication cannot
-    // be reached through this surface, and the honest thing to pin is the rejection. The
-    // resolver must surface it as a VALIDITY refusal, `issuer_key_log_unresolved` — the log is
-    // wrong, not merely expensive — which is what separates it from the cost refusals below.
-    //
-    // Five events, two distinct key sets: events 1-4 all list `repeatedKey`.
+    // Five events, two distinct key sets: events 1-4 all list `repeatedKey`. What the replay
+    // must now do is ACCEPT it, and what the resolver must do is judge each record against the
+    // state its anchor names — which for the two revocations below is two DIFFERENT events
+    // carrying identical `(keys, threshold)`, distinguishable only by digest.
     const first = generateKeyPair(seed(40));
     const repeatedKey = generateKeyPair(seed(41));
     const repeatedRefs = [encodeKeyRef(repeatedKey.publicKey)];
@@ -794,9 +816,6 @@ describe("chain verification allowance", () => {
       kind: "icp" as const,
       keys: [encodeKeyRef(first.publicKey)],
       threshold: "1",
-      // Every event below re-lists `repeatedRefs` at threshold "1", so that is the state each
-      // commitment names — the commitments must reproduce, or the replay would stop at the
-      // commitment check and never reach the quorum rule this test is about.
       next: commitToKeyState(repeatedRefs, "1")
     };
     const id = deriveParticipantId(establishment);
@@ -822,23 +841,21 @@ describe("chain verification allowance", () => {
         signature: [encodeSignature(sign(canonicalBytes(unsigned), repeatedKey.secretKey))]
       });
     }
-    // Signed by the INCEPTION key, which the quorum rule leaves untouched: the claim itself is
-    // perfectly well formed, and it is the LOG the resolver cannot accept.
     const issuer = { id, currentKeys: [first] };
 
-    const viewOfLog = (events: KeyEvent[]): TrustView & { keyLogReads: number } => {
+    const viewOfLog = (
+      events: KeyEvent[],
+      revocations: Revocation[] = []
+    ): TrustView & { keyLogReads: number } => {
       const view: TrustView & { keyLogReads: number } = {
         keyLogReads: 0,
-        // Far above anything this can spend — the whole five-event replay costs 5, one
-        // verification per single-key event — so a refusal here cannot be a cost refusal
-        // wearing a validity reason.
         maxSignatureVerifications: 4096,
         async getKeyLog() {
           view.keyLogReads += 1;
           return events;
         },
-        async getRevocations() {
-          return [];
+        async getRevocations(digest, issuerIds) {
+          return revocations.filter((r) => r.revokes === digest && issuerIds.includes(r.issuerId));
         }
       };
       return view;
@@ -856,15 +873,42 @@ describe("chain verification allowance", () => {
       issuer.currentKeys[0]!.secretKey
     ) as Claim;
 
-    expect(await verifyClaim(claim, viewOfLog(log), { now: NOW })).toEqual({
-      valid: false,
-      reason: "issuer_key_log_unresolved"
-    });
+    // The log replays, so the inception-signed claim verifies against the state it was signed
+    // under — a scalar signature, outside 016, still judged against any state the log commits.
+    expect(await verifyClaim(claim, viewOfLog(log), { now: NOW })).toEqual({ valid: true });
 
-    // The control, and it is what shows the repeat is the cause. The first two events are the
-    // same bytes, and they share NO key — an ordinary rotation — so the same claim, the same
-    // inception key and the same view all verify once the re-listing events are gone.
-    expect(await verifyClaim(claim, viewOfLog(log.slice(0, 2)), { now: NOW })).toEqual({
+    // And the anchored half. Two revocations of the same digest by the same issuer, signed by
+    // the same key, differing ONLY in which of the two identical re-listed states they anchor
+    // to: both name a real event, so both verify. This is the shape the retired rule made
+    // unbuildable, and it is why an anchor is an event digest rather than a commitment to
+    // `(keys, threshold)` — a state commitment could not tell these two events apart.
+    const digest = canonicalDigest(claim);
+    const anchoredAt = (event: KeyEvent): Revocation =>
+      signThresholdRecord(
+        { revokes: digest, issuerId: id, anchor: eventDigest(event), revokedAt: PAST },
+        [repeatedKey.secretKey]
+      ) as Revocation;
+    for (const event of [log[3]!, log[4]!]) {
+      expect(await verifyClaim(claim, viewOfLog(log, [anchoredAt(event)]), { now: NOW })).toEqual({
+        valid: false,
+        reason: "claim_revoked"
+      });
+    }
+
+    // The negative control: a revocation whose set would satisfy the very same key state, but
+    // anchored to an event this log does not carry, is not this issuer's record and does not
+    // revoke. There is no fallback to "some state accepts it" — that existential is what 016
+    // removed.
+    const unknownAnchor = signThresholdRecord(
+      {
+        revokes: digest,
+        issuerId: id,
+        anchor: canonicalDigest({ anchor: "no such event" }),
+        revokedAt: PAST
+      },
+      [repeatedKey.secretKey]
+    ) as Revocation;
+    expect(await verifyClaim(claim, viewOfLog(log, [unknownAnchor]), { now: NOW })).toEqual({
       valid: true
     });
   }, 30_000);
@@ -895,6 +939,7 @@ describe("chain verification allowance", () => {
           audienceId: agent.id,
           abilities: ["directory"],
           caveats: {},
+          anchor: keyLogAnchor(org.log),
           proof: null,
           issuedAt: PAST
         },
@@ -957,6 +1002,7 @@ describe("chain verification allowance", () => {
           audienceId: agent.id,
           abilities: ["directory"],
           caveats: {},
+          anchor: keyLogAnchor(org.log),
           proof: null,
           issuedAt: PAST
         },
@@ -1027,16 +1073,27 @@ describe("chain verification allowance", () => {
     const issuer = committee(64, 1, 1);
     const root = grantFrom(issuer, { audienceId: issuer.id });
 
-    // 64 to replay + 1 to check the link against the newest state, then a little slack that
-    // the revocation candidate's own traversal (64 states) cannot fit in.
+    // 64 to replay the log + 1 to check the link against its anchored state, and NOT ONE MORE.
+    // The margin used to be eight verifications of slack, sized against a candidate that had to
+    // traverse 64 key states; spec 016 prices a candidate at one run of the walk against the ONE
+    // state its anchor names, so the exhaustion is now bought by making the chain exactly
+    // affordable and leaving the candidate's single verification unpayable.
     const view = viewOf([issuer], {
-      maxSignatureVerifications: 64 + 1 + 8,
-      // A candidate signed by a key that is not the issuer's: it never matches, so it forces
-      // a full traversal of the issuer's key history rather than short-circuiting.
+      maxSignatureVerifications: 64 + 1,
+      // A candidate ANCHORED to the issuer's real state and signed by a key that is not the
+      // issuer's. The anchor resolves, so the lookup reaches curve work — a candidate with an
+      // unknown anchor would be skipped for free and prove nothing about cost. Its member count
+      // matches the 1-of-1 state's threshold, so 015's length check does not refuse it either.
       revocationsFor: (digest) => [
-        signThresholdRecord({ revokes: digest, issuerId: issuer.id, revokedAt: PAST }, [
-          generateKeyPair(seed(250)).secretKey
-        ]) as Revocation
+        signThresholdRecord(
+          {
+            revokes: digest,
+            issuerId: issuer.id,
+            anchor: keyLogAnchor(issuer.log),
+            revokedAt: PAST
+          },
+          [generateKeyPair(seed(250)).secretKey]
+        ) as Revocation
       ]
     });
 
@@ -1056,6 +1113,7 @@ describe("chain verification allowance", () => {
         audienceId: a.id,
         abilities: ["directory"],
         caveats: {},
+        anchor: keyLogAnchor(b.log),
         proof: canonicalDigest(root),
         issuedAt: PAST
       },
@@ -2341,5 +2399,269 @@ describe("substituted key logs — a host serving another participant's valid lo
       valid: false,
       reason: "issuer_key_log_participant_mismatch"
     });
+  });
+});
+
+describe("record anchoring (spec 016)", () => {
+  type KeyPair = ReturnType<typeof generateKeyPair>;
+  type State = { keys: KeyPair[]; threshold: string };
+
+  /**
+   * Builds a replay-valid log over the exact key states given, in order.
+   *
+   * `createIdentity`/`rotateIdentity` cannot express these fixtures: the states here deliberately
+   * SHARE keys across a rotation — a 3-of-3 shrinking to a 2-of-2 subset, a 2-of-3 retiring one
+   * key and retaining two — which is precisely the shape 003's retired "no two states may share a
+   * quorum" rule forbade and spec 016 brings back. Each event declares the threshold the previous
+   * event committed and carries exactly that many signatures, in key order (015 S1/S3).
+   */
+  function logOf(states: State[], base: number): { id: ParticipantId; log: KeyEvent[] } {
+    const refs = (keys: KeyPair[]): string[] => keys.map((k) => encodeKeyRef(k.publicKey));
+    const tail: State = {
+      keys: [generateKeyPair(seed(base + 90))],
+      threshold: "1"
+    };
+    const nextOf = (index: number): State => states[index + 1] ?? tail;
+    const signEvent = (unsigned: Omit<KeyEvent, "signature">, state: State): KeyEvent => ({
+      ...unsigned,
+      signature: state.keys
+        .slice(0, Number(state.threshold))
+        .map((k) => encodeSignature(sign(canonicalBytes(unsigned), k.secretKey)))
+    });
+
+    const first = states[0]!;
+    const establishment = {
+      seq: "0",
+      kind: "icp" as const,
+      keys: refs(first.keys),
+      threshold: first.threshold,
+      next: commitToKeyState(refs(nextOf(0).keys), nextOf(0).threshold)
+    };
+    const id = deriveParticipantId(establishment);
+    const log: KeyEvent[] = [signEvent({ ...establishment, id, prior: null }, first)];
+    for (let index = 1; index < states.length; index += 1) {
+      const state = states[index]!;
+      log.push(
+        signEvent(
+          {
+            id,
+            seq: String(index),
+            prior: eventDigest(log[index - 1]!),
+            kind: "rot",
+            keys: refs(state.keys),
+            threshold: state.threshold,
+            next: commitToKeyState(refs(nextOf(index).keys), nextOf(index).threshold)
+          },
+          state
+        )
+      );
+    }
+    return { id, log };
+  }
+
+  function viewOf(id: ParticipantId, log: KeyEvent[], revocations: Revocation[] = []): TrustView {
+    return {
+      async getKeyLog(asked) {
+        return asked === id ? log : null;
+      },
+      async getRevocations(digest, issuerIds) {
+        return revocations.filter((r) => r.revokes === digest && issuerIds.includes(r.issuerId));
+      }
+    };
+  }
+
+  const claimOf = (id: ParticipantId, key: KeyPair): Claim =>
+    signRecord(
+      {
+        id: "claim-anchor-1",
+        subjectId: id,
+        claimType: "domain",
+        value: "anchor.example",
+        issuedBy: id,
+        issuedAt: ISSUED_AT
+      },
+      key.secretKey
+    ) as Claim;
+
+  const revocationOf = (
+    id: ParticipantId,
+    digest: string,
+    anchor: string,
+    keys: KeyPair[]
+  ): Revocation =>
+    signThresholdRecord(
+      { revokes: digest, issuerId: id, anchor, revokedAt: PAST },
+      keys.map((k) => k.secretKey)
+    ) as Revocation;
+
+  it("rejects a chain link whose anchor names no event of its issuer's log", async () => {
+    // 016: "a verifier MUST report that outcome distinguishably from a signature-set failure".
+    // The link below is signed correctly by its issuer's current key — the ONLY thing wrong with
+    // it is the state it names — so a resolver that folded this into `grant_signature_invalid`
+    // would send an operator hunting a forgery where the answer is a state their view has not
+    // seen.
+    const unknown = canonicalDigest({ anchor: "no key event of this log" });
+    const grant = rootGrant({ anchor: unknown });
+    expect(await verifyGrantChain([grant], makeView([org, admin]), { now: NOW })).toEqual({
+      valid: false,
+      reason: "grant_issuer_anchor_unknown"
+    });
+
+    // The control: the same link, same keys, same everything, anchored to the issuer's real
+    // state. It verifies — so the rejection above is about the anchor and nothing else.
+    expect(await verifyGrantChain([rootGrant()], makeView([org, admin]), { now: NOW })).toEqual({
+      valid: true,
+      subjectId: org.id,
+      audienceId: admin.id,
+      abilities: ["directory"]
+    });
+
+    // And the reason is NOT the signature reason, stated as an inequality because the two are
+    // one enum apart and a consumer classifies on the string.
+    const forged = rootGrant({ anchor: keyLogAnchor(org.log) });
+    const tampered = signThresholdRecord({ ...forged }, [attacker.currentKeys[0]!.secretKey]);
+    expect(
+      await verifyGrantChain([tampered as Grant], makeView([org, admin]), { now: NOW })
+    ).toEqual({ valid: false, reason: "grant_signature_invalid" });
+  });
+
+  it("honours a revocation anchored to a state the issuer has since rotated away from", async () => {
+    // The producer rule's other half (016 _Producer rules_): a record MAY name any state whose
+    // keys its issuer held, and a later rotation never orphans it — the log is append-only and
+    // the named event stays where it is.
+    const older = generateKeyPair(seed(150));
+    const newer = generateKeyPair(seed(151));
+    const { id, log } = logOf(
+      [
+        { keys: [older], threshold: "1" },
+        { keys: [newer], threshold: "1" }
+      ],
+      150
+    );
+    const claim = claimOf(id, older);
+    const digest = canonicalDigest(claim);
+
+    const atOldState = revocationOf(id, digest, eventDigest(log[0]!), [older]);
+    expect(await verifyClaim(claim, viewOf(id, log, [atOldState]), { now: NOW })).toEqual({
+      valid: false,
+      reason: "claim_revoked"
+    });
+
+    // ...and the tip state still works too, so the test above is not passing because anchoring
+    // broke the ordinary case.
+    const atTip = revocationOf(id, digest, keyLogAnchor(log), [newer]);
+    expect(await verifyClaim(claim, viewOf(id, log, [atTip]), { now: NOW })).toEqual({
+      valid: false,
+      reason: "claim_revoked"
+    });
+  });
+
+  it("ignores a revocation whose set satisfies the CURRENT state but names an earlier one", async () => {
+    // The heart of 016: exactly one state is tried, and it is the one the record names. This
+    // candidate is signed by the issuer's current key — under 015 S5's existential it revoked,
+    // because SOME state accepted it — and it names the inception state, which does not.
+    const older = generateKeyPair(seed(160));
+    const newer = generateKeyPair(seed(161));
+    const { id, log } = logOf(
+      [
+        { keys: [older], threshold: "1" },
+        { keys: [newer], threshold: "1" }
+      ],
+      160
+    );
+    const claim = claimOf(id, older);
+    const digest = canonicalDigest(claim);
+
+    const misanchored = revocationOf(id, digest, eventDigest(log[0]!), [newer]);
+    expect(await verifyClaim(claim, viewOf(id, log, [misanchored]), { now: NOW })).toEqual({
+      valid: true
+    });
+  });
+
+  it("closes the keyless edit of a 3-of-3 revocation against a 2-of-2 successor state", async () => {
+    // The route 003's interim rule protected, on a log that rule made illegal and 016 makes legal
+    // again: state A is 3-of-3 over {k1,k2,k3} and state B is 2-of-2 over {k1,k2} — a subset
+    // sharing a full quorum of A.
+    //
+    // A genuine 3-of-3 revocation anchored at A is then edited by someone holding NO KEY: drop
+    // the third member, and the remaining two are exactly what B requires, in B's key order. That
+    // edit produced a different, still-valid revocation before 016. Now the record names A, the
+    // edited set is two members against a threshold of three, and 015 S1 refuses it on its length
+    // before any curve work — and rewriting the anchor to name B instead cannot help, because the
+    // anchor is inside the bytes all three members signed.
+    //
+    // The log opens 1-of-1 only so that the revoked record can be a scalar-signed CLAIM: a claim
+    // carries one signature and could not satisfy a multi-key threshold state. Events 1 and 2 are
+    // the pair under test.
+    const opening = generateKeyPair(seed(169));
+    const k1 = generateKeyPair(seed(170));
+    const k2 = generateKeyPair(seed(171));
+    const k3 = generateKeyPair(seed(172));
+    const { id, log } = logOf(
+      [
+        { keys: [opening], threshold: "1" },
+        { keys: [k1, k2, k3], threshold: "3" },
+        { keys: [k1, k2], threshold: "2" }
+      ],
+      170
+    );
+    const claim = claimOf(id, opening);
+    const digest = canonicalDigest(claim);
+
+    const genuine = revocationOf(id, digest, eventDigest(log[1]!), [k1, k2, k3]);
+    expect(await verifyClaim(claim, viewOf(id, log, [genuine]), { now: NOW })).toEqual({
+      valid: false,
+      reason: "claim_revoked"
+    });
+
+    // Edit 1: delete the third member. Same anchor, same bytes under it — a keyless edit.
+    const truncated = { ...genuine, signature: genuine.signature.slice(0, 2) } as Revocation;
+    expect(await verifyClaim(claim, viewOf(id, log, [truncated]), { now: NOW })).toEqual({
+      valid: true
+    });
+
+    // Edit 2: delete the member AND re-point the anchor at the 2-of-2 successor, which is the
+    // move the whole route depended on. The two surviving signatures were made over bytes
+    // carrying the OTHER anchor, so neither verifies here.
+    const remapped = {
+      ...genuine,
+      anchor: eventDigest(log[2]!),
+      signature: genuine.signature.slice(0, 2)
+    } as Revocation;
+    expect(await verifyClaim(claim, viewOf(id, log, [remapped]), { now: NOW })).toEqual({
+      valid: true
+    });
+  });
+
+  it("replays a 2-of-3 rotation that retains two keys, and verifies records at either state", async () => {
+    // The rotation flexibility 016 buys back, stated as the shape 003's interim rule cost:
+    // `|keys(A) n keys(B)| = 2` against `min(t_A, t_B) = 2`, so this log was rejected outright
+    // and an M-of-N committee could not replace one member at a time.
+    const opening = generateKeyPair(seed(179));
+    const k1 = generateKeyPair(seed(180));
+    const k2 = generateKeyPair(seed(181));
+    const k3 = generateKeyPair(seed(182));
+    const k4 = generateKeyPair(seed(183));
+    const { id, log } = logOf(
+      [
+        { keys: [opening], threshold: "1" },
+        { keys: [k1, k2, k3], threshold: "2" },
+        { keys: [k1, k2, k4], threshold: "2" }
+      ],
+      180
+    );
+    const claim = claimOf(id, opening);
+    const digest = canonicalDigest(claim);
+
+    // The log replays — a scalar-signed claim against it verifies — and BOTH anchored records
+    // verify, each at its own state, even though the two states accept the same signature set.
+    expect(await verifyClaim(claim, viewOf(id, log), { now: NOW })).toEqual({ valid: true });
+    for (const event of [log[1]!, log[2]!]) {
+      const revocation = revocationOf(id, digest, eventDigest(event), [k1, k2]);
+      expect(await verifyClaim(claim, viewOf(id, log, [revocation]), { now: NOW })).toEqual({
+        valid: false,
+        reason: "claim_revoked"
+      });
+    }
   });
 });

@@ -50,10 +50,11 @@
       "audienceId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
       "abilities": ["msg/send"],
       "caveats": {},
-      "proof": "zQmYRVuVkx5JBAbQkpRomZYAKwFgeJseY9hUVDpWL12sEge",
+      "anchor": "zQmXgmLcjJETu8t5YfMZtweCrRM5SHV5fry6a18o4BkHG3Z",
+      "proof": "zQmX6g98mExKB8TmFxTF8NbWC4HDwapb7iDWYRtSjmNuRDs",
       "issuedAt": "2026-07-01T00:00:00.000Z",
       "signature": [
-        "z5vPcwC2nk3UMQ6XBjmyfRyS6JKRkcgbMUBxxZ9WBLoPPK2K2anxB9GFhbr2Zd3vnCCwFkcaUYmArLiVEo5c8JnSM"
+        "z3gjNk7bQzuKXKa8UuH9HoXE1TW1zXNq5RgQQtFgsppQZuDcBEAzLirGn2ZuvVXtWsTuFJJsF8vLFqw3TTi3uGvVZ"
       ]
     },
     {
@@ -62,10 +63,11 @@
       "audienceId": "pk_zQmX7NrZGwVYHLfFRD5aXj2UMWMHpQkSGAsqH9LmuFRnh2Z",
       "abilities": ["msg"],
       "caveats": {},
+      "anchor": "zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4",
       "proof": null,
       "issuedAt": "2026-07-01T00:00:00.000Z",
       "signature": [
-        "z23W8UaiSrazQWSEbcUpovqzRFYYnBaAtrsPdGNvdni8fC21rdYgFmfENBowuvJwoB854xfmyYxtAogSuuzqdRnLk"
+        "zwS7gtjEifgpwtsyBVhZDxNuYFnyX1NY9WuS6TBDLFDKs4SqXUtXhiJCUyNrmUmiFxnBo5sCEP1xskNLHYoQsDGp"
       ]
     }
   ],
@@ -73,8 +75,8 @@
     "userId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
     "appId": "pk_zQmX7NrZGwVYHLfFRD5aXj2UMWMHpQkSGAsqH9LmuFRnh2Z",
     "serviceId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
-    "rootGrantDigest": "zQmYRVuVkx5JBAbQkpRomZYAKwFgeJseY9hUVDpWL12sEge",
-    "leafGrantDigest": "zQmNqLc7UcDxT9di3EBFtx1azX8FfFTuHNkRRGR8VnE6Zio",
+    "rootGrantDigest": "zQmX6g98mExKB8TmFxTF8NbWC4HDwapb7iDWYRtSjmNuRDs",
+    "leafGrantDigest": "zQmbkAZNTkqnrvtoKLVQoX7vTpoop4VE2mm1tSkxaMPmkrG",
     "valid": true,
     "abilities": ["msg/send"],
     "requireAudReason": "grant_audience_required"

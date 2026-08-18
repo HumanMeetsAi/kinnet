@@ -1,6 +1,6 @@
 {
   "name": "@kinnet/trust",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Trust resolver for Kinnet: represents-chain, claim, relationship, and UCAN-aligned grant-chain verification (specs 008/009), offline-capable from committed bytes.",
   "license": "Apache-2.0",
   "type": "module",

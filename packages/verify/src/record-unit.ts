@@ -14,16 +14,23 @@
  * hence {@link RecordUnitVerifyOptions.checkRevocation} is a REQUIRED option with no
  * default. A default here is exactly how one side silently gets the other side's answer.
  *
- * Failures that are **resolution** failures — an unresolvable key log at either end — are a
+ * Failures that are **resolution** failures — an unresolvable key log at either end, or (spec
+ * 016) an anchor naming a key event this verifier's copy of the log does not yet carry — are a
  * WAIT, never a rejection: key logs are monotone, so an honest verifier's verdict converges,
  * and rejecting on a cache miss would split the group. They are returned as invalid verdicts
  * carrying a distinguished reason ({@link isUnitWaitReason}), and never thrown.
+ *
+ * Spec 016 also decides the MODE before anything is verified: the record's `anchor` is present
+ * if and only if the unit's `chain` is absent. A unit carrying both, or neither, is
+ * `mode_conflict` — see {@link verifyUnit}.
  */
 import {
+  checkAnchoredSignatureSet,
   KeyLogParticipantMismatch,
-  replayKeyLogFor,
+  replayKeyLogStatesFor,
   VerificationBudgetExceeded,
-  verifyThresholdRecord
+  verifyThresholdRecord,
+  type AnchoredKeyState
 } from "@kinnet/crypto";
 import {
   ABILITY_CONVERSATION_SELF_REMOVE,
@@ -144,12 +151,23 @@ export const UNIT_COST_REASONS: readonly UnitCostReason[] = [
 export type UnitWaitReason =
   | "actor_key_log_unresolved"
   | "creator_key_log_unresolved"
+  | "actor_key_log_anchor_unknown"
+  | "creator_key_log_anchor_unknown"
   | "chain_invalid:grant_issuer_key_log_unresolved"
   | UnitCostReason;
 
 export const UNIT_WAIT_REASONS: readonly UnitWaitReason[] = [
   "actor_key_log_unresolved",
   "creator_key_log_unresolved",
+  // Spec 016, and a WAIT for exactly the reason an unresolvable log is one. An anchor names a
+  // key event by digest; a verifier that cannot find it is either looking at a forgery or at a
+  // log it has not caught up with, and it cannot tell which from the bytes in hand. Key logs are
+  // monotone, so waiting converges on the honest answer while rejecting would discard a record
+  // the rest of the group applied. 016 makes this the member-side disposition explicitly, and
+  // the OTHER disposition — a rejection — is what request-time paths take (`@kinnet/trust`'s
+  // `grant_issuer_anchor_unknown` on a chain link).
+  "actor_key_log_anchor_unknown",
+  "creator_key_log_anchor_unknown",
   "chain_invalid:grant_issuer_key_log_unresolved",
   // The cost reasons are SPREAD IN rather than repeated, so the subset relationship is
   // structural: a reason cannot be added to one list and forgotten in the other. Rejecting on
@@ -203,13 +221,21 @@ export function isUnitCostReason(reason: string): boolean {
  */
 export type UnitReason =
   | "record_malformed"
+  /**
+   * Spec 016: the record's `anchor` and the unit's `chain` disagree — both present, or neither.
+   * A unit declares its mode structurally, so a disagreement is not a mode the verifier can pick
+   * between: both would leave two candidate authorities for one record and neither leaves any.
+   *
+   * A REJECTION, never a wait: nothing about it converges as a view catches up.
+   */
+  | "mode_conflict"
   | "signature_invalid"
   | "chain_invalid:abilities_insufficient"
   | "chain_invalid:audience_not_key"
   | "chain_invalid:leaf_key_signature_invalid"
   | "chain_invalid:subject_not_actor"
   | "chain_invalid:subject_not_creator"
-  | `${"actor" | "creator"}_key_log_${"unresolved" | "too_expensive" | "participant_mismatch"}`
+  | `${"actor" | "creator"}_key_log_${"unresolved" | "too_expensive" | "participant_mismatch" | "anchor_unknown"}`
   | `chain_invalid:${ResolverReason}`;
 
 type Assert<T extends true> = T;
@@ -253,16 +279,19 @@ function invalid<R extends UnitReason>(reason: R): { valid: false; reason: R } {
 
 type SignedRecord = Record<string, unknown> & { signature: string[] };
 
-type KeyState = { keys: string[]; threshold: string };
-
 /**
- * Every key state a participant's log has ever committed. Records verify against **any** of
- * them (spec 012, inherited by 014's evidence record): a rotation must not orphan records the
- * participant already signed. Returns null — never throws — when the log is absent or does not
- * replay, which the callers turn into the WAIT reason for that record kind.
+ * Every key state a participant's log commits, each tagged with the digest of the event that
+ * established it — the table spec 016's `anchor` resolves against. Never throws: an absent or
+ * unreplayable log is a verdict the callers turn into the WAIT reason for that record kind.
+ *
+ * The states are NOT searched. 016 replaced "a record verifies against any state its issuer has
+ * held" with a lookup by digest, so what this produces is a lookup table and its order carries
+ * no meaning — which is why the newest-first de-duplication that used to live here is gone, and
+ * must not come back: two events may now legally commit the same `(keys, threshold)` (016
+ * retires 003's "no two states may share a quorum"), and they are different anchors.
  */
 type ReplayedStates =
-  | { kind: "ok"; states: KeyState[] }
+  | { kind: "ok"; states: AnchoredKeyState[] }
   | { kind: "unresolved" }
   | { kind: "too_expensive" }
   /** The view served a valid log belonging to a different participant. Never a WAIT. */
@@ -282,6 +311,7 @@ async function replayedStates(
   if (!log || log.length === 0) {
     return { kind: "unresolved" };
   }
+  let replayed;
   try {
     // Spends from the REQUEST's allowance, not a fresh one: this is one of several
     // verifications an inbound delivery drives, and a per-call ceiling bounds none of them.
@@ -291,7 +321,10 @@ async function replayedStates(
     // bytes; unbound, a host that answers the creator's or actor's id with an attacker's valid
     // log makes an owner-signed conversation record verify under the attacker's keys, which is
     // impersonation of the named participant with none of their keys.
-    replayKeyLogFor(id, log, {
+    // Binding matters MORE under spec 016: an anchor selects a state WITHIN a log and says
+    // nothing about whose log it is, so an unbound replay would let a substituted log supply the
+    // very state the record's anchor names.
+    replayed = replayKeyLogStatesFor(id, log, {
       ...verificationWorkOptions(operation)
     });
   } catch (error) {
@@ -305,52 +338,47 @@ async function replayedStates(
       ? { kind: "mismatched" }
       : { kind: "unresolved" };
   }
-  // Newest-first and de-duplicated, exactly as `@kinnet/trust`'s twin does it and for the same
-  // reasons: a record verifies against ANY state its issuer has held, so neither ordering nor
-  // a repeated key set can change the verdict, and nearly every record is signed by the state
-  // current when it was written.
-  const seen = new Set<string>();
-  const states: KeyState[] = [];
-  for (let index = log.length - 1; index >= 0; index -= 1) {
-    const event = log[index]!;
-    const fingerprint = `${event.threshold}:${event.keys.join(",")}`;
-    if (seen.has(fingerprint)) {
-      continue;
-    }
-    seen.add(fingerprint);
-    states.push({ keys: event.keys, threshold: event.threshold });
-  }
-  return { kind: "ok", states };
+  // Exactly what the replay produced: one entry per event, in sequence order, each carrying the
+  // digest that selects it. The digests are the ones the replay already computed for `prior`
+  // chaining, so keeping them costs no hashing and no curve work.
+  return { kind: "ok", states: replayed.states };
 }
 
-/** Owner mode (spec 012 mode 1): the threshold signature verifies against any replay-valid state. */
 /**
- * Metered against the view's ceiling, for the same reason `@kinnet/trust`'s namesake is: a
- * participant's log yields one key state per event, so under spec 015's greedy walk this is
- * `states x keys` work driven by data an untrusted view chose. Signature count is not a cost
- * dimension: `m != t` is rejected before curve work. A budget failure is re-thrown rather than
- * swallowed as `false` — it means "not judged", not "not signed".
+ * Owner mode (spec 012 mode 1, amended by 016): the record's signature set is decided against
+ * the ONE key state its `anchor` names, and no other.
+ *
+ * Three outcomes, because 016 requires an unknown anchor to be distinguishable from a failing
+ * set: they are different findings and, on this verifier, they get different dispositions — a
+ * failing set is a rejection, an unknown anchor is a WAIT.
+ *
+ * Metered against the view's ceiling. The cost is one run of spec 015's greedy walk against one
+ * state — at most `MAX_KEY_EVENT_KEYS` verifications, whatever the log's length and whatever the
+ * record's member count (`m != t` is rejected before curve work) — where the any-state search it
+ * replaces was `states x keys` work driven by data an untrusted view chose. An unknown anchor
+ * costs zero: there is no state to walk. A budget failure is re-thrown rather than swallowed as
+ * a verdict — it means "not judged", not "not signed".
  */
-function signedByAnyState(
-  record: SignedRecord,
-  states: KeyState[],
+function signedAtAnchor(
+  record: SignedRecord & { anchor: string },
+  states: readonly AnchoredKeyState[],
   operation: VerificationOperation
-): boolean {
-  return states.some((state) => {
-    try {
-      // ONE allowance across every state, not a fresh one per state. A generic threshold call
-      // owns a compatibility fallback much larger than one protocol key state, so omitting a
-      // zero remaining value would refill work on every state and make this shared meter cosmetic.
-      return verifyThresholdRecord(record, state.keys, state.threshold, {
-        ...verificationWorkOptions(operation)
-      });
-    } catch (error) {
-      if (error instanceof VerificationBudgetExceeded) {
-        throw error;
-      }
-      return false;
+): "ok" | "anchor_unknown" | "signature_invalid" {
+  let result;
+  try {
+    result = checkAnchoredSignatureSet(record, states, {
+      ...verificationWorkOptions(operation)
+    });
+  } catch (error) {
+    if (error instanceof VerificationBudgetExceeded) {
+      throw error;
     }
-  });
+    return "signature_invalid";
+  }
+  if (result.ok) {
+    return "ok";
+  }
+  return result.code === "anchor_unknown" ? "anchor_unknown" : "signature_invalid";
 }
 
 /**
@@ -400,6 +428,11 @@ type UnitProfile<R> = {
   /** Reported when the log was refused for cost rather than being missing or invalid. */
   keyLogTooExpensiveReason: UnitReason;
   /**
+   * Reported when the record's spec-016 `anchor` names no event of the principal's key log. A
+   * WAIT, not a rejection: see {@link UNIT_WAIT_REASONS}.
+   */
+  keyLogAnchorUnknownReason: UnitWaitReason;
+  /**
    * Reported when the view served a replay-valid log belonging to a DIFFERENT participant.
    * Its own reason, and absent from {@link UNIT_WAIT_REASONS}: a substituted log is a
    * rejection, and an operator seeing it needs to know discovery answered with the wrong log
@@ -422,13 +455,34 @@ async function verifyUnit<R extends { signature: string[] }>(
   // Both record schemas are strict and their signature field is `string[]`, so the record IS
   // a signature-set record; the cast only tells the compiler what the schema already pins.
   const signed = record as unknown as SignedRecord;
+  const anchor = typeof signed["anchor"] === "string" ? signed["anchor"] : undefined;
+
+  // Spec 016's mode rule, decided BEFORE anything is verified: `record.anchor` is present if and
+  // only if the unit's `chain` is absent.
+  //
+  // The payload schemas enforce this at parse, so a unit that arrived over the wire cannot reach
+  // here in conflict; this call takes an already-parsed record and a separately-supplied chain,
+  // which is a second door into the same rule. Enforced here too, defensively and with its own
+  // reason, because the alternative is picking one of the two declarations and letting the other
+  // stand unexamined — and both readings are wrong: a unit with both names two authorities for
+  // one record, and a unit with neither names none.
+  if (anchor !== undefined && chain !== null) {
+    return invalid("mode_conflict");
+  }
 
   // Owner mode. Note the branch is on `chain === null`, not on "owner verification failed":
   // spec 014 pins that a presented chain is never decoration, so a unit carrying a chain is
   // judged as a delegated unit and nothing else. Silently ignoring a malformed chain because
   // the record happened to owner-verify makes the verdict depend on evaluation order and
-  // hands an attacker a free field to grind.
+  // hands an attacker a free field to grind. Under 016 the record declares the mode itself, so
+  // this branch is now agreement between two statements rather than a choice between them.
   if (chain === null) {
+    // The other half of the mode rule, and the reason it is stated here rather than beside its
+    // twin: narrowing `anchor` inside this branch is what tells the compiler an owner-mode
+    // record has one, and the two checks are one rule either way.
+    if (anchor === undefined) {
+      return invalid("mode_conflict");
+    }
     const resolved = await replayedStates(view, principal, operation);
     if (resolved.kind !== "ok") {
       if (resolved.kind === "too_expensive") {
@@ -440,17 +494,24 @@ async function verifyUnit<R extends { signature: string[] }>(
           : profile.keyLogUnresolvedReason
       );
     }
-    const states = resolved.states;
     let ownerSigned;
     try {
-      ownerSigned = signedByAnyState(signed, states, operation);
+      ownerSigned = signedAtAnchor({ ...signed, anchor }, resolved.states, operation);
     } catch (error) {
       if (error instanceof VerificationBudgetExceeded) {
         return invalid(profile.keyLogTooExpensiveReason);
       }
       throw error;
     }
-    if (!ownerSigned) {
+    // An anchor this view cannot resolve is a WAIT rather than a rejection, and it is reported
+    // separately from a failing set for exactly that reason (016, _Log freshness_). There is no
+    // refetch to attempt first: `TrustView` exposes `getKeyLog` and no invalidation hook, so a
+    // view that caches — `createDiscoveryView` does, on a TTL — owns that decision behind its
+    // own method, and this verifier's answer is "ask me again", which is what a WAIT is.
+    if (ownerSigned === "anchor_unknown") {
+      return invalid(profile.keyLogAnchorUnknownReason);
+    }
+    if (ownerSigned !== "ok") {
       return invalid("signature_invalid");
     }
     return { valid: true };
@@ -465,6 +526,11 @@ async function verifyUnit<R extends { signature: string[] }>(
   if (Number.isNaN(at.getTime())) {
     return invalid("record_malformed");
   }
+  // The mode rule above leaves exactly this: a chain and no anchor. Participant-issued links
+  // inside it carry their own anchors and are decided at them by `@kinnet/trust`'s chain
+  // verifier — this module never verifies a chain link itself — while the record's own single
+  // signature is checked against the chain's leaf KEY below, which has one constructive state
+  // and takes no anchor (016; 011).
   const verdict = await verifyGrantChain(chain, view, {
     purpose: "record",
     at,
@@ -534,6 +600,7 @@ const conversationUpdateProfile: UnitProfile<ConversationUpdate> = {
     isSelfDeparture(record) ? ABILITY_CONVERSATION_SELF_REMOVE : ABILITY_CONVERSATION_UPDATE,
   keyLogUnresolvedReason: "actor_key_log_unresolved",
   keyLogTooExpensiveReason: "actor_key_log_too_expensive",
+  keyLogAnchorUnknownReason: "actor_key_log_anchor_unknown",
   keyLogMismatchReason: "actor_key_log_participant_mismatch",
   subjectMismatchReason: "chain_invalid:subject_not_actor"
 };
@@ -544,6 +611,7 @@ const conversationProfile: UnitProfile<Conversation> = {
   requiredAbility: () => ABILITY_CONVERSATION,
   keyLogUnresolvedReason: "creator_key_log_unresolved",
   keyLogTooExpensiveReason: "creator_key_log_too_expensive",
+  keyLogAnchorUnknownReason: "creator_key_log_anchor_unknown",
   keyLogMismatchReason: "creator_key_log_participant_mismatch",
   subjectMismatchReason: "chain_invalid:subject_not_creator"
 };
@@ -552,12 +620,16 @@ const conversationProfile: UnitProfile<Conversation> = {
  * Verifies a `pn/conversation-update` unit — spec 014's evidence record plus, when it is
  * delegated-signed, its authorizing chain.
  *
- * `chain === null` selects owner mode; a chain, however broken, selects delegated mode and
- * nothing else. Reason strings: `record_malformed`, `actor_key_log_unresolved` (WAIT),
- * `actor_key_log_participant_mismatch` (the view served another participant's log — a
- * rejection, never a WAIT), `signature_invalid`, `chain_invalid:<detail>` where `<detail>` is either a
- * `@kinnet/trust` `grant_*` reason or one of `subject_not_actor`, `audience_not_key`,
- * `leaf_key_signature_invalid`, `abilities_insufficient`.
+ * The mode is the record's own declaration (spec 016): `record.anchor` present and no chain is
+ * owner mode, a chain and no anchor is delegated mode, and either other combination is
+ * `mode_conflict`. A chain, however broken, is never decoration.
+ *
+ * Reason strings: `record_malformed`, `mode_conflict`, `actor_key_log_unresolved` (WAIT),
+ * `actor_key_log_anchor_unknown` (WAIT — the anchor names an event this view's copy of the log
+ * does not carry), `actor_key_log_participant_mismatch` (the view served another participant's
+ * log — a rejection, never a WAIT), `signature_invalid`, `chain_invalid:<detail>` where
+ * `<detail>` is either a `@kinnet/trust` `grant_*` reason or one of `subject_not_actor`,
+ * `audience_not_key`, `leaf_key_signature_invalid`, `abilities_insufficient`.
  */
 export async function verifyConversationUpdateUnit(
   record: ConversationUpdate,
@@ -582,8 +654,8 @@ export async function verifyConversationUpdateUnit(
  * conversation record from a later session, or another member re-delivering it as
  * `addParticipant`'s first step, is exactly the case this closes.
  *
- * Reason strings mirror the update variant, with `creator_key_log_unresolved` (WAIT) and
- * `chain_invalid:subject_not_creator`.
+ * Reason strings mirror the update variant, with `creator_key_log_unresolved` and
+ * `creator_key_log_anchor_unknown` (both WAIT) and `chain_invalid:subject_not_creator`.
  */
 export async function verifyConversationRecordUnit(
   record: Conversation,

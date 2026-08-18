@@ -14,9 +14,9 @@
     {
       "name": "accepted — the one-link chain consent mints",
       "why": "The profile's token, end to end: the participant self-issues one grant at the moment of consent, audience the resource participant, abilities exactly the ticked scopes, aud-bound to the resource, expiring. This is the token an RP receives from `/token` and presents as a bearer credential, and it is the vector that pins the wire form the other vectors deviate from.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXX1d",
       "accept": true,
-      "payloadJson": "[{\"subjectId\":\"pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t\",\"issuerId\":\"pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\",\"photos/write\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":null,\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zMqjR8SPB6T5EXhRgzAGkyi7ZceU88Fext66FTBquFuk9NSYSHhP3oDaBtXinuW2Em9sR2BEC4yswK2po1AjtJR1\"]}]",
+      "payloadJson": "[{\"subjectId\":\"pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t\",\"issuerId\":\"pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\",\"photos/write\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":null,\"anchor\":\"zQmTg4BWmouSSLWTYf6iJeo9e7ytcnHLovChPB2Q2MJXzcS\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z4MijqCAQGTFGqaRy124sfn333zmHYvUJgwBKzhMdMqkV4dhWZrQH5PGs3jNrGr3CYUazBsrST2Am3DEjQuqpLoU9\"]}]",
       "chain": [
         {
           "subjectId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
@@ -27,10 +27,11 @@
             "aud": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"
           },
           "proof": null,
+          "anchor": "zQmTg4BWmouSSLWTYf6iJeo9e7ytcnHLovChPB2Q2MJXzcS",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "zMqjR8SPB6T5EXhRgzAGkyi7ZceU88Fext66FTBquFuk9NSYSHhP3oDaBtXinuW2Em9sR2BEC4yswK2po1AjtJR1"
+            "z4MijqCAQGTFGqaRy124sfn333zmHYvUJgwBKzhMdMqkV4dhWZrQH5PGs3jNrGr3CYUazBsrST2Am3DEjQuqpLoU9"
           ]
         }
       ],
@@ -42,9 +43,9 @@
     {
       "name": "accepted — a two-link org-rooted chain, leaf first",
       "why": "Order is part of the encoding: the array is LEAF FIRST, so element 0 is the link the resource is asked to honour and each element's `proof` names the NEXT one by its spec-003 digest. A decoder that sorted, reversed or deduplicated the array would still produce two valid Grants, so a one-link fixture could not catch it; here the recorded `proof` values only line up in one order.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbVdQeE5SSnltamt4VGc1MTlXVHpWbzY2Y1NFUVZSdnF3bWJMZUpKUDhuYnU1IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOiJ6UW1lQzQyVUJCWVBNcXhjbmFoMWVkQzh4NXhac3J3ZDJRR2hoQVhnTURhZ0VuSCIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpDOXhiOGJVWG9STm1CeVNRcEdWcWk0YURZVzd6RzVaYnp1UGRNcVBFazE4Sjh3b0dHNlczZHNXTHVKRmJMdENMM2Q0SEVRaThBdEdiQnNhWURHdVM1RzQiXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJhdWRpZW5jZUlkIjoicGtfelFtV1B4TlJKeW1qa3hUZzUxOVdUelZvNjZjU0VRVlJ2cXdtYkxlSkpQOG5idTUiLCJhYmlsaXRpZXMiOlsicGhvdG9zIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6bnVsbCwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejJtQUZVRjJtNmM2V3BxMkdSYlI1VThOOEpqNlBXZzZOaEJYUkNDc1RyRzhpS0czbU54TXlYWENUdEVLOWVXemo4aHdGald0S21vaGNIa3BTam1UMk1ncjUiXX1d",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbVdQeE5SSnltamt4VGc1MTlXVHpWbzY2Y1NFUVZSdnF3bWJMZUpKUDhuYnU1IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOiJ6UW1XdmZCdDNDUDN6dHJ4Y2lWODRiWExyclNZekxCcHNnV1FUUTJqSzVERVF5UiIsImFuY2hvciI6InpRbVhaanNrdFRvYk5GNW44VXJnRzYxS015VFZOOHpaOXdZdlVMWVgxdURHWm40IiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejNUVWVobVRwM2pNYlN1bm8zeGd6VjMyVEt3eFRocHMzUnJ4TVlHM3NhQlBwa015VkdobjNvaFJDZ0ZVUlVnWmVIMldlbmhHeVVzZDVidU1iTkpvaEZhS1QiXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJhdWRpZW5jZUlkIjoicGtfelFtV1B4TlJKeW1qa3hUZzUxOVdUelZvNjZjU0VRVlJ2cXdtYkxlSkpQOG5idTUiLCJhYmlsaXRpZXMiOlsicGhvdG9zIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6bnVsbCwiYW5jaG9yIjoielFtVUxyWFV4RHBiVFhWV0JKc05wWWdpcGtiNVVUSFE1MjlYYXFRY2RHUnpIZkQiLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6em41QWJOS2duOEM4UzYzU21oZzNuMmJnMzJIckUyUHJFQlBmUEJmaU1GOEhrRnE2bnlLWEpCTkhKdEFUOENLRnhoTFgzWGFEcThmRDFaUnZScTV1QVhLIl19XQ",
       "accept": true,
-      "payloadJson": "[{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":\"zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zC9xb8bUXoRNmBySQpGVqi4aDYW7zG5ZbzuPdMqPEk18J8woGG6W3dsWLuJFbLtCL3d4HEQi8AtGbBsaYDGuS5G4\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"audienceId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":null,\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5\"]}]",
+      "payloadJson": "[{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":\"zQmWvfBt3CP3ztrxciV84bXLrrSYzLBpsgWQTQ2jK5DEQyR\",\"anchor\":\"zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z3TUehmTp3jMbSuno3xgzV32TKwxThps3RrxMYG3saBPpkMyVGhn3ohRCgFURUgZeH2WenhGyUsd5buMbNJohFaKT\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"audienceId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":null,\"anchor\":\"zQmULrXUxDpbTXVWBJsNpYgipkb5UTHQ529XaqQcdGRzHfD\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zzn5AbNKgn8C8S63Smhg3n2bg32HrE2PrEBPfPBfiMF8HkFq6nyKXJBNHJtAT8CKFxhLX3XaDq8fD1ZRvRq5uAXK\"]}]",
       "chain": [
         {
           "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
@@ -54,11 +55,12 @@
           "caveats": {
             "aud": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"
           },
-          "proof": "zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH",
+          "proof": "zQmWvfBt3CP3ztrxciV84bXLrrSYzLBpsgWQTQ2jK5DEQyR",
+          "anchor": "zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "zC9xb8bUXoRNmBySQpGVqi4aDYW7zG5ZbzuPdMqPEk18J8woGG6W3dsWLuJFbLtCL3d4HEQi8AtGbBsaYDGuS5G4"
+            "z3TUehmTp3jMbSuno3xgzV32TKwxThps3RrxMYG3saBPpkMyVGhn3ohRCgFURUgZeH2WenhGyUsd5buMbNJohFaKT"
           ]
         },
         {
@@ -70,10 +72,11 @@
             "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
           },
           "proof": null,
+          "anchor": "zQmULrXUxDpbTXVWBJsNpYgipkb5UTHQ529XaqQcdGRzHfD",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5"
+            "zzn5AbNKgn8C8S63Smhg3n2bg32HrE2PrEBPfPBfiMF8HkFq6nyKXJBNHJtAT8CKFxhLX3XaDq8fD1ZRvRq5uAXK"
           ]
         }
       ],
@@ -88,9 +91,9 @@
     {
       "name": "accepted — four links, exactly at the spec 011 cap",
       "why": "MAX_GRANT_CHAIN_LINKS is 4 and the cap is INCLUSIVE — a boundary a verdict alone cannot state, which is why this sits beside the five-link refusal below. Every link is genuinely signed by its issuer and names its parent, so a decoder cannot pass this one by truncating the chain to something it finds more comfortable.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbWFON3ByVHFHNzcyMm5iTEc1Mzlka1VDalZUTHE2a2tLU0tDUUo1UzNqWXhRIiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOiJ6UW1kU1NEVnVkeEtTbm5xbzczYVd3SE1MOXB4V3U2ZnhoNG9oTXRrTlNTZTZCMSIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInozcjJqMTN1eGVBUHBIQVRFV0t4dmZHY1FxZXNISnFLcUF5eUc1b1hiUDdYaThxa0tEOUNGa3FYa2Z0YTFyRnYzajI5aHJndFhoQTFodFNpUUxScURhcU5hIl19LHsic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbVlmTUdpR3NyNUpOdDRheEF5bm9kNUhUbUg1cExmTDZkMVhvN1Z0cVFuSEZGIiwiYXVkaWVuY2VJZCI6InBrX3pRbWFON3ByVHFHNzcyMm5iTEc1Mzlka1VDalZUTHE2a2tLU0tDUUo1UzNqWXhRIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6InpRbWFUN0RmQUVvZWh5S2FFcEZhemlCTDF0ZEhWdWQzVTNkeTlLSEZyVlNSb0pBIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejNUeTE1NHlOaDNLakszYUx1UjNrdmtndndUUERrOWtLQXZiS1FZODdia1FhSmNVV1AyV2h4dDFpQUFTZXdDeXRxTHdIR2dHR0FtcXhhYW1NV2twVm1QUzkiXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtV1B4TlJKeW1qa3hUZzUxOVdUelZvNjZjU0VRVlJ2cXdtYkxlSkpQOG5idTUiLCJhdWRpZW5jZUlkIjoicGtfelFtWWZNR2lHc3I1Sk50NGF4QXlub2Q1SFRtSDVwTGZMNmQxWG83VnRxUW5IRkYiLCJhYmlsaXRpZXMiOlsicGhvdG9zIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6InpRbWVDNDJVQkJZUE1xeGNuYWgxZWRDOHg1eFpzcndkMlFHaGhBWGdNRGFnRW5IIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsielBZMnFNeEdvYXJvYm1rWWhDWmd4QnAxbkNZb3hXUW5tWXJ4ZXNoSnM0dTNQRTJ1RmVHV3NwRmoyTkdhYTJCNFdQdXhkNGR2RktMcHFaeHVpWWNodjZlSCJdfSx7InN1YmplY3RJZCI6InBrX3pRbVdjY2MyWnpETVJHdXpzS01aRVJ4ZlRtZ3hmVE1GQk1LQXpLRHZNd3FHRFc3IiwiaXNzdWVySWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImF1ZGllbmNlSWQiOiJwa196UW1XUHhOUkp5bWpreFRnNTE5V1R6Vm82NmNTRVFWUnZxd21iTGVKSlA4bmJ1NSIsImFiaWxpdGllcyI6WyJwaG90b3MiXSwiY2F2ZWF0cyI6eyJhdWQiOlsicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiXX0sInByb29mIjpudWxsLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6Mm1BRlVGMm02YzZXcHEyR1JiUjVVOE44Smo2UFdnNk5oQlhSQ0NzVHJHOGlLRzNtTnhNeVhYQ1R0RUs5ZVd6ajhod0ZqV3RLbW9oY0hrcFNqbVQyTWdyNSJdfV0",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtV2NjYzJaekRNUkd1enNLTVpFUnhmVG1neGZUTUZCTUtBektEdk13cUdEVzciLCJpc3N1ZXJJZCI6InBrX3pRbWFON3ByVHFHNzcyMm5iTEc1Mzlka1VDalZUTHE2a2tLU0tDUUo1UzNqWXhRIiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOiJ6UW1XS01UWTg4eXhRNWZEOFMyOGQ1Qmo0cktTYThUdzFhZldLNmk2WGNmV1hOMSIsImFuY2hvciI6InpRbU56eVFBTEg3ZGZUZnZob3RiZzFubzlldVdXQkxiWTJFSEdlS2hVaXZ3dnlhIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejNKd0pxWkFlQlJkc2Z1Wks0NXF1NlFCNW5IcUN5TTJQWldrbVRGQ251RmhFd3NNRlZMdTc5eUxyU3ZYTUhnVjh1ZWVIS0t6TUdySjVUdXBqaFJheFBUOUciXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtWWZNR2lHc3I1Sk50NGF4QXlub2Q1SFRtSDVwTGZMNmQxWG83VnRxUW5IRkYiLCJhdWRpZW5jZUlkIjoicGtfelFtYU43cHJUcUc3NzIybmJMRzUzOWRrVUNqVlRMcTZra0tTS0NRSjVTM2pZeFEiLCJhYmlsaXRpZXMiOlsicGhvdG9zL3JlYWQiXSwiY2F2ZWF0cyI6eyJhdWQiOlsicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiXX0sInByb29mIjoielFtZjl5YVFIcTRBaG9KdldRMWc0NXdjUlJnUGFGNUNqZE1OUloyQ1NMUVpYNzgiLCJhbmNob3IiOiJ6UW1RdmNkR1NhcXVzclB0dno2RTF4R0h1RFFpNEF5RzFmU3Q1QmlqenhTSGk0QyIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpibm9vQVM0Qlk0TkV4UnQ2VXRiRHdENVV5aVZZUXhwdEpxWlVUQ01qZEZxUWJSNnRMWEgxY0VSekJNbjFqRTZhOVpKc3hBWUw0cndmZ1NhVFg0OXVQekUiXX0seyJzdWJqZWN0SWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImlzc3VlcklkIjoicGtfelFtV1B4TlJKeW1qa3hUZzUxOVdUelZvNjZjU0VRVlJ2cXdtYkxlSkpQOG5idTUiLCJhdWRpZW5jZUlkIjoicGtfelFtWWZNR2lHc3I1Sk50NGF4QXlub2Q1SFRtSDVwTGZMNmQxWG83VnRxUW5IRkYiLCJhYmlsaXRpZXMiOlsicGhvdG9zIl0sImNhdmVhdHMiOnsiYXVkIjpbInBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIl19LCJwcm9vZiI6InpRbVd2ZkJ0M0NQM3p0cnhjaVY4NGJYTHJyU1l6TEJwc2dXUVRRMmpLNURFUXlSIiwiYW5jaG9yIjoielFtWFpqc2t0VG9iTkY1bjhVcmdHNjFLTXlUVk44elo5d1l2VUxZWDF1REdabjQiLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6NEpMaG5nM2c4OUo3c1M3NFhOTFlDdk03VjdVZGdCdmdadmluU2g5cVo0MVFOOEZLUXNrR0pWdEtFNVhqS1NhWWhpQVZYRzYyQ2N3QUUxNVg5cnkzaGRkdSJdfSx7InN1YmplY3RJZCI6InBrX3pRbVdjY2MyWnpETVJHdXpzS01aRVJ4ZlRtZ3hmVE1GQk1LQXpLRHZNd3FHRFc3IiwiaXNzdWVySWQiOiJwa196UW1XY2NjMlp6RE1SR3V6c0tNWkVSeGZUbWd4ZlRNRkJNS0F6S0R2TXdxR0RXNyIsImF1ZGllbmNlSWQiOiJwa196UW1XUHhOUkp5bWpreFRnNTE5V1R6Vm82NmNTRVFWUnZxd21iTGVKSlA4bmJ1NSIsImFiaWxpdGllcyI6WyJwaG90b3MiXSwiY2F2ZWF0cyI6eyJhdWQiOlsicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiXX0sInByb29mIjpudWxsLCJhbmNob3IiOiJ6UW1VTHJYVXhEcGJUWFZXQkpzTnBZZ2lwa2I1VVRIUTUyOVhhcVFjZEdSekhmRCIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInp6bjVBYk5LZ244QzhTNjNTbWhnM24yYmczMkhyRTJQckVCUGZQQmZpTUY4SGtGcTZueUtYSkJOSEp0QVQ4Q0tGeGhMWDNYYURxOGZEMVpSdlJxNXVBWEsiXX1d",
       "accept": true,
-      "payloadJson": "[{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":\"zQmdSSDVudxKSnnqo73aWwHML9pxWu6fxh4ohMtkNSSe6B1\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z3r2j13uxeAPpHATEWKxvfGcQqesHJqKqAyyG5oXbP7Xi8qkKD9CFkqXkfta1rFv3j29hrgtXhA1htSiQLRqDaqNa\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF\",\"audienceId\":\"pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":\"zQmaT7DfAEoehyKaEpFaziBL1tdHVud3U3dy9KHFrVSRoJA\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z3Ty154yNh3KjK3aLuR3kvkgvwTPDk9kKAvbKQY87bkQaJcUWP2Whxt1iAASewCytqLwHGgGGAmqxaamMWkpVmPS9\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"audienceId\":\"pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":\"zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zPY2qMxGoarobmkYhCZgxBp1nCYoxWQnmYrxeshJs4u3PE2uFeGWspFj2NGaa2B4WPuxd4dvFKLpqZxuiYchv6eH\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"audienceId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":null,\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5\"]}]",
+      "payloadJson": "[{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ\",\"audienceId\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"},\"proof\":\"zQmWKMTY88yxQ5fD8S28d5Bj4rKSa8Tw1afWK6i6XcfWXN1\",\"anchor\":\"zQmNzyQALH7dfTfvhotbg1no9euWWBLbY2EHGeKhUivwvya\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z3JwJqZAeBRdsfuZK45qu6QB5nHqCyM2PZWkmTFCnuFhEwsMFVLu79yLrSvXMHgV8ueeHKKzMGrJ5TupjhRaxPT9G\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF\",\"audienceId\":\"pk_zQmaN7prTqG7722nbLG539dkUCjVTLq6kkKSKCQJ5S3jYxQ\",\"abilities\":[\"photos/read\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":\"zQmf9yaQHq4AhoJvWQ1g45wcRRgPaF5CjdMNRZ2CSLQZX78\",\"anchor\":\"zQmQvcdGSaqusrPtvz6E1xGHuDQi4AyG1fSt5BijzxSHi4C\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zbnooAS4BY4NExRt6UtbDwD5UyiVYQxptJqZUTCMjdFqQbR6tLXH1cERzBMn1jE6a9ZJsxAYL4rwfgSaTX49uPzE\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"audienceId\":\"pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":\"zQmWvfBt3CP3ztrxciV84bXLrrSYzLBpsgWQTQ2jK5DEQyR\",\"anchor\":\"zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"z4JLhng3g89J7sS74XNLYCvM7V7UdgBvgZvinSh9qZ41QN8FKQskGJVtKE5XjKSaYhiAVXG62CcwAE15X9ry3hddu\"]},{\"subjectId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"issuerId\":\"pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7\",\"audienceId\":\"pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5\",\"abilities\":[\"photos\"],\"caveats\":{\"aud\":[\"pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH\"]},\"proof\":null,\"anchor\":\"zQmULrXUxDpbTXVWBJsNpYgipkb5UTHQ529XaqQcdGRzHfD\",\"issuedAt\":\"2026-08-14T09:00:00.000Z\",\"expiresAt\":\"2026-08-14T10:00:00.000Z\",\"signature\":[\"zzn5AbNKgn8C8S63Smhg3n2bg32HrE2PrEBPfPBfiMF8HkFq6nyKXJBNHJtAT8CKFxhLX3XaDq8fD1ZRvRq5uAXK\"]}]",
       "chain": [
         {
           "subjectId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
@@ -100,11 +103,12 @@
           "caveats": {
             "aud": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"
           },
-          "proof": "zQmdSSDVudxKSnnqo73aWwHML9pxWu6fxh4ohMtkNSSe6B1",
+          "proof": "zQmWKMTY88yxQ5fD8S28d5Bj4rKSa8Tw1afWK6i6XcfWXN1",
+          "anchor": "zQmNzyQALH7dfTfvhotbg1no9euWWBLbY2EHGeKhUivwvya",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "z3r2j13uxeAPpHATEWKxvfGcQqesHJqKqAyyG5oXbP7Xi8qkKD9CFkqXkfta1rFv3j29hrgtXhA1htSiQLRqDaqNa"
+            "z3JwJqZAeBRdsfuZK45qu6QB5nHqCyM2PZWkmTFCnuFhEwsMFVLu79yLrSvXMHgV8ueeHKKzMGrJ5TupjhRaxPT9G"
           ]
         },
         {
@@ -115,11 +119,12 @@
           "caveats": {
             "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
           },
-          "proof": "zQmaT7DfAEoehyKaEpFaziBL1tdHVud3U3dy9KHFrVSRoJA",
+          "proof": "zQmf9yaQHq4AhoJvWQ1g45wcRRgPaF5CjdMNRZ2CSLQZX78",
+          "anchor": "zQmQvcdGSaqusrPtvz6E1xGHuDQi4AyG1fSt5BijzxSHi4C",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "z3Ty154yNh3KjK3aLuR3kvkgvwTPDk9kKAvbKQY87bkQaJcUWP2Whxt1iAASewCytqLwHGgGGAmqxaamMWkpVmPS9"
+            "zbnooAS4BY4NExRt6UtbDwD5UyiVYQxptJqZUTCMjdFqQbR6tLXH1cERzBMn1jE6a9ZJsxAYL4rwfgSaTX49uPzE"
           ]
         },
         {
@@ -130,11 +135,12 @@
           "caveats": {
             "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
           },
-          "proof": "zQmeC42UBBYPMqxcnah1edC8x5xZsrwd2QGhhAXgMDagEnH",
+          "proof": "zQmWvfBt3CP3ztrxciV84bXLrrSYzLBpsgWQTQ2jK5DEQyR",
+          "anchor": "zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "zPY2qMxGoarobmkYhCZgxBp1nCYoxWQnmYrxeshJs4u3PE2uFeGWspFj2NGaa2B4WPuxd4dvFKLpqZxuiYchv6eH"
+            "z4JLhng3g89J7sS74XNLYCvM7V7UdgBvgZvinSh9qZ41QN8FKQskGJVtKE5XjKSaYhiAVXG62CcwAE15X9ry3hddu"
           ]
         },
         {
@@ -146,10 +152,11 @@
             "aud": ["pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH"]
           },
           "proof": null,
+          "anchor": "zQmULrXUxDpbTXVWBJsNpYgipkb5UTHQ529XaqQcdGRzHfD",
           "issuedAt": "2026-08-14T09:00:00.000Z",
           "expiresAt": "2026-08-14T10:00:00.000Z",
           "signature": [
-            "z2mAFUF2m6c6Wpq2GRbR5U8N8Jj6PWg6NhBXRCCsTrG8iKG3mNxMyXXCTtEK9eWzj8hwFjWtKmohcHkpSjmT2Mgr5"
+            "zzn5AbNKgn8C8S63Smhg3n2bg32HrE2PrEBPfPBfiMF8HkFq6nyKXJBNHJtAT8CKFxhLX3XaDq8fD1ZRvRq5uAXK"
           ]
         }
       ],
@@ -166,7 +173,7 @@
     {
       "name": "refused — the PN-Grants header form of the same chain",
       "why": "THE PAYLOAD IS BYTE-IDENTICAL to the first accepted vector's; only the prefix differs. The two deliveries deliberately share an encoding — one chain has one payload, whichever way it travels — and deliberately do not share a prefix, because a bearer token and a request header are handled by different code with different lifetimes. Accepting `1:` here would make a header value pasted into an `Authorization: Bearer` a valid token.",
-      "token": "1:W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "token": "1:W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXX1d",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -181,7 +188,7 @@
     {
       "name": "refused — the bare payload with no prefix",
       "why": "An unversioned token. The prefix is what makes a future profile (chain-by-reference, a different payload encoding) additive rather than ambiguous, so a payload that declines to say which profile it is written in cannot be read under the current one by default.",
-      "token": "W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "token": "W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXX1d",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -196,7 +203,7 @@
     {
       "name": "refused — a future version prefix",
       "why": "`pnc2.` is not defined by any profile today. A decoder must refuse it rather than fall back to `pnc1.` parsing: a version prefix that is ignored when unrecognized is not a version prefix, and it would let a future format's payload be reinterpreted under today's rules.",
-      "token": "pnc2.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "token": "pnc2.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXX1d",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -211,7 +218,7 @@
     {
       "name": "refused — the prefix in upper case",
       "why": "The prefix is compared exactly, not case-insensitively. Recorded because bearer tokens pass through case-normalizing plumbing often enough that a lenient comparison looks like a kindness, and a decoder that offers it accepts a token no encoder in this profile emits.",
-      "token": "PNC1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX1d",
+      "token": "PNC1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXX1d",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -286,7 +293,7 @@
     {
       "name": "refused — a link carrying a duplicate object key (spec 015 S6.1)",
       "why": "ONE delivered byte string, two logical chains: `JSON.parse` resolves this last-wins and a first-wins parser resolves it to the other `proof`, so two resource servers handed this exact token would digest two different Grants. A Grant's digest is what its child's `proof` names and what spec 008 keys its revocation by, so the ambiguity is a second identity for one credential — and a token is long-lived and widely copied, which is worse here than in a single request header. Both resolutions are defensible, so the delivery is refused rather than resolved.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsInByb29mIjoielFtRGlmZmVyZW50UGFyZW50RW50aXJlbHkiLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6TXFqUjhTUEI2VDVFWGhSZ3pBR2t5aTdaY2VVODhGZXh0NjZGVEJxdUZ1azlOU1lTSGhQM29EYUJ0WGludVcyRW05c1IyQkVDNHlzd0sycG8xQWp0SlIxIl19XQ",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsInByb29mIjoielFtRGlmZmVyZW50UGFyZW50RW50aXJlbHkiLCJhbmNob3IiOiJ6UW1UZzRCV21vdVNTTFdUWWY2aUplbzllN3l0Y25ITG92Q2hQQjJRMk1KWHpjUyIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbIno0TWlqcUNBUUdURkdxYVJ5MTI0c2ZuMzMzem1IWXZVSmd3Qkt6aE1kTXFrVjRkaFdaclFINVBHczNqTnJHcjNDWVVhekJzclNUMkFtM0RFalF1cXBMb1U5Il19XQ",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -301,7 +308,7 @@
     {
       "name": "refused — a single grant that was not wrapped in an array",
       "why": "A valid Grant object, presented as the whole payload. A one-link chain is an array of one; a decoder that coerced a lone object into one would accept a token no encoder produces.",
-      "token": "pnc1.eyJzdWJqZWN0SWQiOiJwa196UW1mRzN6ejFwTnlhYjNuM21KTm42R1lCS0pWQXc2TnQ0eHlNa2tSeWdodHc2dCIsImlzc3VlcklkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJhdWRpZW5jZUlkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiLCJhYmlsaXRpZXMiOlsicGhvdG9zL3JlYWQiLCJwaG90b3Mvd3JpdGUiXSwiY2F2ZWF0cyI6eyJhdWQiOiJwa196UW1RNXp1N0hwbVJINzRuWjFmUUVjVTRHb2s3NlI5aDRLaWZXdmtrTWk0WXFZSCJ9LCJwcm9vZiI6bnVsbCwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiek1xalI4U1BCNlQ1RVhoUmd6QUdreWk3WmNlVTg4RmV4dDY2RlRCcXVGdWs5TlNZU0hoUDNvRGFCdFhpbnVXMkVtOXNSMkJFQzR5c3dLMnBvMUFqdEpSMSJdfQ",
+      "token": "pnc1.eyJzdWJqZWN0SWQiOiJwa196UW1mRzN6ejFwTnlhYjNuM21KTm42R1lCS0pWQXc2TnQ0eHlNa2tSeWdodHc2dCIsImlzc3VlcklkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJhdWRpZW5jZUlkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgiLCJhYmlsaXRpZXMiOlsicGhvdG9zL3JlYWQiLCJwaG90b3Mvd3JpdGUiXSwiY2F2ZWF0cyI6eyJhdWQiOiJwa196UW1RNXp1N0hwbVJINzRuWjFmUUVjVTRHb2s3NlI5aDRLaWZXdmtrTWk0WXFZSCJ9LCJwcm9vZiI6bnVsbCwiYW5jaG9yIjoielFtVGc0Qldtb3VTU0xXVFlmNmlKZW85ZTd5dGNuSExvdkNoUEIyUTJNSlh6Y1MiLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsImV4cGlyZXNBdCI6IjIwMjYtMDgtMTRUMTA6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6NE1panFDQVFHVEZHcWFSeTEyNHNmbjMzM3ptSFl2VUpnd0JLemhNZE1xa1Y0ZGhXWnJRSDVQR3Mzak5yR3IzQ1lVYXpCc3JTVDJBbTNERWpRdXFwTG9VOSJdfQ",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -346,7 +353,7 @@
     {
       "name": "refused — a link carrying a key the schema does not define (spec 015 S6.3)",
       "why": "CLOSED schema: an unknown key is rejected, not silently stripped. A stripped key is a second digest for one delivery, which is exactly the malleability that defeated revocation-by-digest.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXSwic3VycHJpc2UiOjF9XQ",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXSwic3VycHJpc2UiOjF9XQ",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -358,7 +365,7 @@
     {
       "name": "refused — a key-audience link without expiresAt (spec 011)",
       "why": "A bare key has no key log, so expiry is the only planned end a grant to one can have. The link is otherwise honest and honestly signed — the signature covers the record WITHOUT `expiresAt`, so this is a shape refusal and not a forgery, which is the point: the schema refuses records a signature cannot rescue.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6Ino2TWtuM3NVYVJKTVJ3VDRpUGJCdEhVelRrNDJtSERTQTNNM0Q4a3JHcFpmR1c4RCIsImFiaWxpdGllcyI6WyJwaG90b3MvcmVhZCJdLCJjYXZlYXRzIjp7ImF1ZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIn0sInByb29mIjpudWxsLCJpc3N1ZWRBdCI6IjIwMjYtMDgtMTRUMDk6MDA6MDAuMDAwWiIsInNpZ25hdHVyZSI6WyJ6NjVQcFFOQVpidFFwZXo4QW9YM1dDMmFiUXNyS0VjR3pveUUzTEZIbkhDZlhGM1R6ZVU0Rm53S0g1b2YxNER1ZTVXOUdSOFpZMVFqTXJHeTZiVnRyQ0UzWCJdfV0",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6Ino2TWtuM3NVYVJKTVJ3VDRpUGJCdEhVelRrNDJtSERTQTNNM0Q4a3JHcFpmR1c4RCIsImFiaWxpdGllcyI6WyJwaG90b3MvcmVhZCJdLCJjYXZlYXRzIjp7ImF1ZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIn0sInByb29mIjpudWxsLCJhbmNob3IiOiJ6UW1UZzRCV21vdVNTTFdUWWY2aUplbzllN3l0Y25ITG92Q2hQQjJRMk1KWHpjUyIsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbIno0TjEzQjl2UjZRUFJMbjJBTHJTd0ZZbW9jenk5N1R6VWdCOTUzeDVWcWdmeUg2SG5qWVVaeGNzd1IzeFJnd25KMktxVXE0Q25qVEEzQmZra2NRQmFGMlBmIl19XQ",
       "accept": false,
       "payloadJson": null,
       "chain": null,
@@ -370,7 +377,7 @@
     {
       "name": "refused — a valid leaf followed by a non-grant element",
       "why": "EVERY element is parsed, not just the leaf. A decoder that validated element 0 and passed the rest through would hand a verifier a chain whose parent links are attacker-shaped objects, and the leaf is the one link a lazy implementation is most likely to check.",
-      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImlzc3VlZEF0IjoiMjAyNi0wOC0xNFQwOTowMDowMC4wMDBaIiwiZXhwaXJlc0F0IjoiMjAyNi0wOC0xNFQxMDowMDowMC4wMDBaIiwic2lnbmF0dXJlIjpbInpNcWpSOFNQQjZUNUVYaFJnekFHa3lpN1pjZVU4OEZleHQ2NkZUQnF1RnVrOU5TWVNIaFAzb0RhQnRYaW51VzJFbTlzUjJCRUM0eXN3SzJwbzFBanRKUjEiXX0seyJub3QiOiJhIGdyYW50In1d",
+      "token": "pnc1.W3sic3ViamVjdElkIjoicGtfelFtZkczenoxcE55YWIzbjNtSk5uNkdZQktKVkF3Nk50NHh5TWtrUnlnaHR3NnQiLCJpc3N1ZXJJZCI6InBrX3pRbWZHM3p6MXBOeWFiM24zbUpObjZHWUJLSlZBdzZOdDR4eU1ra1J5Z2h0dzZ0IiwiYXVkaWVuY2VJZCI6InBrX3pRbVE1enU3SHBtUkg3NG5aMWZRRWNVNEdvazc2UjloNEtpZld2a2tNaTRZcVlIIiwiYWJpbGl0aWVzIjpbInBob3Rvcy9yZWFkIiwicGhvdG9zL3dyaXRlIl0sImNhdmVhdHMiOnsiYXVkIjoicGtfelFtUTV6dTdIcG1SSDc0bloxZlFFY1U0R29rNzZSOWg0S2lmV3Zra01pNFlxWUgifSwicHJvb2YiOm51bGwsImFuY2hvciI6InpRbVRnNEJXbW91U1NMV1RZZjZpSmVvOWU3eXRjbkhMb3ZDaFBCMlEyTUpYemNTIiwiaXNzdWVkQXQiOiIyMDI2LTA4LTE0VDA5OjAwOjAwLjAwMFoiLCJleHBpcmVzQXQiOiIyMDI2LTA4LTE0VDEwOjAwOjAwLjAwMFoiLCJzaWduYXR1cmUiOlsiejRNaWpxQ0FRR1RGR3FhUnkxMjRzZm4zMzN6bUhZdlVKZ3dCS3poTWRNcWtWNGRoV1pyUUg1UEdzM2pOckdyM0NZVWF6QnNyU1QyQW0zREVqUXVxcExvVTkiXX0seyJub3QiOiJhIGdyYW50In1d",
       "accept": false,
       "payloadJson": null,
       "chain": null,

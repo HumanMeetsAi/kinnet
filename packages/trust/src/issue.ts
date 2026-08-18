@@ -17,8 +17,16 @@
  * records (Claim, Relationship) take the first current key; signature-set records (Grant,
  * Revocation) are signed by all of them, so an issuer running a signing committee satisfies its
  * own threshold without the caller assembling the set.
+ *
+ * The signature-set records also carry spec 016's `anchor`: the digest of the key event whose
+ * state they are signed under, written into the record BEFORE it is signed so it is covered by
+ * every member of the set. `keyLogAnchor(issuer.log)` names the log's tip, which is the state
+ * `currentKeys` reveals — the producer rule 016 states as SHOULD, and the only anchor an issuer
+ * signing with its current keys can honestly write. The scalar records take no anchor: 016
+ * scopes the field to the four signature-set types, and a one-member set has no keyless edit to
+ * move between states.
  */
-import { signRecord, signThresholdRecord, type Identity } from "@kinnet/crypto";
+import { keyLogAnchor, signRecord, signThresholdRecord, type Identity } from "@kinnet/crypto";
 import type {
   Claim,
   Grant,
@@ -144,9 +152,10 @@ export function issueRepresentsEdge(
  * key-audience grant is malformed without it.
  *
  * VALIDATED AFTER SIGNING, and throws {@link GrantValidationError} rather than returning a
- * grant no verifier will accept. Without the check, the three cross-field rules `grantSchema`
+ * grant no verifier will accept. Without the check, the cross-field rules `grantSchema`
  * enforces — a key audience needs `expiresAt`, an `e2ee` credential link needs empty caveats, a
- * key-audience non-credential needs `caveats.aud` — are checked nowhere on the mint path. A
+ * key-audience non-credential needs `caveats.aud`, and (spec 016) a participant issuer needs an
+ * `anchor` — are checked nowhere on the mint path. A
  * grant breaking one of them is signed, handed to a counterparty, and rejected at the far end
  * as `grant_malformed`, which names neither the field nor the party that got it wrong. Failing
  * at the mint is the difference between a stack trace pointing at the caller's own arguments
@@ -168,6 +177,10 @@ export function issueGrant(
       audienceId,
       abilities,
       caveats: options.caveats ?? {},
+      // Spec 016: a participant-issued grant is anchored to the key state it is signed under,
+      // and `grantSchema` requires the field for a `pk_` issuer. A root grant is self-issued, so
+      // the issuer is always a participant here and the anchor is never conditional.
+      anchor: keyLogAnchor(issuer.log),
       proof: null,
       issuedAt: options.issuedAt ?? new Date().toISOString(),
       ...(options.expiresAt ? { expiresAt: options.expiresAt } : {})
@@ -195,6 +208,9 @@ export function issueRevocation(
     {
       revokes,
       issuerId: issuer.id,
+      // Spec 016: required on every Revocation — a revocation's issuer is always a participant,
+      // so there is always a key log and always exactly one state the set is judged against.
+      anchor: keyLogAnchor(issuer.log),
       revokedAt: options.revokedAt ?? new Date().toISOString(),
       ...(options.reason === undefined ? {} : { reason: options.reason })
     },

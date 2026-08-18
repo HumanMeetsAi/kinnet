@@ -1,5 +1,5 @@
 {
-  "note": "Replay conformance vectors for spec 003's key-history log — chaining, sequencing, pre-rotation (including the committed THRESHOLD), spec 015's signature-set rules as the log applies them, the quorum rule, the work bound, and the participant binding. Every vector is verifiable from bytes alone: `events` is the log exactly as delivered, `signingInputs[i]` is the UTF-8 JCS of event i WITHOUT its `signature` field (the spec-001 signing input), and `digests[i]` is the spec-003 multihash of the COMPLETE event i, which event i+1's `prior` must name. `valid` is the replay verdict. For a rejected log, `rejection` is the normative class (see `codes`) and `error` is the reference implementation's exact throw — recorded so this repo's test can assert it byte for byte, NOT as a wire contract another implementation must reproduce; conform to `rejection`, not to the English. For an accepted log, `state` is the resulting key state. `expectedId`, when present, means the log is judged with the participant binding (`replayKeyLogFor`); `options` carries the replay options the verdict assumes. Regenerate with packages/crypto/scripts/generate-key-log-rejection-fixtures.ts.",
+  "note": "Replay conformance vectors for spec 003's key-history log — chaining, sequencing, pre-rotation (including the committed THRESHOLD), spec 015's signature-set rules as the log applies them, the work bound, and the participant binding. Every vector is verifiable from bytes alone: `events` is the log exactly as delivered, `signingInputs[i]` is the UTF-8 JCS of event i WITHOUT its `signature` field (the spec-001 signing input), and `digests[i]` is the spec-003 multihash of the COMPLETE event i, which event i+1's `prior` must name. `valid` is the replay verdict. For a rejected log, `rejection` is the normative class (see `codes`) and `error` is the reference implementation's exact throw — recorded so this repo's test can assert it byte for byte, NOT as a wire contract another implementation must reproduce; conform to `rejection`, not to the English. For an accepted log, `state` is the resulting key state. `expectedId`, when present, means the log is judged with the participant binding (`replayKeyLogFor`); `options` carries the replay options the verdict assumes. Regenerate with packages/crypto/scripts/generate-key-log-rejection-fixtures.ts.",
   "codes": {
     "chain_prior_mismatch": "An event's `prior` is not the digest of the event before it (003). The hash chain is what makes a log an append-only history rather than a bag of events.",
     "sequence_not_contiguous": "`seq` is not the previous event's `seq` plus one (003) — a gap, a repeat, or a jump.",
@@ -7,7 +7,6 @@
     "signature_set_not_conforming": "015 S2/S3: some member does not verify under a distinct listed key in strictly increasing key order. Covers a signature by an unlisted key and a tampered event body alike — the verifier learns only that the set does not conform, which is all it can honestly report.",
     "commitment_not_reproduced": "A rotation's `{keys, threshold}` does not reproduce the PRIOR event's `next` commitment (003, _The committed next key state_). The threshold is inside the commitment, so a rotation cannot restate it — this is the rule that closes the lowered-threshold rotation.",
     "state_repeats_key": "015 S0: the event's key list holds the same key twice, so the state is invalid and every record checked against it is invalid with it.",
-    "quorum_shared": "003's 'no two states may share a quorum': two states this log commits share at least `min(t_A, t_B)` keys, which would let a signature set conform against both.",
     "work_budget_exceeded": "The replay would spend more Ed25519 verifications than its budget allows. NOT a verdict on the log — a refusal to spend CPU on attacker-supplied input — so it is a distinct class.",
     "participant_mismatch": "The log is internally valid and belongs to a DIFFERENT participant than the caller asked for: the substituted-log attack, refused by `replayKeyLogFor`."
   },
@@ -426,7 +425,7 @@
     },
     {
       "name": "rejected — an event listing the same key twice",
-      "why": "The commitment names {[K, K], threshold 2} and the rotation reveals exactly that, so the commitment check passes and 015 S0 is the only rule violated. Two signatures by the one key would satisfy an INDEX-based reading of the threshold — one key counted twice — which is why the state itself is invalid rather than the record merely failing against it. Recorded because the commitment helper does not dedupe: a log can commit to this shape and only discover on reveal that it has bricked the identity. `schemaValid` is false — `keyEventSchema` carries the same rule, so both gates hold it, which is the state 015 S0 asked for after the rule spent a while living only in the replay.",
+      "why": "The commitment names {[K, K], threshold 2} and the rotation reveals exactly that, so the commitment check passes and 015 S0 is the only rule violated. Two signatures by the one key would satisfy an INDEX-based reading of the threshold — one key counted twice — which is why the state itself is invalid rather than the record merely failing against it. The commitment is written directly rather than through `commitToKeyState`, which refuses to commit to a state no conforming event could reveal — the reveal-side rule is what this vector pins, and it must hold for bytes that arrive from anywhere. `schemaValid` is false — `keyEventSchema` carries the same rule, so both gates hold it, which is the state 015 S0 asked for after the rule spent a while living only in the replay.",
       "valid": false,
       "events": [
         {
@@ -570,9 +569,9 @@
       }
     },
     {
-      "name": "rejected — two committed states sharing a quorum",
-      "why": "Both events are individually valid: the rotation reveals exactly the committed key state and carries exactly its two signatures. The LOG is still refused, because the two states share both keys against a threshold of two — records verify against any state a log ever committed, so a two-member signature set would conform against both, and 015's cross-state deletion and reordering routes reopen. A log-level rule, checked after every event's own structure.",
-      "valid": false,
+      "name": "accepted — two committed states sharing a quorum",
+      "why": "A log whose rotation RE-REVEALS its own key set at the same threshold: the two states share both keys against a threshold of two. Valid, and deliberately pinned as valid. An earlier interim rule refused exactly this shape to keep 015's keyless cross-state deletion and reordering routes out of reach; spec 016 closes those routes inside the record instead — a signature-set record names the one state it is judged against — so rotation flexibility comes back and a 2-of-3 may again retain two keys. Both events are individually valid: the rotation reveals exactly the committed key state and carries exactly its two signatures in key order.",
+      "valid": true,
       "events": [
         {
           "seq": "0",
@@ -616,12 +615,79 @@
         "zQmPyA4VWvgQ1nV5G4knzCRiQGMX6zJi1E8f8NtWqLbvqWf"
       ],
       "schemaValid": true,
-      "state": null,
-      "rejection": "quorum_shared",
-      "error": {
-        "name": "Error",
-        "message": "Key events 0 and 1 share 2 keys against a threshold of 2: no two key states of one log may share a quorum"
-      }
+      "state": {
+        "id": "pk_zQmeLjhTQxQhiN2Z1obTK2RaJxe2ubMJBhUYmPkn38mKF3Y",
+        "keys": [
+          "z6MkmNL6xksdEJENGk9Z1qqGsY5njKQdjU1UhnUEUvWyQUVX",
+          "z6MkfDSNRs2i9S6LZ5vd4RbpZ6754H7R3btDqRTeHhamqvuJ"
+        ],
+        "threshold": "2",
+        "seq": "1"
+      },
+      "rejection": null,
+      "error": null
+    },
+    {
+      "name": "accepted — a 2-of-3 rotation retaining two of its three keys",
+      "why": "The partial rotation the interim rule cost and spec 016 gives back: the rotation retires one key, introduces one, and keeps two against a threshold of two — a shared quorum. It replays valid. Records signed under either state stay verifiable, each against the state its own anchor names, which is what makes the shared quorum harmless: no record is ever offered to both states.",
+      "valid": true,
+      "events": [
+        {
+          "seq": "0",
+          "kind": "icp",
+          "keys": [
+            "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "z6MkjkxcrsuBXGxVYAZFC1hPUViiRXLC5Kup4G9aBkFoPimV",
+            "z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"
+          ],
+          "threshold": "2",
+          "next": "zQmSJKANDkAszCngrNRgF7Zt8wqhdESqKGpMbzbpT6hpeMj",
+          "id": "pk_zQmUVXn3NKVbbqTt1ZcsDbrka1pyHfBJpRFhjvUyxW3TgVV",
+          "prior": null,
+          "signature": [
+            "z5ZccwYV5P7htHjSo4BNG7QpvJMWBcVshrWrWiemsaR7K42DKXK4qK7ZnAGtmvcn3eqAA8Fq7qEop5qhPJg3cJgvu",
+            "z33NJUM2wwbcgdH7DmAPE4psdkyPLY4QAbRGbrDKcngogWXLKZm4mXok5f3a1WDucw2LDuFm1w2GBpNQTkgShvP6Z"
+          ]
+        },
+        {
+          "id": "pk_zQmUVXn3NKVbbqTt1ZcsDbrka1pyHfBJpRFhjvUyxW3TgVV",
+          "seq": "1",
+          "prior": "zQmUxjJEp5aB6tUDBxKXVoq816Ax7fepLqXduh4XmNuhkJK",
+          "kind": "rot",
+          "keys": [
+            "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+            "z6MkjkxcrsuBXGxVYAZFC1hPUViiRXLC5Kup4G9aBkFoPimV",
+            "z6MkqGC3nWZhYieEVTVDKW5v588CiGfsDSmRVG9ZwwWTvLSK"
+          ],
+          "threshold": "2",
+          "next": "zQmTn9MCcun24w1SaiWcbLfdGWSqNLg45bpo2t4SmkDzSbS",
+          "signature": [
+            "z3VFcboBw7XQJkUHMwp7QLVKviNJ3BrJY6BUfUwZ6QsYu8RpbiHcEpMwvi2Kfv22toyBJRvaZQ6Ba4Ykp8JbgXGyT",
+            "z2RVscuQnSZo28ka38YhdMZk5z6t6yZtSybHHGHTAJPvKkjm2idCHoWRcobh7Bv1GrzzarUQeyNv3P66hEVDR2je"
+          ]
+        }
+      ],
+      "signingInputs": [
+        "{\"id\":\"pk_zQmUVXn3NKVbbqTt1ZcsDbrka1pyHfBJpRFhjvUyxW3TgVV\",\"keys\":[\"z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH\",\"z6MkjkxcrsuBXGxVYAZFC1hPUViiRXLC5Kup4G9aBkFoPimV\",\"z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2\"],\"kind\":\"icp\",\"next\":\"zQmSJKANDkAszCngrNRgF7Zt8wqhdESqKGpMbzbpT6hpeMj\",\"prior\":null,\"seq\":\"0\",\"threshold\":\"2\"}",
+        "{\"id\":\"pk_zQmUVXn3NKVbbqTt1ZcsDbrka1pyHfBJpRFhjvUyxW3TgVV\",\"keys\":[\"z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH\",\"z6MkjkxcrsuBXGxVYAZFC1hPUViiRXLC5Kup4G9aBkFoPimV\",\"z6MkqGC3nWZhYieEVTVDKW5v588CiGfsDSmRVG9ZwwWTvLSK\"],\"kind\":\"rot\",\"next\":\"zQmTn9MCcun24w1SaiWcbLfdGWSqNLg45bpo2t4SmkDzSbS\",\"prior\":\"zQmUxjJEp5aB6tUDBxKXVoq816Ax7fepLqXduh4XmNuhkJK\",\"seq\":\"1\",\"threshold\":\"2\"}"
+      ],
+      "digests": [
+        "zQmUxjJEp5aB6tUDBxKXVoq816Ax7fepLqXduh4XmNuhkJK",
+        "zQmYopVo5ReUrJQT56KoHFY2LtWMhNEi6N1S9eMWDRdXWXT"
+      ],
+      "schemaValid": true,
+      "state": {
+        "id": "pk_zQmUVXn3NKVbbqTt1ZcsDbrka1pyHfBJpRFhjvUyxW3TgVV",
+        "keys": [
+          "z6MkixsGj3MVGKMug2VMC2JbtzX3UjaAcfRs7G1RjbSnZJaH",
+          "z6MkjkxcrsuBXGxVYAZFC1hPUViiRXLC5Kup4G9aBkFoPimV",
+          "z6MkqGC3nWZhYieEVTVDKW5v588CiGfsDSmRVG9ZwwWTvLSK"
+        ],
+        "threshold": "2",
+        "seq": "1"
+      },
+      "rejection": null,
+      "error": null
     },
     {
       "name": "rejected — an honest log refused by the work bound",

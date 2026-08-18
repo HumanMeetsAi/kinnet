@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Blocks:** the container every later interaction record (tasks, proposals, approvals) flows
 through
-**Amended by:** 013, 014
+**Amended by:** 013, 014, 016
 
 ## Context
 
@@ -44,6 +44,8 @@ Conversation {
   title?:       string           // optional; if present 1..256 characters; meaning is above the protocol
   lane?:        "e2ee"           // 014: absent = machine lane; MUST be omitted, never "machine", never null
   groupNonce?:  string           // 014: multibase 32 random bytes; REQUIRED iff lane == "e2ee"
+  anchor?:      Multihash        // 016: present iff owner mode — the 003 digest of the key event
+                                 //   whose state verifies this record; absent iff delegated mode
   signature:    Signature[]      // over JCS(record − signature), per the signing convention
 }
 ```
@@ -58,6 +60,10 @@ record (signature included) — the same rule revocation targets use. Every memb
 same record bytes, so every member — and every node, including nodes that have never spoken to
 each other — derives the same id with no coordination and no minting authority. An id field
 would be derivable (000 #4) and forgeable; the digest is neither.
+
+_Amended by 016: the rule is unchanged, but the bytes are not. An owner-mode record carries
+`anchor` inside the digested bytes, so every such conversation is re-signed and **its id moves** —
+and with it the MLS `group_id` 014 derives from that id._
 
 **The digested bytes are the schema-validated bytes, and the schema is closed.** A digest id
 is only an identity if two implementations digest the same bytes for the same logical record.
@@ -128,9 +134,11 @@ On delivery of a `pn/conversation` envelope, in addition to 010/011's rules, the
 MUST:
 
 1. validate the payload against the `Conversation` schema and verify the record signature per
-   the signing rules below — owner mode against any key state the **creator's** log replays
-   to, or delegated mode against the accompanying chain's leaf key — the embedded record is
-   the authority; the envelope merely transports it;
+   the signing rules below — owner mode against the key state the record's `anchor` names in the
+   **creator's** log, or delegated mode against the accompanying chain's leaf key — the embedded
+   record is the authority; the envelope merely transports it;
+   _Amended by 016: owner mode was "against any key state the creator's log replays to"; the
+   record now names the one state it is verified against, and anchor presence declares the mode._
 2. require `envelope.from` and `envelope.to` to both be members of the conversation — any
    member may (re)deliver the record, not only the creator, so a conversation survives its
    creator going quiet before every member has it;
@@ -386,7 +394,10 @@ so `msg/read-state` would be a sibling of `msg/read` that _reads_ like a child o
 whose authority relationship must be reasoned out are how prefix-confusion bugs enter
 verifiers; `msg/cursor` cannot be misread.
 
-### Signing a Conversation: two modes, and any replay-valid key state
+### Signing a Conversation: two modes, and one named key state
+
+_Amended by 016 throughout this section: this section was titled "two modes, and any replay-valid
+key state"; owner mode now names the single key state that verifies the record._
 
 A `Conversation` verifies in the **same two modes 011 defines for envelopes**, and for the
 same reason: custody's signing surface is a closed enumeration of protocol operations, so a
@@ -394,9 +405,11 @@ custodial participant signs through session keys or not at all. A creator-signed
 would mean **no participant under custody could ever create a conversation** — the feature
 would exist only for participants holding raw root keys.
 
-1. **Owner mode.** The record's signatures verify against the creator's key state (003),
-   meeting that state's threshold.
-2. **Delegated mode.** The record is signed by a session key, and it travels as a
+1. **Owner mode.** The record carries an `anchor` (016) and no chain accompanies it. Its
+   signatures verify against the key state that anchor names in the creator's log (003), meeting
+   that state's threshold.
+2. **Delegated mode.** The record carries no `anchor`. It is signed by a session key, and it
+   travels as a
    **(record, chain) unit** (011): the accompanying chain's subject is `creator`, its
    abilities cover **`msg/conversation`**, and the record's signature verifies against the
    chain's leaf key. The node stores the chain with the record, exactly as 011 stores a
@@ -405,17 +418,19 @@ would exist only for participants holding raw root keys.
 The transporting envelope's mode is **independent** of the record's mode: any member may
 re-deliver a conversation, in either mode, whatever mode created it.
 
-Against a given key state, the signature set is checked per **015**: exactly `threshold` members —
-the "requires _m_ signatures here" above, read exactly — every one verifying against a distinct
-listed key, in that state's key order, before the digest is taken as the conversation id. 015's
-S5 states how strictness composes with the any-state rule below — the existential is over
-states, so a stricter per-state check does not orphan a record signed under an older state.
+Against the anchored key state, the signature set is checked per **015**: exactly `threshold`
+members — the "requires _m_ signatures here" above, read exactly — every one verifying against a
+distinct listed key, in that state's key order, before the digest is taken as the conversation id.
+016 states how that check composes with key resolution: the anchor is a lookup, so exactly one
+state is tried and no other is admissible.
 
-**Verification is against any key state the creator's log replays to (008), not merely the
-current one.** Verifying against current state would mean a creator's first key rotation
-silently invalidates every conversation they ever created — the records are immutable and
-already delivered, so there is nothing to re-sign. This is the rule grants already
-follow (008); conversations inherit it rather than inventing a stricter one.
+**Verification is against the key state the record's `anchor` names (016), not against the
+creator's current state.** Verifying against current state would mean a creator's first key
+rotation silently invalidates every conversation they ever created — the records are immutable and
+already delivered, so there is nothing to re-sign. Anchoring does not reintroduce that: an anchor
+names a **historical** state, and a key log is append-only, so the named event stays where it is
+and **a later rotation never invalidates an anchored record.** This is the rule grants follow
+(008, 016); conversations inherit it rather than inventing a stricter one.
 
 Two consequences worth stating plainly. A conversation created in delegated mode does **not**
 re-verify from bytes alone with no time window — it carries 011's residual windows and needs
@@ -503,6 +518,9 @@ completed act at a point in time, judged against the key state and chain valid t
   verifying against a distinct listed key in that state's key order, checked before the digest
   is taken as the conversation id.
 - 2026-08-13 — Reserved envelope types took the brand-neutral `pn/` prefix (000).
+- 2026-08-18 — Amended by 016: `anchor` joins the schema, present iff owner mode; owner mode
+  verifies against the single key state the anchor names rather than any state the creator's log
+  replays to; every owner-mode conversation is re-signed and its id moves.
 
 ## References
 
@@ -512,4 +530,5 @@ completed act at a point in time, judged against the key state and chain valid t
   filter), 011 (delegated requests, (record, chain) unit), 013 (realtime — mirrors this spec's
   visibility rules), 014 (the E2EE lane — amends this spec: `lane`/`groupNonce`, membership
   change for that lane, three reserved types, the lane gate, the filtered read, the block-list
-  exception), 015 (canonical signature sets)
+  exception), 015 (canonical signature sets), 016 (record anchoring — amends this spec: `anchor`
+  on the Conversation record, owner mode against the anchored state, mode declared by the field)

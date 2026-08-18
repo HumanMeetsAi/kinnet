@@ -39,6 +39,7 @@ import {
   createIdentity,
   decodeChainAccessToken,
   encodeChainAccessToken,
+  keyLogAnchor,
   signThresholdRecord,
   type Identity
 } from "@kinnet/crypto";
@@ -94,6 +95,8 @@ const leaf: Grant = grantSchema.parse(
       audienceId: RESOURCE_PARTICIPANT_ID,
       abilities: CONSENTED_SCOPES,
       caveats: { aud: RESOURCE_PARTICIPANT_ID },
+      // Spec 016: a participant-issued grant names the key state it is signed under.
+      anchor: keyLogAnchor(human.log),
       proof: null,
       issuedAt: ISSUED_AT,
       expiresAt: EXPIRES_AT

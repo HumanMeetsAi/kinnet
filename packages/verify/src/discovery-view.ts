@@ -194,21 +194,25 @@ export const DEFAULT_MAX_CACHE_ENTRIES = 10_000;
  *
  * Let `E = MAX_KEY_LOG_EVENTS = 128`, `K = MAX_KEY_EVENT_KEYS = 8`,
  * `A = E*K = 1024`, and `L = MAX_GRANT_CHAIN_LINKS = 4`. The default is
- * `(3L + 1)A = 13A = 13,312`, sized to complete every HONEST verdict this call supports:
+ * `(3L + 1)A = 13A = 13,312`, and every HONEST verdict this call supports now completes well
+ * inside it. Measured at the schema maxima, over full-length 1-of-K logs whose matching key is
+ * last in every state:
  *
- *   participant delegation                              9A
- *   `requireRepresents` agent + relationship + chain    12A
- *   late genuine relationship revocation                13A
+ *   `requireRepresents` agent + relationship + chain    7A + 5K = 7208
+ *   late genuine relationship revocation                7A + 6K = 7216
+ *   the same shapes with a hostile view's decoys        7A + 13K = 7272
  *
- * Each `2A` link term is one issuer-log replay plus one search across every historical state.
- * The late genuine revocation is another full historical-state search after the preceding
- * honest stages have succeeded. Tests construct and meter those shapes; the formulas are not a
- * substitute for the measurements.
+ * Every term is now either a REPLAY or a single walk. The `7A` is seven issuer-log replays —
+ * one per distinct participant, memoized across the request's stages — and each `K` is one
+ * record checked against the one key state its spec-016 anchor names. The link terms used to be
+ * `2A` apiece, a replay plus a search across every historical state, which is why these figures
+ * were `12A` and `13A` before 016 and why the hostile composition used to exceed this default
+ * rather than fit inside it.
  *
- * This is NOT the full bounded-hostile composition. A hostile view can make
- * `createVerifier()+requireRepresents` reach `20A = 20,480`; the default deliberately refuses
- * that shape on capacity. Revocation lookup's `R = 2A` is a per-lookup sub-allowance, not a
- * promise that every hostile composition fits this default.
+ * The constant is deliberately NOT lowered to match. It is a local resource policy rather than a
+ * cost model, its headroom now absorbs shapes it previously refused, and lowering a ceiling is a
+ * change that can only start rejecting things. Tests construct and meter these shapes; the
+ * formulas are not a substitute for the measurements.
  *
  * RFC 9421 request-signature verification is at most `K` curve checks and is charged to both
  * the local operation meter and any outer request meter. Operators may lower this local policy;

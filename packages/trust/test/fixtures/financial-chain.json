@@ -54,10 +54,11 @@
         "currency": "USD",
         "beneficiary": ["acct:vendor-7", "acct:vendor-9"]
       },
-      "proof": "zQmNMCC51LWiAcUsTNS7USFhp9fnyAhpR4HkqV5DkXX7Vqr",
+      "anchor": "zQmNZX3k6i2YY6KX4c9EbLziFhCL4P57iZTJXCUkMPEvQHS",
+      "proof": "zQmP7o4UphcikMTrGzKQv563hxVUkJq5QuD7KSfuN5bBND2",
       "issuedAt": "2026-08-01T00:00:00.000Z",
       "signature": [
-        "z4twh6DHcJAngdF34FTRqHTiV2W6BZRnzm67vZQEokpHQku8vW11ZcqdsKkmHyNxDeFd8gEG8nAALk7XxNrNMbX2a"
+        "z4oBoabGEHAK91bSvqNhdy3Xj9gy56W7afCyBV1iNfUrMy57Ne1ituNLmWmFDEPpA96nFQMvBidFdW7wXWcjhxR5h"
       ]
     },
     {
@@ -66,10 +67,11 @@
       "audienceId": "pk_zQmVyXCU21DoH1dkvFdFkqGBo4ztp69CrAz4S4MSqvbTktT",
       "abilities": ["payments"],
       "caveats": {},
+      "anchor": "zQmPJN4ymSyZrkxbRk3ofRVE91gkUzmazr1EbGEaRT1n6RA",
       "proof": null,
       "issuedAt": "2026-08-01T00:00:00.000Z",
       "signature": [
-        "z2zfyBjQLLyqByfAiDcVFCePHWmfTkm1XRz6HXfHpsYfzixLNgssBBeVXewLT97BN4tMXgV7zPdomeRpocnp3cExC"
+        "z4TorVNKvFjYTSWbrioVf2riKg2YncLdD25NGbNikwF46QtfrUT3cuhhPQsXftUG71EozEirPxiGuGYPEbLoaiTwi"
       ]
     }
   ],
@@ -87,8 +89,8 @@
     "treasuryId": "pk_zQmczJYrWDXDaKujCjzhDZE2hYNUmpMru5LuxF1CqFCogBa",
     "opsId": "pk_zQmVyXCU21DoH1dkvFdFkqGBo4ztp69CrAz4S4MSqvbTktT",
     "agentId": "pk_zQmYPEznXuTAPd9CmRX69Qrxxc3FpoPL3MCbyPxQmrapdGZ",
-    "rootGrantDigest": "zQmNMCC51LWiAcUsTNS7USFhp9fnyAhpR4HkqV5DkXX7Vqr",
-    "leafGrantDigest": "zQmVixkoB5ZZVVybjTG8vgddcRsy7XGRsFbinuRuZiiKqF3",
+    "rootGrantDigest": "zQmP7o4UphcikMTrGzKQv563hxVUkJq5QuD7KSfuN5bBND2",
+    "leafGrantDigest": "zQmcJKTi2JhGNw6WMv5xSBz51nptc5HNSH1NmZozSSieojd",
     "caveats": {
       "maxAmount": "1000.00",
       "currency": "USD",

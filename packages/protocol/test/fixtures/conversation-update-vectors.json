@@ -1,5 +1,5 @@
 {
-  "note": "ConversationUpdate schema vectors (spec 014). Each entry is a bytes-level accept/reject case for conversationUpdateSchema, which enforces well-formedness ONLY: the lane-conditional and authorization rules (E2EE lane only, leaves against the group tree, rule 2's actor authority, the epoch's one-shot binding to a commit) are evaluated where the Conversation record and MLS group state are held, not here. The `signature` values are shape-valid Signature strings, not verifiable signatures — signature checking is 012's two modes at the validation layer, and most reject vectors are deliberately malformed bytes nobody would sign. `conversationId` is the pinned id from signed-conversation-e2ee.json.",
+  "note": "ConversationUpdate schema vectors (spec 014). Each entry is a bytes-level accept/reject case for conversationUpdateSchema, which enforces well-formedness ONLY: the lane-conditional and authorization rules (E2EE lane only, leaves against the group tree, rule 2's actor authority, the epoch's one-shot binding to a commit) are evaluated where the Conversation record and MLS group state are held, not here. The `signature` values are shape-valid Signature strings, not verifiable signatures — signature checking is 012's two modes at the validation layer, and most reject vectors are deliberately malformed bytes nobody would sign. `conversationId` is the pinned id from signed-conversation-e2ee.json. Spec 016 adds the optional `anchor`: present in owner mode, naming the key event whose state the signature set is judged against, and absent in delegated mode, where the chain's leaf key is the only candidate. Which mode a record is in is a rule of the (record, chain) unit, not of this schema — see conversation-unit-vectors.json.",
   "vectors": [
     {
       "name": "add — creator adds another participant (actor need not be in members)",
@@ -485,6 +485,59 @@
         "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
         "epoch": "3",
         "createdAt": "2026-08-01T00:00:00.000Z",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "owner mode — the record carries an anchor (spec 016)",
+      "valid": true,
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "anchor": "zQmT6K4BFpWFmKwJegszEWRgEpMWDaZVu8rJDmUDgfTMdo5",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "malformed anchor",
+      "valid": false,
+      "reason": "anchor is a multibase(base58btc) multihash naming a key event of the actor’s log (spec 016)",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "anchor": "not-a-multihash",
+        "signature": [
+          "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+        ]
+      }
+    },
+    {
+      "name": "a null anchor rather than an omitted one",
+      "valid": false,
+      "reason": "delegated mode is the ABSENCE of the field — never null, which would be a second byte-form of one record (spec 016)",
+      "record": {
+        "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE",
+        "kind": "add",
+        "members": ["pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC"],
+        "leaves": ["z6MkodJHzY8Bn6PycRu3pon7V3vzfk12nbndWcBz2mxMAsa2"],
+        "actor": "pk_zQmXKdKh3B9vJaLGC9yMV4uWopZgGbWf1NJBH6qv3tWWJU1",
+        "epoch": "3",
+        "createdAt": "2026-08-01T00:00:00.000Z",
+        "anchor": null,
         "signature": [
           "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
         ]

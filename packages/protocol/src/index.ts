@@ -112,6 +112,10 @@ export type ParticipantType = z.infer<typeof participantTypeSchema>;
  * longer a curve-cost multiplicand. Raising the event or key bounds requires re-deriving the
  * replay budget; raising only the signature bound does not.
  *
+ * Checking a signature-set RECORD against a replayed log costs at most `MAX_KEY_EVENT_KEYS`
+ * more: spec 016 anchors such a record to one key event, so exactly one state is tried and the
+ * event count is not a factor (spec 015, _Cost_).
+ *
  * 8 keys and 8 signatures allow an M-of-N committee well beyond anything the network runs:
  * every identity this codebase can mint is 1-of-1, because `createIdentity` produces one
  * key and `rotateIdentity` preserves the count. 128 events is about a decade of monthly
@@ -279,6 +283,12 @@ export type ParticipantNode = z.infer<typeof participantNodeSchema>;
  * complete signed form (the 003 digest rule). Permanent and monotonic — never itself
  * revoked. Signed per the revoker's threshold. Key events are out of scope: keys
  * leave the log by rotation, not revocation.
+ *
+ * `anchor` (spec 016) is REQUIRED: a Revocation's issuer is always a participant, so its
+ * signature set is always judged against a key state, and 016 requires the record to name that
+ * state rather than leave a verifier to search. It is the spec-003 digest of one `KeyEvent` in
+ * the issuer's key log — the same value `prior` carries — and the state it names is the one
+ * that event establishes.
  */
 // STRICT (spec 015 S6.3): a Revocation is named by what it revokes and is itself
 // digest-addressed, so an unknown key must be rejected rather than stripped — a stripped key
@@ -286,6 +296,7 @@ export type ParticipantNode = z.infer<typeof participantNodeSchema>;
 export const revocationSchema = z.strictObject({
   revokes: multihashSchema,
   issuerId: participantIdSchema,
+  anchor: multihashSchema,
   revokedAt: z.string().datetime(),
   reason: z.string().optional(),
   signature: boundedArray(signatureSchema, 1, MAX_RECORD_SIGNATURES)
@@ -379,12 +390,14 @@ export type AudCaveat = z.infer<typeof audCaveatSchema>;
 /**
  * Links one delegation chain may carry.
  *
- * Verifying a chain costs a key-log replay AND a signature walk over the issuer's whole key
- * history PER LINK, so an unbounded chain is unbounded work bought with one request header —
- * and the header arrives before the chain has proven anything. The honest worst case for a
- * no-candidate chain is
- * `MAX_GRANT_CHAIN_LINKS * 2 * MAX_KEY_LOG_EVENTS * MAX_KEY_EVENT_KEYS` verifications, so this
- * number is a direct multiplier on what a verifier must be willing to spend per request.
+ * Verifying a chain costs a key-log replay PER LINK, so an unbounded chain is unbounded work
+ * bought with one request header — and the header arrives before the chain has proven anything.
+ * The honest worst case for a no-candidate chain is
+ * `MAX_GRANT_CHAIN_LINKS * (MAX_KEY_LOG_EVENTS + 1) * MAX_KEY_EVENT_KEYS` verifications — the
+ * replay, plus at most one walk over one key state for the link's own signature set, because
+ * spec 016 anchors a participant-issued link to a single key event rather than leaving a
+ * verifier to try every state the log ever committed. So this number is a direct multiplier on
+ * what a verifier must be willing to spend per request.
  *
  * 4, reduced from 8. Spec 011's shapes are shallow — subject to application to service is
  * three links — so 4 carries every shape the specs describe with one spare, while halving the
@@ -432,7 +445,23 @@ export const MAX_GRANT_ABILITIES = 32;
  *
  * A grant **mixing** `e2ee` and non-`e2ee` abilities is not a credential link and gets no
  * exemption: 011's rules apply to it unchanged.
+ *
+ * Amended by spec 016 for the **anchor**: `anchor` is present exactly when `issuerId` is a
+ * ParticipantId and absent exactly when it is a KeyRef. A participant issuer signs against a
+ * key state, so 016 requires the link to name that state; a bare-key issuer is self-certifying
+ * against the single key `issuerId` already names, which is one candidate state by
+ * construction and takes no field (015, _Key events anchor themselves_).
  */
+/**
+ * 011's principal discrimination, as one predicate: a participant id carries the `pk_` prefix
+ * and a KeyRef is bare multibase, so the two shapes are disjoint by construction. Used for both
+ * the audience rules (011, 014) and the issuer's anchor rule (016) so the two cannot read the
+ * same principal differently.
+ */
+function isParticipantPrincipal(principal: string): boolean {
+  return principal.startsWith("pk_");
+}
+
 export const grantSchema = z
   // STRICT (spec 015 S6.3). A Grant is digest-addressed twice over: a child names its parent
   // by `proof`, and 008 keys revocation by the same digest. A stripped unknown key is
@@ -445,12 +474,13 @@ export const grantSchema = z
     abilities: boundedArray(abilitySchema, 1, MAX_GRANT_ABILITIES),
     caveats: z.record(z.string(), z.unknown()),
     proof: multihashSchema.nullable(),
+    anchor: multihashSchema.optional(),
     issuedAt: z.string().datetime(),
     expiresAt: z.string().datetime().optional(),
     signature: boundedArray(signatureSchema, 1, MAX_RECORD_SIGNATURES)
   })
   .superRefine((grant, ctx) => {
-    const keyAudience = !grant.audienceId.startsWith("pk_");
+    const keyAudience = !isParticipantPrincipal(grant.audienceId);
     // A credential link (spec 014): every ability in the `e2ee` namespace. `abilities` is
     // non-empty by schema, so `every` cannot be vacuously true here.
     const credentialLink = grant.abilities.every(isE2eeAbility);
@@ -483,6 +513,25 @@ export const grantSchema = z
         code: "custom",
         path: ["caveats", "aud"],
         message: "caveats.aud must be a ParticipantId or a non-empty array of them (spec 011)"
+      });
+    }
+    // Spec 016: the anchor tracks the ISSUER's shape, in both directions. A participant issuer
+    // is verified against a key state, so the link must name it; a bare-key issuer has exactly
+    // one candidate state — the key `issuerId` already is, at t = 1 — so an anchor there would
+    // name a key event of a log the issuer does not have. Both halves are schema rules so that
+    // independent verifiers agree such a link is malformed rather than merely unwelcome.
+    if (isParticipantPrincipal(grant.issuerId) && grant.anchor === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["anchor"],
+        message: "A participant-issued grant must carry anchor (spec 016)"
+      });
+    }
+    if (!isParticipantPrincipal(grant.issuerId) && grant.anchor !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["anchor"],
+        message: "A key-issued grant must not carry anchor (spec 016)"
       });
     }
   });
@@ -566,6 +615,12 @@ export type MessageEnvelope = z.infer<typeof messageEnvelopeSchema>;
  *   `lane` MUST be OMITTED for the machine lane — never `"machine"`, never `null` — and a
  *   machine-lane record MUST NOT carry a stray nonce, because either would be a second
  *   byte-form of the same logical conversation and 012's digest identity admits only one.
+ *
+ * Spec 016 adds `anchor`, which is also the mode discriminator: present means owner mode and
+ * names the creator key state the signature set is judged against; absent means delegated
+ * mode, where the single candidate state is the chain's leaf key. The agreement between the
+ * anchor and the unit's `chain` is a rule of the unit, not of the record, because the record
+ * cannot see the chain — {@link conversationPayloadSchema} decides it.
  */
 /**
  * Participants one conversation record may name. Unchanged in value from the `.max(256)` it
@@ -582,6 +637,7 @@ export const conversationSchema = z
     title: z.string().min(1).max(256).optional(),
     lane: z.literal("e2ee").optional(),
     groupNonce: groupNonceSchema.optional(),
+    anchor: multihashSchema.optional(),
     signature: boundedArray(signatureSchema, 1, MAX_RECORD_SIGNATURES)
   })
   .superRefine((record, ctx) => {
@@ -688,6 +744,9 @@ function refineSortedUniqueSet(
  *   own history), and `"01"` vs `"1"` would be two records claiming one epoch.
  * - `actor` need NOT appear in `members`: on `add`/`remove` the actor is the creator, acting on
  *   others.
+ * - (spec 016) `anchor` is present in owner mode and absent in delegated mode, exactly as on
+ *   {@link conversationSchema}; its agreement with the unit's `chain` is decided by
+ *   {@link conversationUpdatePayloadSchema}.
  */
 export const conversationUpdateSchema = z
   .strictObject({
@@ -697,6 +756,7 @@ export const conversationUpdateSchema = z
     leaves: z.array(keyRefSchema).min(1),
     actor: participantIdSchema,
     epoch: z.string().regex(/^(0|[1-9][0-9]*)$/),
+    anchor: multihashSchema.optional(),
     createdAt: z.string().datetime(),
     signature: boundedArray(signatureSchema, 1, MAX_RECORD_SIGNATURES)
   })
@@ -728,6 +788,37 @@ export type ConversationUpdate = z.infer<typeof conversationUpdateSchema>;
 const recordChainSchema = boundedArray(grantSchema, 1, MAX_GRANT_CHAIN_LINKS);
 
 /**
+ * Spec 016's mode discriminator for a `(record, chain)` unit: the record's `anchor` and the
+ * unit's `chain` MUST agree — `anchor` present ⇔ `chain` absent. A unit carrying both, or
+ * neither, is malformed.
+ *
+ * This replaces 014's "the chain MUST be present whenever owner-mode verification of `record`
+ * fails" with a structural rule the unit declares, so a verifier knows the mode, and the state,
+ * before it verifies anything. Neither half is redundant: both would leave two candidate
+ * authorities for one record, and neither leaves none.
+ */
+function refineAnchorChainAgreement(
+  record: { anchor?: string },
+  chain: unknown[] | undefined,
+  ctx: z.RefinementCtx
+): void {
+  if (record.anchor !== undefined && chain !== undefined) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["chain"],
+      message: "a unit carrying an anchored (owner-mode) record must carry no chain (spec 016)"
+    });
+  }
+  if (record.anchor === undefined && chain === undefined) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["record", "anchor"],
+      message: "a unit with no chain must carry an anchored (owner-mode) record (spec 016)"
+    });
+  }
+}
+
+/**
  * `pn/conversation` payload (spec 012, amended by 014): the `(record, chain)` unit —
  * {@link conversationSchema} plus, when the record is delegated-signed, the chain that
  * authorizes it.
@@ -736,10 +827,14 @@ const recordChainSchema = boundedArray(grantSchema, 1, MAX_GRANT_CHAIN_LINKS);
  * different records, so a custodial creator's conversation record is re-deliverable by any
  * member — and by the creator from a later session — exactly as their evidence is.
  */
-export const conversationPayloadSchema = z.strictObject({
-  record: conversationSchema,
-  chain: recordChainSchema.optional()
-});
+export const conversationPayloadSchema = z
+  .strictObject({
+    record: conversationSchema,
+    chain: recordChainSchema.optional()
+  })
+  .superRefine((unit, ctx) => {
+    refineAnchorChainAgreement(unit.record, unit.chain, ctx);
+  });
 export type ConversationPayload = z.infer<typeof conversationPayloadSchema>;
 
 /**
@@ -763,10 +858,14 @@ export type ConversationPayload = z.infer<typeof conversationPayloadSchema>;
  * envelope, is what re-verifies, which is what lets any member re-deliver a delegated-signed
  * record in either transport mode.
  */
-export const conversationUpdatePayloadSchema = z.strictObject({
-  record: conversationUpdateSchema,
-  chain: recordChainSchema.optional()
-});
+export const conversationUpdatePayloadSchema = z
+  .strictObject({
+    record: conversationUpdateSchema,
+    chain: recordChainSchema.optional()
+  })
+  .superRefine((unit, ctx) => {
+    refineAnchorChainAgreement(unit.record, unit.chain, ctx);
+  });
 export type ConversationUpdatePayload = z.infer<typeof conversationUpdatePayloadSchema>;
 
 /**

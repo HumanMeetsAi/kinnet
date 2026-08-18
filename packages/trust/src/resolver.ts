@@ -8,11 +8,13 @@
  */
 import {
   canonicalDigest,
+  checkAnchoredSignatureSet,
   KeyLogParticipantMismatch,
-  replayKeyLogFor,
+  replayKeyLogStatesFor,
   safeVerificationCount,
   VerificationBudgetExceeded,
-  verifyThresholdRecord
+  verifyThresholdRecord,
+  type AnchoredKeyState
 } from "@kinnet/crypto";
 import {
   audCaveatSchema,
@@ -21,7 +23,6 @@ import {
   isE2eeAbility,
   MAX_GRANT_CHAIN_LINKS,
   MAX_KEY_EVENT_KEYS,
-  MAX_KEY_LOG_EVENTS,
   relationshipSchema,
   revocationSchema,
   type Claim,
@@ -199,6 +200,15 @@ export type GrantChainReason =
   | "grant_chain_too_long"
   | "grant_e2ee_not_request_valid"
   | "grant_expired"
+  /**
+   * Spec 016: the link's `anchor` names no event of its issuer's key log, so there is no state
+   * to judge its signature set against. Its own reason, never folded into
+   * `grant_signature_invalid`, because 016 requires an unknown anchor to be reported
+   * distinguishably from a signature-set failure: the two call for different responses — a bad
+   * set is a forgery, an unknown anchor may be a view that has not seen the issuer's later
+   * events. On this request-time path it is still a rejection (016, _Log freshness_).
+   */
+  | "grant_issuer_anchor_unknown"
   | "grant_issuer_key_log_participant_mismatch"
   | "grant_issuer_key_log_too_expensive"
   | "grant_issuer_key_log_unresolved"
@@ -283,11 +293,13 @@ function invalid<R extends ResolverReason>(reason: R): { valid: false; reason: R
  *
  * - `grant_issuer_key_log_too_expensive` — a link's issuer log could not be replayed within the
  *   allowance. Reported where it happens, because it names the log.
- * - `grant_signature_check_too_expensive` — the OTHER spender: the threshold-signature searches
- *   (a link against its issuer's key states, a revocation candidate against its issuer's), and
- *   the revocation sub-allowance of {@link MAX_REVOCATION_CANDIDATE_VERIFICATIONS}. One search
- *   and one replay have the same `E * K` maximum; this reason covers the searches' multiplicity
- *   across links and revocation candidates, which is where a shared allowance can run out.
+ * - `grant_signature_check_too_expensive` — the OTHER spender: the threshold-signature checks
+ *   (a link against its issuer's anchored key state, a revocation candidate against its
+ *   issuer's), and the revocation sub-allowance of
+ *   {@link MAX_REVOCATION_CANDIDATE_VERIFICATIONS}. Spec 016 made each such check `K` rather
+ *   than `E * K`, so it is now far below one replay; this reason still covers their
+ *   multiplicity across links and revocation candidates, and it stays reachable because the
+ *   shared allowance is spent by the replays too.
  *
  * EXPORTED so consumers classify from this list rather than from a hand-written copy of it.
  * `@kinnet/verify` builds its own cost-reason set by mapping over this one, so a reason added
@@ -353,8 +365,6 @@ export type CostReasonsAreClassified = Assert<
 function isExpiredAt(expiresAt: string | undefined, now: Date): boolean {
   return Boolean(expiresAt && Date.parse(expiresAt) <= now.getTime());
 }
-
-type SignerState = { keys: string[]; threshold: string };
 
 /**
  * Per-context memo of `signerStates`. A chain verification asks about the same
@@ -537,7 +547,17 @@ export function verificationWorkOptions(
  * which inverts the exact distinction this exists to draw.
  */
 type SignerStatesResult =
-  | { kind: "ok"; states: SignerState[] }
+  | {
+      kind: "ok";
+      /**
+       * Every state the log commits, in sequence order, each tagged with the digest of the
+       * event that established it — spec 016's anchor lookup table. Sequence order rather
+       * than newest-first because that is what the replay produces and what an anchor lookup
+       * is indifferent to; the one consumer that still WALKS states (the scalar-signature
+       * statements, outside 016's scope) reverses as it goes.
+       */
+      states: AnchoredKeyState[];
+    }
   | { kind: "unresolved" }
   | { kind: "too_expensive" }
   /**
@@ -554,9 +574,13 @@ type SignerStatesResult =
   | { kind: "mismatched" };
 
 /**
- * All key states a participant has held, from a replay-valid log. Records verify
- * against any of them, so a rotation does not orphan previously issued records;
- * forgeries by a stolen key are withdrawn by revocation (spec 008 compromise story).
+ * Every key state a participant's replay-valid log commits, each tagged with the digest of the
+ * event that established it (spec 016).
+ *
+ * ONE replay per issuer per operation, whatever asks: an anchored record resolves its own state
+ * out of this table by digest (Revocation, participant-issued Grant), and the scalar-signature
+ * statements — Claim and Relationship, which 016 does not scope — still walk it. Both read the
+ * same replay, so adding the anchor lookup added no curve work to either.
  */
 async function signerStates(
   view: TrustView,
@@ -593,6 +617,7 @@ async function resolveSignerStates(
   if (!log || log.length === 0) {
     return { kind: "unresolved" };
   }
+  let replayed;
   try {
     // The view's own ceiling, not the general one: this replay is driven by data the view
     // supplied, and every caller above reaches here before anything has been authenticated.
@@ -608,7 +633,11 @@ async function resolveSignerStates(
     // claim, relationship and grant naming V verify under A's keys, with none of V's keys
     // involved. The returned state was previously discarded, which is exactly how the check
     // went missing.
-    replayKeyLogFor(id, log, {
+    //
+    // Binding matters MORE under spec 016, not less: an anchor selects a state WITHIN a log and
+    // says nothing about whose log it is, so an unbound replay would let a substituted log
+    // supply the very state a record's anchor names.
+    replayed = replayKeyLogStatesFor(id, log, {
       // No fallback to `view.maxSignatureVerifications` here: every public entry point builds
       // a shared budget from it, so a missing budget means the view set no ceiling at all. A
       // second path that read the view directly would be an untested branch that silently
@@ -623,90 +652,114 @@ async function resolveSignerStates(
       ? { kind: "mismatched" }
       : { kind: "unresolved" };
   }
-  // MOST RECENT FIRST, and distinct key sets only.
+  // Handed back exactly as the replay produced them: one entry per event, in sequence order,
+  // each carrying the anchor that selects it. No re-walk of `log` here — the digests are the
+  // ones the replay already computed for `prior` chaining, so re-deriving them would be the
+  // same hashing done twice, and a locally rebuilt list is a second place for the state an
+  // anchor resolves to to be wrong.
   //
-  // A record verifies against ANY state the participant has held — that is what stops a
-  // rotation orphaning previously issued records — so the order cannot change WHICH records
-  // verify. It does change what they cost, and with a shared budget in play a cost refusal is
-  // itself a verdict, so ordering is not free: it decides which shape pays the ceiling, not
-  // whether a ceiling is paid. Newest-first is chosen because nearly every honest record is
-  // signed by the state current when it was written, so the common case finds its match
-  // immediately where oldest-first walked the whole history. The worst case is unchanged and
-  // mirrored — an inception-signed record now pays what a newest-signed one used to — which is
-  // why the chain allowance is derived from `2 * MAX_KEY_LOG_EVENTS * MAX_KEY_EVENT_KEYS` =
-  // `2A` per participant link — one `A` replay plus one `A` history search — rather than from
-  // the best case.
-  //
-  // De-duplication is the same argument: two events listing the same keys and threshold are
-  // the same question asked twice, and no duplicate can change a verdict. It does nothing for
-  // a rotation log, where every event reveals a fresh key set — it is for logs that re-list
-  // one — but it is free.
-  //
-  // DEFENSIVE RATHER THAN LOAD-BEARING, as of spec 003's "No two states may share a quorum".
-  // That rule requires `|keys(A) n keys(B)| < min(t_A, t_B)` for every pair of committed
-  // states, so a log that re-lists one key set shares every key of it against that state's own
-  // threshold and is REJECTED by `replayKeyLogFor` above — this loop never sees one. The
-  // shape it was written for therefore cannot reach here, and the rejection is what
-  // `packages/trust/test/resolver.test.ts`'s "refuses a log that re-lists a key set" pins.
-  // Kept because it costs one string compare per event and the alternative — relying on an
-  // upstream rule to guarantee an invariant this loop would otherwise silently depend on —
-  // is the weaker arrangement; removing it is a separate change, not a consequence of 003.
-  const seen = new Set<string>();
-  const states: SignerState[] = [];
-  for (let index = log.length - 1; index >= 0; index -= 1) {
-    const event = log[index]!;
-    const fingerprint = `${event.threshold}:${event.keys.join(",")}`;
-    if (seen.has(fingerprint)) {
-      continue;
-    }
-    seen.add(fingerprint);
-    states.push({ keys: event.keys, threshold: event.threshold });
-  }
-  return { kind: "ok", states };
+  // The old shape — newest-first, de-duplicated by `threshold:keys` — is gone with the
+  // existential it served. De-duplication in particular MUST NOT come back: two events can now
+  // legally commit the same key set (spec 016 retires 003's "no two states may share a quorum"),
+  // and they are different anchors, so collapsing them would drop a state some record names.
+  return { kind: "ok", states: replayed.states };
 }
 
 /**
  * Does the record verify against any key state this participant has held?
  *
- * METERED against the shared allowance, and this is where the bulk of a chain verification's
- * cost actually lives. `resolveSignerStates` yields one state PER LOG EVENT — up to
- * `MAX_KEY_LOG_EVENTS` — each listing up to `MAX_KEY_EVENT_KEYS` keys, and spec 015's greedy
- * walk spends at most one verification per listed key per state. That is `E * K` = `128 x 8` =
- * 1024 verifications for ONE call, and this is called per chain link and per revocation
- * candidate.
+ * SCALAR-SIGNATURE RECORDS ONLY — Claim and Relationship, lifted into set form by
+ * {@link asSignatureSet}. Spec 016 scopes `anchor` to the four signature-set record types and
+ * leaves these two as they were, so they keep 015 S5's existential: a rotation must not orphan
+ * a claim its issuer signed years ago, and a one-member set carries no keyless cross-state edit
+ * (there is nothing to delete or reorder), which is the malleability anchoring exists to close.
+ * The anchored records — Revocation, participant-issued Grant — go through
+ * {@link signedAtAnchor} instead, and this function must not be reintroduced for them.
  *
- * The record's SIGNATURE COUNT is not a factor, and it used to be the largest one. The old
- * key-counting search was `states x keys x signatures` — `128 x 8 x 8` = 8192 for one call —
- * and 015 collapses the `x S`: a set whose member count is not exactly the threshold is refused
- * on its LENGTH before any curve work, and one whose count conforms is decided by a walk
- * bounded by the key list. The historical 8192 search did not exceed replay's then-generic 8192
- * default per call; the amplification came from MULTIPLICITY, because every link and candidate
- * could pay another search in addition to issuer replay. That compositional reason for metering
- * is unchanged. The current per-search maximum is `E * K` = 1024, equal to one maximum replay
- * and eight times smaller than the historical search.
+ * MOST RECENT FIRST, and distinct key sets only. The order cannot change WHICH records verify;
+ * it changes what they cost, and with a shared budget in play a cost refusal is itself a
+ * verdict. Nearly every honest statement is signed by the state current when it was written, so
+ * newest-first finds its match immediately where oldest-first would walk the whole history.
+ * De-duplication is the same argument — two events listing the same keys and threshold are one
+ * question asked twice — and it is now a shape that really occurs: spec 016 retires 003's "no
+ * two states may share a quorum", so a log MAY re-list a key set. Collapsing duplicates is safe
+ * HERE, where the states are searched, and would be a defect in the anchored lookup, where each
+ * state is named by its own digest.
  *
- * Throws {@link VerificationBudgetExceeded} when either allowance runs out; the call sites
- * render that as a cost refusal rather than as a bad signature.
+ * METERED against the shared allowance. `resolveSignerStates` yields one state PER LOG EVENT —
+ * up to `MAX_KEY_LOG_EVENTS` — each listing up to `MAX_KEY_EVENT_KEYS` keys, and spec 015's
+ * greedy walk spends at most one verification per listed key per state, so one call is at most
+ * `E * K` = `128 x 8` = 1024 verifications. That figure is now confined to this path: an
+ * anchored record costs `K`.
  *
- * `allowance`, when supplied, is a SECOND ceiling charged in parallel with the shared one —
- * the revocation search's sub-allowance (see {@link MAX_REVOCATION_CANDIDATE_VERIFICATIONS}).
- * Both are charged for every verification and the tighter of the two is what stops the search,
- * so exhausting either throws. Two separate objects rather than one nested budget because the
- * shared allowance must still see what a revocation lookup spent: work that came off a
- * sub-allowance is work the request performed, and a caller bounding a whole request would
- * otherwise be told it was free.
+ * Throws {@link VerificationBudgetExceeded} when the allowance runs out; the call sites render
+ * that as a cost refusal rather than as a bad signature.
  */
 function signedByAnyState(
   record: Record<string, unknown> & { signature: string[] },
-  states: SignerState[],
+  states: readonly AnchoredKeyState[],
+  operation: VerificationOperation
+): boolean {
+  const seen = new Set<string>();
+  for (let index = states.length - 1; index >= 0; index -= 1) {
+    const state = states[index]!;
+    const fingerprint = `${state.threshold}:${state.keys.join(",")}`;
+    if (seen.has(fingerprint)) {
+      continue;
+    }
+    seen.add(fingerprint);
+    if (
+      verifyThresholdRecord(record, state.keys, state.threshold, {
+        ...verificationWorkOptions(operation)
+      })
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Spec 016's verdict for an anchored signature-set record: the state its `anchor` names, and
+ * that state alone.
+ *
+ * Three outcomes, and the third is why this returns a string rather than a boolean. An unknown
+ * anchor is not a signature failure — 016 requires a verifier to "report that outcome
+ * distinguishably from a signature-set failure", because the two call for different responses:
+ * a failing set is a forgery, while an anchor naming no event of the log may equally be a view
+ * that has not caught up with the issuer's later rotations.
+ *
+ * WHAT IT COSTS. One run of 015's greedy walk against ONE state: at most
+ * `K = MAX_KEY_EVENT_KEYS` = 8 verifications, whatever the log's length and whatever the
+ * record's member count (a set whose count is not exactly the threshold is refused on its
+ * length before any curve work). The `E` factor of {@link signedByAnyState} is gone, not
+ * reduced — the lookup is by digest and exactly one state is tried — and an unknown anchor
+ * costs ZERO curve work, because there is no state to walk.
+ *
+ * `allowance`, when supplied, is a SECOND ceiling charged in parallel with the shared one —
+ * the revocation search's sub-allowance (see {@link MAX_REVOCATION_CANDIDATE_VERIFICATIONS}).
+ * Both are charged for every verification and the tighter of the two is what stops the walk, so
+ * exhausting either throws. Two separate objects rather than one nested budget because the
+ * shared allowance must still see what a revocation lookup spent: work that came off a
+ * sub-allowance is work the request performed, and a caller bounding a whole request would
+ * otherwise be told it was free.
+ *
+ * Throws {@link VerificationBudgetExceeded} when either allowance runs out; the call sites
+ * render that as a cost refusal rather than as a bad signature.
+ */
+function signedAtAnchor(
+  record: Record<string, unknown> & { signature: string[]; anchor: string },
+  states: readonly AnchoredKeyState[],
   operation: VerificationOperation,
   allowance?: VerificationBudget
-): boolean {
-  return states.some((state) => {
-    return verifyThresholdRecord(record, state.keys, state.threshold, {
-      ...verificationWorkOptions(operation, allowance)
-    });
+): "ok" | "anchor_unknown" | "signature_invalid" {
+  const result = checkAnchoredSignatureSet(record, states, {
+    ...verificationWorkOptions(operation, allowance)
   });
+  if (result.ok) {
+    return "ok";
+  }
+  return result.code === "anchor_unknown" ? "anchor_unknown" : "signature_invalid";
 }
 
 /** Lifts a single-signature record (claim, relationship) into the signature-set form. */
@@ -720,69 +773,64 @@ function asSignatureSet<T extends { signature: string }>(
  * Ed25519 verifications ONE revocation lookup may spend checking candidate signatures.
  *
  * WHY A SUB-ALLOWANCE EXISTS AT ALL. Everything else a chain verification does is sized by the
- * chain: one replay and one signature search per link, so `MAX_GRANT_CHAIN_LINKS` bounds it.
- * The revocation search is not: a link may ask about `u` authorized participant issuers and an
- * untrusted view chooses the candidate bytes. Without a sub-allowance, that link contributes up
- * to `u*A`, where `A = MAX_KEY_LOG_EVENTS * MAX_KEY_EVENT_KEYS = 1024`; across a four-link chain
- * the candidate slots sum to `L(L+1)/2 = 10`, and the measured no-R hostile chain is `18A`.
+ * chain: one replay and one signature check per link, so `MAX_GRANT_CHAIN_LINKS` bounds it. The
+ * revocation search is not sized that way — a link may ask about `u` authorized participant
+ * issuers and an UNTRUSTED VIEW chooses the candidate bytes — so the lookup's contribution to a
+ * caller's cost model has to be a constant of this module rather than a number the view picks.
  *
- * Each slot cost `states x keys x signatures` = 8,192, so all ten cost 81,920 before spec 015
- * collapsed the `x S`: a
- * signature set whose member count is not exactly the threshold is now refused on its LENGTH
- * before any curve work, and one whose count conforms is decided by a walk bounded by the key
- * list. The SLOT COUNT is untouched, so the composition is still unbounded without this
- * constant and the reason it exists is unchanged — only how long a log a hostile view needs in
- * order to reach the bound.
+ * RE-DERIVED FOR SPEC 016, not carried over. The previous value was `2 * E * K` = 2048, sized on
+ * the `E` factor of an any-state search: a revocation was offered to every state its issuer's log
+ * had ever committed, so ONE candidate could cost `E * K` = 1024. Anchoring removes that factor —
+ * a revocation names the one state it is judged against and `checkAnchoredSignatureSet` tries
+ * that state and no other — so the arithmetic is done again from the new shape. Writing
+ * `K = MAX_KEY_EVENT_KEYS` (8) and `L = MAX_GRANT_CHAIN_LINKS` (4):
  *
- * WHAT IT IS SIZED FROM. An honest lookup answers with revocations that were signature-checked
- * against their issuer's then-current state before discovery would store them, so an honest
- * candidate always verifies and the search returns on it. What it costs is decided by how far
- * the issuer has rotated since: `signedByAnyState` walks key states NEWEST FIRST, so a
- * revocation signed under the state current when it was issued costs `K` (measured: 8), and one
- * signed under the OLDEST state of a maximum-length log — the honest worst case, and exactly
- * what "verifies against any state" exists for — costs `E * K` (measured: 1024 at E=128).
+ *   one candidate    <= K        = 8      one run of 015's greedy walk against ONE state
+ *   honest ceiling   =  K        = 8      an honest lookup returns on the genuine record
+ *   this allowance   = 2 * K     = 16     (headroom factor exactly 2, as before)
  *
- *   honest ceiling  = E * K                 = 1024
- *   this allowance  = 2 * E * K             = 2048   (headroom factor exactly 2)
+ * WHAT "HONEST CEILING = K" MEANS. The per-candidate term is `K` for any candidate a view can
+ * send: a set whose member count is not exactly the anchored state's threshold is refused on its
+ * LENGTH before any curve work, one whose anchor names no event of the issuer's log is skipped
+ * before any curve work, and one that reaches the walk costs at most one verification per listed
+ * key. Neither the log's length nor the record's member count appears. And an honest lookup pays
+ * that term ONCE: discovery signature-checks a revocation before storing it, so an honest
+ * candidate verifies and the loop returns on it. A lookup that pays for a second candidate has
+ * already been sent one record that is not what it claims to be.
  *
- * The factor of 2 buys exactly two complete conforming candidate searches: one rejected,
- * stale, or hostile answer followed by the genuine revocation. It is not padding headroom:
- * a signature set whose member count differs from its threshold is rejected before curve work.
+ * WHY NOT `K` EXACTLY, and why not `L * K`. `K` is the smallest constant that admits the honest
+ * ceiling, and it would refuse the first stale or forged answer placed ahead of the genuine
+ * record — a shape the previous constant deliberately tolerated. The factor of two buys exactly
+ * that: one rejected, stale, or hostile candidate followed by the genuine revocation, and no
+ * more. At the other end, `L * K` = 32 is the most a CONFORMING answer can cost (at most one
+ * record per requested issuer, and this module names at most `L` issuers), so an allowance of
+ * `L * K` could never bind — it would be arithmetic rather than a bound, and a hostile view
+ * filling every slot would spend the maximum by right.
  *
- * IT DOES NOT FOLLOW that everything within this allowance fits a caller's own ceiling, and the
- * two derivations must not be read as agreeing. A rejected candidate costs `E * K` and leaves
- * the chain running, so a view that puts one on every link adds `L * E * K` = 4096 to a chain
- * that already costs 8192 — 13,312 once the leaf replay is counted. That exact generated shape
- * is what a node's re-derived per-tick default admits. This constant bounds what ONE LOOKUP may
- * spend; whether the composition fits is the caller's ceiling to state.
+ * THE REPLAY IS NOT CHARGED HERE, and the accounting is unchanged in that respect: an issuer's
+ * key log is replayed through `signerStates`, which charges the operation's local and outer
+ * meters and never this sub-allowance, and it is memoized per operation, so a lookup asking about
+ * `u` issuers pays at most `u` replays ONCE for the whole verification rather than once per
+ * candidate. This constant covers candidate signature checks and nothing else — which is why a
+ * hostile answer still costs a verifier a replay per named issuer, bounded by the operation's own
+ * allowance rather than by this one.
  *
- * MULTI-SIGNATURE CANDIDATES DO NOT MULTIPLY IT, and that is worth stating because the shape is
- * real: `revocationSchema` admits a revocation carrying up to `MAX_RECORD_SIGNATURES` members,
- * and a conforming discovery service would store it. Spec 015 is what keeps the cost flat — a
- * record is validly signed against a state only if it carries EXACTLY that state's threshold in
- * members, so:
+ * AN UNKNOWN ANCHOR COSTS NOTHING. A candidate whose anchor names no event of its issuer's log is
+ * not the issuer's record; it does not revoke, and it is skipped like any other candidate that
+ * fails its checks — before any curve work, so a view that answers every lookup with unanchored
+ * candidates buys itself zero verifications rather than a full search each.
  *
- * - a GENUINE multi-signature revocation carries `t` members against a `t`-of-N issuer and its
- *   search costs at most `E * K` = 1024, inside this allowance — covered like any other shape,
- *   with nothing raised to achieve it.
- * - a PADDED candidate — `MAX_RECORD_SIGNATURES` members against a `threshold: "1"` issuer — is
- *   refused by S1's length check before any curve work and costs ZERO. Measured: a hostile view
- *   padding every one of a chain's `L(L+1)/2` slots leaves the chain's spend at exactly
- *   `L * 2E * K` = 8192, its own work and not one verification more.
- *
- * So padding is the CHEAP answer and a conforming member count is the expensive one, which
- * is what `revocation-allowance.test.ts` sends.
- *
- * The exact candidate term for one link is therefore `min(R, u*A)`, never blindly `R`; summing
- * `L*R` is a conservative upper bound only. The tests pin a genuine `A` search, rejected plus
- * genuine at `2A`, refusal at `2A-1`, and zero curve work for a padded `m != t` candidate.
+ * IT DOES NOT FOLLOW that everything within this allowance fits a caller's own ceiling. A
+ * rejected candidate leaves the chain running, so its cost ADDS to the chain's rather than
+ * replacing part of it. This constant bounds what ONE LOOKUP may spend; whether the composition
+ * fits is the caller's ceiling to state (see {@link verifyGrantChain}'s closed form).
  *
  * EXHAUSTION FAILS CLOSED. Running out throws {@link VerificationBudgetExceeded} out of
  * `findRevocation`, exactly as an issuer resolving `too_expensive` already did, and the callers
  * render it as `grant_signature_check_too_expensive` / `issuer_key_log_too_expensive`. A lookup
  * that ran out established nothing, and "nothing" must never read as "not revoked".
  */
-export const MAX_REVOCATION_CANDIDATE_VERIFICATIONS = 2 * MAX_KEY_LOG_EVENTS * MAX_KEY_EVENT_KEYS;
+export const MAX_REVOCATION_CANDIDATE_VERIFICATIONS = 2 * MAX_KEY_EVENT_KEYS;
 
 /**
  * Finds a valid revocation for a record digest (spec 008): issued by an authorized
@@ -879,10 +927,26 @@ async function findRevocation(
     // established handling for a candidate that fails its checks is to skip it. Nor does
     // skipping hand the view anything: it can already suppress a genuine revocation by simply
     // not returning it, so a substituted issuer log buys no suppression power it lacked.
-    if (
-      resolved.kind === "ok" &&
-      signedByAnyState(parsed.data, resolved.states, operation, candidateAllowance)
-    ) {
+    if (resolved.kind !== "ok") {
+      continue;
+    }
+    // Spec 016: the candidate is judged against the state its own `anchor` names, and no other.
+    //
+    // An UNKNOWN ANCHOR is a skip, not an error, and the distinction is about what the record
+    // is rather than about how expensive it was. A revocation whose anchor names no event of
+    // the issuer's log is not that issuer's record — it is a candidate that failed one of this
+    // loop's checks, like a wrong `revokes` digest or an unrequested issuer — so it does not
+    // revoke, and the search carries on to the next candidate. It is surfaced exactly as those
+    // are: the loop continues, `findRevocation` answers null if nothing else verifies, and the
+    // caller reports "not revoked" rather than a cost or an invalidity. It costs no
+    // verifications, so it draws nothing from `candidateAllowance` either.
+    //
+    // This is a REQUEST-TIME path (016, _Log freshness_): the resolver holds no refetch hook,
+    // and the log it judges against was fetched from the view during THIS operation — the
+    // signer-state memo lives no longer than the request context, so there is no stale cached
+    // replay of this module's own to refresh. A view that caches key logs across requests owns
+    // that freshness decision behind `getKeyLog`.
+    if (signedAtAnchor(parsed.data, resolved.states, operation, candidateAllowance) === "ok") {
       return parsed.data;
     }
   }
@@ -1029,41 +1093,40 @@ function audOf(link: Grant): ParticipantId[] | null {
  *
  * WHAT ONE CHAIN COSTS, as a closed form a caller can add up. Writing
  * `E = MAX_KEY_LOG_EVENTS` (128), `K = MAX_KEY_EVENT_KEYS` (8), `L = MAX_GRANT_CHAIN_LINKS` (4),
- * `R = MAX_REVOCATION_CANDIDATE_VERIFICATIONS` (2048):
+ * `R = MAX_REVOCATION_CANDIDATE_VERIFICATIONS` (16):
  *
  *   chain cost  = L * (E * K)                    issuer-log replays
- *               + L * (E * K)                    link signature searches
- *               + sum_i min(R, u_i * E * K)      candidate searches at each link
+ *               + L * K                          link signature checks
+ *               + sum_i min(R, u_i * K)          candidate checks at each link
  *
- * The conservative substitution `sum_i ... <= L*R` gives `16A = 16,384`; it is an upper
- * bound, not the exact cost of every chain. The replay term is `L` and not `L(L+1)/2` because
- * {@link SignerStateCache} makes each distinct issuer replay once per verification however many
- * links and revocation lookups ask about it.
+ * The conservative substitution `sum_i ... <= L*R` gives `4 * 1024 + 32 + 64` = 4192; it is an
+ * upper bound, not the exact cost of every chain. The replay term is `L` and not `L(L+1)/2`
+ * because {@link SignerStateCache} makes each distinct issuer replay once per verification
+ * however many links and revocation lookups ask about it.
  *
- * THE SIGNATURE COUNT IS NOT IN THIS FORM ANY MORE, and its absence is the whole of spec 015's
- * effect on cost. The middle term was `L * (E * K * S)`, and the closed form held only at
- * `S = 1` — the shape an honest 1-of-N signer produces — with `S = MAX_RECORD_SIGNATURES`
- * costing eight times that. Under 015 a signature set is checked by a greedy walk bounded by
- * the state's KEY LIST, and a set whose member count is not exactly the threshold is refused on
- * its length before any curve work, so `E * K` is the per-link ceiling for every record the
- * schema admits. The number did not move; what moved is that it is now unconditional.
+ * THE `E` FACTOR HAS LEFT THE RECORD TERMS, and that is spec 016's whole effect on cost. The
+ * middle term was `L * (E * K)`: a link was offered to every state its issuer's log had ever
+ * committed, so the states of the log multiplied the keys of a state. An anchored link names
+ * ONE state, so the term is `L * K` — the replay still dominates, and it is work a verifier
+ * performs anyway to resolve the issuer. (The signature COUNT left the form one spec earlier,
+ * with 015: a set whose member count is not exactly the threshold is refused on its length
+ * before any curve work, so `K` is the per-link ceiling for every record the schema admits.)
  *
  * The candidate term is the whole reason {@link MAX_REVOCATION_CANDIDATE_VERIFICATIONS} exists:
- * without it the revocation search contributes `(L(L+1)/2) * E * K` = 10,240, chosen by the
- * VIEW rather than by the chain — measured at 18,432 for a whole chain with the sub-allowance
- * removed.
+ * without it the revocation search contributes `(L(L+1)/2) * K`, chosen by the VIEW rather than
+ * by the chain — a bound of the same shape as the one it replaces, an order of magnitude
+ * smaller, and still the view's number rather than the chain's.
  *
- * The HONEST ceiling is lower, and it is the one a caller sizing a timeout wants: an honest
- * lookup finds at most one genuine revocation and returns on it, so the chain pays at most one
- * candidate search of `E * K` in total rather than the conservative `L * R`, giving
- * `L * 2E * K + E * K` = 8192 + 1024 = 9216.
+ * The HONEST ceiling is the one a caller sizing a timeout wants: an honest lookup finds at most
+ * one genuine revocation and returns on it, so the chain pays at most one candidate check of
+ * `K` in total rather than the conservative `L * R`, giving `L * (E * K) + L * K + K` = 4136.
  *
  * "Honest" there means the VIEW is honest as well as the chain. A view that answers a lookup
- * with a candidate the verifier must reject is not covered by it: that candidate costs `E * K`,
- * the lookup returns null, and the chain carries on to the next link, so the rejections ADD to
- * the chain's cost rather than replacing part of it. Measured at these constants, one such
- * candidate per link takes a re-check from 9216 to 13,312 while still returning
- * `authorized: true`.
+ * with a candidate the verifier must reject is not covered by it: that candidate costs at most
+ * `K`, the lookup returns null, and the chain carries on to the next link, so the rejections
+ * ADD to the chain's cost rather than replacing part of it. The addition is now bounded by
+ * `L * R` = 64 rather than by `L * E * K` = 4096, so a hostile view's contribution has stopped
+ * being the dominant term of this form.
  */
 export async function verifyGrantChain(
   chain: Grant[],
@@ -1220,9 +1283,10 @@ export async function verifyGrantChain(
 
   // Every cost refusal inside this loop lands here. Replay exhaustion is reported where it
   // happens (it names the key log); this catches the OTHER spender — threshold-signature
-  // searches. One search and one replay each have the same `E * K` maximum, but searches recur
-  // across links and revocation candidates, so their accumulated spend can exhaust the shared
-  // allowance. That exhaustion must never be mistaken for a bad signature.
+  // checks. Since spec 016 one such check is `K` against one anchored state rather than `E * K`
+  // against every state a log committed, so a single check can no longer exhaust an allowance a
+  // replay fits in; they still recur across links and revocation candidates, and the accumulated
+  // spend still has to be told apart from a bad signature.
   try {
     for (let index = 0; index < chain.length; index += 1) {
       const link = chain[index]!;
@@ -1254,7 +1318,31 @@ export async function verifyGrantChain(
         if (resolved.kind !== "ok") {
           return invalid("grant_issuer_key_log_unresolved");
         }
-        if (!signedByAnyState(link, resolved.states, operation)) {
+        // Spec 016 chain rule 1, participant branch: a participant-issued link carries an
+        // `anchor` and is judged against the state that anchor names, and no other. `grantSchema`
+        // (checked for every link above) requires the field exactly when the issuer is a
+        // participant, so the undefined arm is unreachable through this entry point and is
+        // handled as a malformed link rather than as a signature failure — a link with no anchor
+        // is not a link whose signature is wrong.
+        if (link.anchor === undefined) {
+          return invalid("grant_malformed");
+        }
+        // Cast rather than reconstructed: the bytes a signature covers are the bytes as given,
+        // and narrowing an optional property does not narrow the object type.
+        const anchored = signedAtAnchor(
+          link as Grant & { anchor: string },
+          resolved.states,
+          operation
+        );
+        // Reported distinguishably from a bad set, as 016 requires: an unknown anchor may be a
+        // view that has not seen the issuer's later events, where a failing set is a forgery.
+        // The chain is invalid either way on this request-time path — a verifier here has no
+        // refetch hook and no reason to stall — but an operator reading the two reasons is sent
+        // to different places.
+        if (anchored === "anchor_unknown") {
+          return invalid("grant_issuer_anchor_unknown");
+        }
+        if (anchored !== "ok") {
           return invalid("grant_signature_invalid");
         }
       } else if (!signedByKeyIssuer(link, link.issuerId, operation)) {

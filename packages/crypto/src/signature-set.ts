@@ -1,6 +1,5 @@
 /**
- * Canonical signature sets — spec 015 (S0–S3) and spec 003's "no two states may share a
- * quorum" replay rule.
+ * Canonical signature sets — spec 015's S0–S3.
  *
  * This module holds the parts of those rules that are pure combinatorics over key refs,
  * thresholds and verification outcomes: no curve work, no record shapes. `records.ts` and
@@ -19,9 +18,9 @@
  *   increasing key index. {@link walkSignatureSet}, which is 015's normative greedy forward
  *   walk verbatim.
  *
- * S4 (the check precedes the digest) and S5 (the existential over states sits outside the
- * per-state check) are properties of the CALLERS, not of this module; they are asserted at
- * the call sites and in their tests.
+ * S4 (the check precedes the digest) and the choice of WHICH state a record is judged against
+ * are properties of the CALLERS, not of this module: spec 016 turns 015 S5's existential over
+ * states into a lookup on the record's own `anchor`, decided in `records.ts`.
  */
 
 /** Which rule of spec 015 refused a signature set. */
@@ -253,60 +252,4 @@ export function diagnoseAssignment(
   // S3, order: an injective assignment exists, but no strictly increasing one does — which is
   // what the walk just failed to find.
   return "members_out_of_key_order";
-}
-
-/** A committed key state, as the quorum rule sees it: a key list and a threshold. */
-export type QuorumState = { keys: readonly string[]; threshold: string };
-
-/** The pair of states that violate spec 003's quorum rule, and the numbers that show it. */
-export type QuorumViolation = {
-  /** Indices into the states array as supplied — event order for a key log. */
-  first: number;
-  second: number;
-  shared: number;
-  minThreshold: number;
-};
-
-/**
- * Spec 003's "no two states may share a quorum": for EVERY pair of states `A`, `B` a log
- * commits, `|keys(A) ∩ keys(B)| < min(t_A, t_B)`.
- *
- * Over every pair and not merely consecutive ones, because records verify against any state
- * the log ever committed (008, 012) — so every pair is simultaneously live for verification,
- * and a rule checked pairwise on adjacent events leaves the route open between non-adjacent
- * ones.
- *
- * A malformed threshold is treated as `min` of nothing: this returns no violation for it and
- * leaves the rejection to S1, which owns the threshold domain. Callers run S1 per event
- * first, so a threshold reaching here has already been through it.
- *
- * Returns the FIRST violating pair in `(second, first)` scan order, or null.
- */
-export function quorumViolation(states: readonly QuorumState[]): QuorumViolation | null {
-  for (let second = 1; second < states.length; second += 1) {
-    const b = states[second]!;
-    const bThreshold = parseThreshold(b.threshold);
-    if (bThreshold === null) {
-      continue;
-    }
-    const bKeys = new Set(b.keys);
-    for (let first = 0; first < second; first += 1) {
-      const a = states[first]!;
-      const aThreshold = parseThreshold(a.threshold);
-      if (aThreshold === null) {
-        continue;
-      }
-      let shared = 0;
-      for (const key of new Set(a.keys)) {
-        if (bKeys.has(key)) {
-          shared += 1;
-        }
-      }
-      const minThreshold = Math.min(aThreshold, bThreshold);
-      if (shared >= minThreshold) {
-        return { first, second, shared, minThreshold };
-      }
-    }
-  }
-  return null;
 }

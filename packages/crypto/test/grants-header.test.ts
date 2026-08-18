@@ -18,6 +18,9 @@ function grantFixture(overrides: Partial<Grant> = {}): Grant {
     abilities: ["msg/send"],
     caveats: { aud: "pk_z6MkVerifier1111" },
     proof: null,
+    // Spec 016: this link's issuer is a participant, so it names the key state it was signed
+    // under. Shape-valid rather than resolvable — the codec under test decodes, never verifies.
+    anchor: "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
     issuedAt: "2026-07-21T12:00:00.000Z",
     expiresAt: "2026-07-28T12:00:00.000Z",
     signature: ["z2SignatureBytes1111"],

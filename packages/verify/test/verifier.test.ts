@@ -9,6 +9,7 @@ import {
   encodeSignature,
   eventDigest,
   generateKeyPair,
+  keyLogAnchor,
   rotateIdentity,
   sign,
   signRecord,
@@ -345,7 +346,12 @@ describe("inbound agent verification", () => {
     // move the signature/expiry/revocation checks anywhere.
     const edge = representsEdge();
     const revocation = signThresholdRecord(
-      { revokes: canonicalDigest(edge), issuerId: org.id, revokedAt: ISSUED_AT },
+      {
+        revokes: canonicalDigest(edge),
+        issuerId: org.id,
+        anchor: keyLogAnchor(org.log),
+        revokedAt: ISSUED_AT
+      },
       [org.currentKeys[0]!.secretKey]
     ) as Revocation;
     const verifier = makeVerifier(
@@ -480,6 +486,9 @@ describe("delegated requests (spec 011)", () => {
         audienceId: sessionKeyRef,
         abilities: ["msg/send"],
         caveats: { aud: [service.id] },
+        // Spec 016: required on a participant-issued link, forbidden on the key-issued tail
+        // below.
+        anchor: keyLogAnchor(user.log),
         proof: null,
         issuedAt: ISSUED_AT,
         expiresAt: EXPIRES_AT,
@@ -659,7 +668,12 @@ describe("delegated requests (spec 011)", () => {
   it("rejects a revoked session grant", async () => {
     const root = sessionGrant();
     const revocation = signThresholdRecord(
-      { revokes: canonicalDigest(root), issuerId: user.id, revokedAt: ISSUED_AT },
+      {
+        revokes: canonicalDigest(root),
+        issuerId: user.id,
+        anchor: keyLogAnchor(user.log),
+        revokedAt: ISSUED_AT
+      },
       [user.currentKeys[0]!.secretKey]
     ) as Revocation;
     const verifier = makeDelegatedVerifier({
@@ -710,6 +724,7 @@ describe("delegated requests (spec 011)", () => {
         audienceId: backend.id,
         abilities: ["msg/send"],
         caveats: {},
+        anchor: keyLogAnchor(user.log),
         proof: null,
         issuedAt: ISSUED_AT,
         expiresAt: EXPIRES_AT
@@ -1253,6 +1268,7 @@ describe("the verification call's shared allowance", () => {
           audienceId: sessionRef,
           abilities: ["msg/send"],
           caveats: { aud: [verifierId] },
+          anchor: keyLogAnchor(user.log),
           proof: null,
           issuedAt: ISSUED_AT,
           expiresAt: new Date(NOW.getTime() + 19 * 86_400_000).toISOString()
@@ -1334,6 +1350,7 @@ describe("a delegated verify() refused on cost names the stage that ran out", ()
         audienceId,
         abilities: ["quote"],
         caveats: withAud ? { aud: [org.id] } : {},
+        anchor: keyLogAnchor(issuer.log),
         proof: null,
         issuedAt: ISSUED_AT,
         expiresAt: new Date(NOW.getTime() + 86_400_000).toISOString()
@@ -1483,6 +1500,8 @@ describe("the 13A verifier default against generated honest and hostile composit
         audienceId: index === 0 ? actor.id : issuers[index - 1]!.id,
         abilities: ["quote"],
         caveats: {},
+        // Signed under the issuer's INCEPTION state, so spec 016's anchor names that event.
+        anchor: eventDigest(issuers[index]!.log[0]!),
         proof,
         issuedAt: ISSUED_AT
       },
@@ -1520,10 +1539,26 @@ describe("the 13A verifier default against generated honest and hostile composit
     });
     return { method: "POST", url: TARGET, headers: { ...headers }, body };
   };
+  /**
+   * Every identity in this fixture, so a revocation can be anchored (spec 016) to the state its
+   * signer belongs to — the inception state, which is where every signature here is made.
+   */
+  const identityById = new Map(
+    [actor, organization, ...issuers].map((identity) => [identity.id, identity])
+  );
+
   const revocationOf = (digest: string, issuerId: string, secretKey: Uint8Array): Revocation =>
-    signThresholdRecord({ revokes: digest, issuerId, revokedAt: ISSUED_AT }, [
-      secretKey
-    ]) as Revocation;
+    signThresholdRecord(
+      {
+        revokes: digest,
+        issuerId,
+        // The inception event of the named issuer's own log. A candidate anchored anywhere else
+        // would be skipped before any curve work, and these fixtures exist to measure work.
+        anchor: eventDigest(identityById.get(issuerId)!.log[0]!),
+        revokedAt: ISSUED_AT
+      },
+      [secretKey]
+    ) as Revocation;
 
   function verifier(maxSignatureVerifications: number, revocations: Record<string, Revocation[]>) {
     return makeVerifier(
@@ -1536,8 +1571,21 @@ describe("the 13A verifier default against generated honest and hostile composit
     );
   }
 
-  it("measures the memoized full honest success at 11A + K", async () => {
-    const exact = 11 * A + K;
+  it("measures the memoized full honest success at 7A + 5K", async () => {
+    // The composition, term by term, at `E = MAX_KEY_LOG_EVENTS`, `K = MAX_KEY_EVENT_KEYS`,
+    // `L = MAX_GRANT_CHAIN_LINKS`, `A = E * K` (one full-length 1-of-K replay):
+    //
+    //   7A  seven replays — the actor, the four chain issuers, the organization, and the
+    //       agent's own — each memoized, so a distinct log is replayed once per request
+    //   5K  five record checks — four anchored chain links and the represents edge
+    //
+    // It was `11A + K` before spec 016, and the whole of the difference is the four chain
+    // links: each was offered to every state its issuer's log had ever committed (`A` apiece,
+    // since these fixtures sign under the INCEPTION state and the search ran newest-first), and
+    // each now names the one state it is judged against (`K`). The replays are untouched — they
+    // are what a verifier pays to resolve an issuer at all — and they now dominate the request
+    // so completely that the record checks are under one percent of it.
+    const exact = 7 * A + 5 * K;
     await expect(verifier(exact, {}).verify(request())).resolves.toMatchObject({
       agentId: agent.id,
       delegated: true
@@ -1548,7 +1596,10 @@ describe("the 13A verifier default against generated honest and hostile composit
     });
   }, 300_000);
 
-  it("uses 13A to reach a late genuine relationship revocation at exactly 12A + K", async () => {
+  it("reaches a late genuine relationship revocation at exactly 7A + 6K", async () => {
+    // One more `K` than the honest success: the genuine revocation candidate is anchored to the
+    // organization's inception state and costs one walk against it. Before 016 it cost `A` — the
+    // full history search — which is why this figure was `12A + K`.
     const revocation = revocationOf(
       canonicalDigest(edge),
       organization.id,
@@ -1564,7 +1615,7 @@ describe("the 13A verifier default against generated honest and hostile composit
       status: 401,
       reason: "represents_chain_unverified"
     });
-    const exact = 12 * A + K;
+    const exact = 7 * A + 6 * K;
     await expect(
       verifier(exact - 1, {
         [revocation.revokes]: [revocation]
@@ -1572,7 +1623,10 @@ describe("the 13A verifier default against generated honest and hostile composit
     ).rejects.toMatchObject({ name: "VerifyCapacityError", status: 503 });
   }, 300_000);
 
-  it("does not let an 18A outer request widen the hostile operation past 13A", async () => {
+  it("does not let an 18A outer request widen the operation past its own ceiling", async () => {
+    // A hostile view answering every lookup with conforming-count candidates signed by a key in
+    // nobody's log, and anchored to real key events so each one reaches the walk rather than
+    // being skipped for free.
     const revocations: Record<string, Revocation[]> = {};
     for (let index = 0; index < chain.length; index += 1) {
       const digest = canonicalDigest(chain[index]!);
@@ -1584,13 +1638,33 @@ describe("the 13A verifier default against generated honest and hostile composit
     const edgeDigest = canonicalDigest(edge);
     revocations[edgeDigest] = [revocationOf(edgeDigest, organization.id, stranger.secretKey)];
 
-    const bounded = verifier(DEFAULT_VERIFY_MAX_SIGNATURE_VERIFICATIONS, revocations);
+    // The whole hostile composition now costs `7A + 13K` — the same seven replays, plus a walk
+    // for each of the nine decoys and the five honest record checks — so it fits inside the 13A
+    // default with room to spare, where before 016 it exhausted it. The bound has stopped biting
+    // on this shape, and that is spec 016's effect rather than a weakening: the decoys are still
+    // checked, and still fail.
+    const hostileCost = 7 * A + 13 * K;
+    await expect(
+      verifier(DEFAULT_VERIFY_MAX_SIGNATURE_VERIFICATIONS, revocations).verify(request())
+    ).resolves.toMatchObject({ agentId: agent.id });
+    await expect(verifier(hostileCost, revocations).verify(request())).resolves.toMatchObject({
+      agentId: agent.id
+    });
+
+    // The property this test exists for, unchanged: a request-wide allowance LARGER than the
+    // verifier's per-operation ceiling does not widen the operation. With the operation capped
+    // below what the hostile composition costs, the tick is refused for capacity even though the
+    // request offered 18A — and the outer budget shows exactly the operation's own ceiling
+    // spent, not a verification more.
+    const operationCeiling = 7 * A;
+    expect(operationCeiling).toBeLessThan(hostileCost);
+    const bounded = verifier(operationCeiling, revocations);
     const context = bounded.beginRequest({ maxSignatureVerifications: 18 * A });
     await expect(bounded.verify(request(), context)).rejects.toMatchObject({
       name: "VerifyCapacityError",
       status: 503
     });
-    expect(context.budget.remaining).toBe(5 * A);
+    expect(context.budget.remaining).toBe(18 * A - operationCeiling);
   }, 300_000);
 });
 

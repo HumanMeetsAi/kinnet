@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** rotation, recovery, and ID→current-key resolution
-**Amended by:** 011
+**Amended by:** 011, 016
 
 ## Context
 
@@ -109,88 +109,58 @@ because that needs the prior event's `next`. So such a validator is entitled to 
 - **No:** _"this rotation was authorized."_ That requires the prior event's `next`, which one
   event does not contain.
 
-The commitment equality is therefore a **log-level** validity rule, like the quorum rule below:
-a replay MUST enforce it, and a record-layer validator cannot. An implementation that validates
+The commitment equality is therefore a **log-level** validity rule: a replay MUST enforce it, and
+a record-layer validator cannot. An implementation that validates
 key events but never replays a log **will accept a rotation revealing a key state the prior event
 never committed**, including the single-member takeover set out in _Design notes_. Key events are
 not independently checkable records, and anything that treats them as such is incomplete.
 
 ### No two states may share a quorum
 
-A log's events are not independent: **records verify against any state the log ever committed**
-(008, 012), so every pair of committed states is simultaneously live for verification purposes.
-That makes overlap between them a validity question rather than a matter of taste.
+_Amended by 016: this rule is removed; the section is kept so cross-references to it resolve._
 
-A conforming log MUST satisfy, for **every pair** of key states `A`, `B` it commits — not merely
-consecutive ones, since the any-state rule makes every pair reachable:
+This section required, of **every pair** of key states `A`, `B` one log commits:
 
 ```
 |keys(A) ∩ keys(B)| < min(threshold(A), threshold(B))
 ```
 
-In words: **no two key states of one log may share enough keys to satisfy the lower of their two
-thresholds.** A replay MUST reject a log that violates this, and MUST do so as a log-level check
-after each event's own structure is validated — it is a set intersection over already-bounded key
-lists, so it costs nothing next to the signature work.
+— no two states of one log sharing enough keys to satisfy the lower of their two thresholds. It
+was the **interim** closure of the keyless cross-state edits 015 records as routes 3 and 4, in
+which an attacker holding no key deletes or permutes the members of a signed record's signature
+array so that the result verifies against a different state of the same log. Forbidding a shared
+quorum removed the second state those edits need.
 
-**Why.** An attacker who holds no key can still delete and rearrange the members of a signed
-record's signature array. Every member that survives such an edit verifies under a key one of the
-original signers held — a key of the state the record was signed against. For the edited record to
-verify against a _different_ state, each of its members must verify under a distinct key listed
-there too, so those keys lie in the intersection of the two states, and there must be at least that
-state's threshold of them. **The attack exists exactly when two states share a quorum.** Forbidding
-that closes it: an edit can never land in another state, so a record that verifies at all verifies
-against exactly one committed state, and no keyless edit of it verifies anywhere.
+**016 closes them structurally instead**, and the rule is withdrawn rather than kept as belt and
+braces. A record now names the one key state it is verified against, so no record is judged
+against two states and there is no second state for an edit to land in — a guarantee that needs
+neither the assumption that a signature verifies under exactly one key nor a verifier that checks
+log shape as well as signatures. The rule was not free: it cost rotation flexibility exactly where
+M-of-N needs it (a 2-of-3 could retain at most one key), and it refused configurations that admit
+no attack at all, `1-of-n` states among them.
 
-**What this does not give you.** It is a real restriction on rotation, and an operator should learn
-it here rather than by hitting a rejection:
+**A replay MUST NOT reject a log on the ground that two of its committed states share a quorum.**
+Every log the rule rejected is valid: a 2-of-3 may retire one key and retain two, a state may
+re-reveal an earlier key set, and a `1-of-n` log may carry a key across a rotation. Nothing that
+was valid under the rule becomes invalid without it.
 
-- A **1-of-1** rotation is unaffected — it shares zero keys, which is what makes it a rotation.
-- A **3-of-5** may retire three keys and retain two: `2 < 3`.
-- A **2-of-3 may retain at most one key.** Retiring one compromised key and keeping the other two
-  shares two keys against a threshold of two, and is **illegal**. There is no way to both keep a
-  quorum of old keys across a rotation and close the attack above — those are the same
-  configuration described twice. Restoring that flexibility needs record anchoring (015), which
-  binds a record to one named state and so removes the reason the rule exists.
-- **The rule is deliberately conservative, and rejects some logs that admit no attack.** It tests
-  key sets and thresholds, not reachability, so it refuses configurations that are in fact safe.
-  The clearest case is **any `1-of-n` state**: with `t = 1` a conforming record carries exactly one
-  signature, so there is nothing to delete and nothing to reorder and no edit exists — yet
-  `[K₀,K₁] t=1 → [K₁,K₂] t=1` shares one key against `min(t) = 1` and is rejected. A log that
-  re-reveals its own current key set is likewise illegal, though the pre-rotation commitment alone
-  would permit it. Over a universe of five keys, states being ordered key lists of at most three
-  keys with every threshold and pairs unordered, roughly a fifth of the state pairs the rule
-  rejects admit no attack in either direction, and four fifths of those are the `t = 1` case.
-  Over-refusal is the right failure direction for an interim rule; a precise rule would have to
-  reason about which subsets are reachable in which order, which is exactly the complexity
-  anchoring removes.
+**Records verify against the state their anchor names (016)**, not against any state the log ever
+committed. That earlier sentence is what made every pair of committed states simultaneously live,
+and it is what this section rested on.
 
-**Soundness basis, stated exactly.** This rule rests on the assumption that **a signature verifies
-under exactly one key**. The counting argument above says each surviving member verifies under a
-key its original signer held; if one signature verified under two distinct listed keys, a member
-could satisfy a key outside the intersection and the argument fails. That is the **same**
-assumption a blanket ban on key reuse would rest on — no weaker — and it is an assumption about
-Ed25519 rather than a structural property of the record. Anchoring (015) needs no such assumption,
-which is why this rule is an interim measure and anchoring is the real fix.
-
-**The assumption holds only under a verification mode that rejects low-order public keys, and 005
-pins one.** This is a hard prerequisite of the rule above, not a footnote. Under cofactored
-(ZIP-215) verification a signature whose `R` is the identity point and whose `S` is zero verifies
-under **every** small-order public key, for any message, so one such signature could satisfy
-several distinct listed keys and the counting argument fails. 005's _Verification mode_ section
-therefore requires low-order public-key rejection explicitly, with committed conformance vectors
-at `packages/crypto/test/fixtures/ed25519-verification-vectors.json`. A verifier that ignores that
-pin and uses its runtime's cofactored default breaks this rule's soundness argument, and does so
-silently, because every record an honest issuer ever published still verifies for it. _Design
-notes_ states what that mode rejects and why RFC 8032 alone does not supply it.
+005's pinned verification mode is unaffected and still required: with this rule gone its basis is
+determinism (015 _Terms_), not the soundness of an intersection argument.
 
 ### Resolving the current key
 
 Replay from inception: check the hash chain, that each rotation reproduces the prior event's
 pre-rotation commitment (_The committed next key state_), that each event satisfies its own
-threshold, that seq is contiguous, and that no two committed states share a quorum (above). The
-latest event's `keys` are the **current** signing keys. This is what discovery serves and what
-verifiers cache.
+threshold, and that seq is contiguous. The latest event's `keys` are the **current** signing keys.
+This is what discovery serves and what verifiers cache.
+
+_Amended by 016: the replay no longer checks that no two committed states share a quorum, and a
+record signed by the participant is verified against the state its `anchor` names — one event of
+this log, identified by digest — rather than against any state the log has committed._
 
 **The state an event is judged against is the state the event carries** — its `keys` and its
 `threshold`. For a rotation those are the prior event's committed values, because the commitment
@@ -318,8 +288,9 @@ Judging a rotation against the threshold the event itself declares allows a take
 committee member. An attacker who holds ONE private key of a multi-key committed next set — one
 member of an M-of-N committee, who also knows the set's public keys — reveals that committed set
 at `threshold: "1"`, signs once, and takes sole control of the identity. The reveal matches a
-key-list-only commitment, and nothing else refuses it: the quorum rule compares key sets, and a
-rotation to a disjoint set shares nothing. The effective authorization for **any** rotation would
+key-list-only commitment, and nothing else refuses it: a rotation to a set disjoint from every
+state before it is exactly what an honest rotation looks like. The effective authorization for
+**any** rotation would
 then be one signature from any one committed key, whatever the committee's size — precisely the
 guarantee M-of-N exists to provide.
 
@@ -338,9 +309,13 @@ key digests, and a rotation must satisfy both it and the event's own signing thr
 the commitment was preferred over layering a second rule over the old one: a commitment that
 under-specifies what it commits to cannot be repaired from outside.
 
-**What the pinned verification mode rejects.** _No two states may share a quorum_ depends on a
-signature verifying under exactly one key, and that holds only under a verification mode that
-rejects low-order public keys. Under cofactored (ZIP-215) verification, a signature whose `R` is
+**What the pinned verification mode rejects.** 005 pins a verification mode, and this log's replay
+depends on it for the plainest of reasons: "the signature verifies" must be a statement about the
+bytes and not about the verifier, or two replays of one log reach two verdicts. The retired quorum
+rule additionally needed the mode for its soundness — it assumed a signature verifies under
+exactly one key — and 016 removed both the rule and that dependency; what remains is
+determinism (015 _Terms_), which is requirement enough. Under cofactored (ZIP-215) verification, a
+signature whose `R` is
 the identity point and whose `S` is zero verifies under **every** small-order public key, for any
 message; all eight canonical small-order points accept it, and all eight encode as well-formed
 `KeyRef`s. **No secret key is involved** — small-order points have no discrete log to know — so
@@ -351,9 +326,9 @@ _Verification mode_ section requires the rejection as an addition to RFC 8032 ra
 reading of it. Severity is bounded in any case: exploiting the gap requires the issuer's own key
 state to list two or more small-order keys — a state only that issuer can publish, and an issuer
 willing to publish it could set `threshold: "1"` and achieve the same effect directly. It is
-self-harm rather than an outsider attack. What it means for this spec is that the quorum rule's
-guarantee is conditional on 005's pinned mode in a way an implementer reading that section alone
-would otherwise not discover, which is why the dependency is written down there.
+self-harm rather than an outsider attack. What it means for this spec is that a replay's verdict is
+conditional on 005's pinned mode in a way an implementer reading the threshold rules alone would
+otherwise not discover, which is why the dependency is written down here.
 
 **Reach of M-of-N today.** 004 restricts request signing to threshold-1 key states, so a
 participant whose current key state has a threshold above 1 cannot perform discovery writes at
@@ -374,8 +349,13 @@ M-of-N safe to publish once it is.
   **state**, ordered keys plus threshold, so a rotation's threshold is fixed one event ahead;
   every event digest and participant ID derived under the earlier commitment changes.
 - 2026-08-11 — The replay-cost bound was restated in terms of 015's canonical signature sets.
+- 2026-08-18 — Amended by 016: the quorum rule is removed and a replay no longer applies it, since
+  a record is verified against the single key state its anchor names; rotation flexibility that
+  rule cost — a 2-of-3 retaining two keys — is restored.
 
 ## References
 
 - KERI — key event logs, establishment events, pre-rotation
-- Spec 002 (ID derivation), 005 (signature suite / KeyRef encoding)
+- Spec 002 (ID derivation), 005 (signature suite / KeyRef encoding), 015 (canonical signature
+  sets), 016 (record anchoring — the state a record is verified against; the retirement of the
+  quorum rule)

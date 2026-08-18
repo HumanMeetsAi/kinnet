@@ -23,7 +23,6 @@ import {
   checkKeyState,
   checkMemberCount,
   parseThreshold,
-  quorumViolation,
   walkSignatureSet
 } from "./signature-set.js";
 
@@ -349,6 +348,18 @@ export type KeyState = {
 };
 
 /**
+ * A key state together with the digest of the event that established it — the value spec 016's
+ * `anchor` field names.
+ *
+ * `anchor` is `eventDigest(event)`, the same value the NEXT event's `prior` carries, so a state
+ * and the record that names it are joined by a digest both sides already compute. A `seq` would
+ * not do: it is unambiguous only within one replay-valid log, and 003 defers duplicity
+ * detection, so two forks could carry different events at the same `seq` (015, _Options
+ * considered_).
+ */
+export type AnchoredKeyState = KeyState & { anchor: string };
+
+/**
  * The ceiling for replaying a log supplied by a caller who has not authenticated yet.
  *
  * `write-auth.ts` replays the key log carried in the request body to discover the keys the
@@ -574,6 +585,11 @@ export function replayKeyLogFor(
   return state;
 }
 
+/** Strips the anchor from a replayed state, for the callers that ask only for the state. */
+function bareState(state: AnchoredKeyState): KeyState {
+  return { id: state.id, keys: state.keys, threshold: state.threshold, seq: state.seq };
+}
+
 /**
  * Replays a key-event log per spec 003 and returns the current key state. Throws on
  * any chain, commitment, identity, or signature violation, and on exhausting the
@@ -582,8 +598,96 @@ export function replayKeyLogFor(
  * The returned `id` is derived from the log's OWN inception event and is therefore a claim the
  * log makes about itself, never a confirmation that this is the log you asked for. A caller
  * holding an expected participant id must use {@link replayKeyLogFor}.
+ *
+ * A caller verifying an ANCHORED record (spec 016) wants {@link replayKeyLogStates} instead: it
+ * is the same replay, and it keeps the per-event states the anchor selects among.
  */
 export function replayKeyLog(events: KeyEvent[], options: ReplayKeyLogOptions = {}): KeyState {
+  return bareState(runReplay(events, options).current);
+}
+
+/**
+ * Replays a key-event log per spec 003 and returns EVERY state it commits, each tagged with the
+ * digest of the event that established it — the lookup table spec 016's anchor resolves against.
+ *
+ * `states` is in sequence order, one entry per event, and `current` is its last entry. Same
+ * replay, same budget and same rejections as {@link replayKeyLog}: an anchored verifier still
+ * has to establish that the log itself is valid before any state of it means anything (016's
+ * verification rule, clause 1).
+ *
+ * The digests are the ones the replay already computes for `prior` chaining, so keeping the
+ * states costs no additional hashing and no additional curve work.
+ */
+export function replayKeyLogStates(
+  events: KeyEvent[],
+  options: ReplayKeyLogOptions = {}
+): { current: AnchoredKeyState; states: AnchoredKeyState[] } {
+  return runReplay(events, options);
+}
+
+/**
+ * {@link replayKeyLogStates} bound to the participant the log was fetched for — the same
+ * substituted-log defence {@link replayKeyLogFor} applies, and for the same reason: an anchor
+ * selects a state WITHIN a log and says nothing about whose log it is, so a verifier holding an
+ * expected participant id must bind the log before resolving the anchor.
+ *
+ * Throws {@link KeyLogParticipantMismatch} when the replayed id is not `expectedId`.
+ */
+export function replayKeyLogStatesFor(
+  expectedId: ParticipantId,
+  events: KeyEvent[],
+  options: ReplayKeyLogOptions = {}
+): { current: AnchoredKeyState; states: AnchoredKeyState[] } {
+  const replayed = runReplay(events, options);
+  if (replayed.current.id !== expectedId) {
+    throw new KeyLogParticipantMismatch(expectedId, replayed.current.id);
+  }
+  return replayed;
+}
+
+/**
+ * The anchor a producer writes into a record it signs under its CURRENT key state (spec 016):
+ * the spec-003 digest of the log's last event.
+ *
+ * A producer MAY anchor to any earlier committed state whose keys it still holds — a verifier
+ * cannot tell the difference and does not need to — but the tip is what a signer using its
+ * current keys means, so this is the helper producers reach for: `anchor: keyLogAnchor(log)`.
+ *
+ * Throws on an empty log: there is no state to name, so there is no honest value to return.
+ * This does NOT replay — the caller signing with its own keys already holds a replayed log; a
+ * verifier resolves anchors through {@link replayKeyLogStates}, never through this.
+ */
+export function keyLogAnchor(events: KeyEvent[]): string {
+  const last = events[events.length - 1];
+  if (!last) {
+    throw new Error("Cannot anchor to an empty key log: no key event exists to name");
+  }
+  return eventDigest(last);
+}
+
+/**
+ * Resolves spec 016's `anchor` against a replayed log's states: the state established by the
+ * event whose digest is `anchor`, or `undefined` when the log commits no such event.
+ *
+ * `undefined` is a verdict, not a fallback. 016 tries exactly the anchored state and no other,
+ * so a caller MUST refuse a record whose anchor names no event of the issuer's log rather than
+ * fall back to any state that happens to accept it.
+ *
+ * For deciding a record, `checkAnchoredSignatureSet` applies this same lookup and then the
+ * S0–S3 check; this is for callers that want the state itself — reporting which state a record
+ * was judged against, or deciding whether a cached log is fresh enough to conclude.
+ */
+export function findAnchoredKeyState(
+  states: readonly AnchoredKeyState[],
+  anchor: string
+): AnchoredKeyState | undefined {
+  return states.find((state) => state.anchor === anchor);
+}
+
+function runReplay(
+  events: KeyEvent[],
+  options: ReplayKeyLogOptions
+): { current: AnchoredKeyState; states: AnchoredKeyState[] } {
   const budget: WorkBudget = {
     limit: safeVerificationCount(
       options.maxSignatureVerifications,
@@ -598,7 +702,11 @@ export function replayKeyLog(events: KeyEvent[], options: ReplayKeyLogOptions = 
   }
 }
 
-function replay(events: KeyEvent[], options: ReplayKeyLogOptions, budget: WorkBudget): KeyState {
+function replay(
+  events: KeyEvent[],
+  options: ReplayKeyLogOptions,
+  budget: WorkBudget
+): { current: AnchoredKeyState; states: AnchoredKeyState[] } {
   // Both options are sanitized by ACCEPTING only a safe non-negative integer, never by
   // coercing whatever arrived. `Math.trunc(NaN)` is `NaN` and `Math.max(0, NaN)` is `NaN`, so
   // the obvious clamp let `NaN` and `Infinity` through — and every comparison against them is
@@ -610,14 +718,13 @@ function replay(events: KeyEvent[], options: ReplayKeyLogOptions, budget: WorkBu
   const verifiedPrefixLength = safeVerificationCount(options.verifiedPrefixLength, 0);
   // The log-length bound, enforced HERE rather than left to the schema.
   //
-  // `keyEventLogSchema` bounds every in-repo delivery to MAX_KEY_LOG_EVENTS, and before spec
-  // 003's quorum rule this function's cost was linear in the event count, so relying on that
-  // was defensible. The quorum check below is O(E^2 * K) — it compares every PAIR of committed
-  // states — so this function now depends on a bound that lived entirely outside it, and a
-  // caller reaching `replayKeyLog` with an unvalidated array (the type permits it: the
-  // parameter is `KeyEvent[]`, not a parsed `KeyEventLog`) would drive that quadratic with no
-  // ceiling. Not exploitable through any current caller; the point is that the function that
-  // became quadratic should enforce the bound it became quadratic against.
+  // `keyEventLogSchema` bounds every in-repo delivery to MAX_KEY_LOG_EVENTS, but this
+  // function's parameter is a bare `KeyEvent[]` rather than a parsed `KeyEventLog`, so a caller
+  // can reach it with an unvalidated array. The replay's own work — one digest, one structural
+  // check and up to `MAX_KEY_EVENT_KEYS` verifications per event, plus the state it retains for
+  // spec 016's anchor lookup — is linear in the event count, and the function that spends it
+  // should enforce the bound it is sized against rather than inherit it from a schema a caller
+  // may not have run.
   //
   // Checked before the elements are touched, per spec 003's length-before-shape rule.
   if (events.length > MAX_KEY_LOG_EVENTS) {
@@ -646,6 +753,20 @@ function replay(events: KeyEvent[], options: ReplayKeyLogOptions, budget: WorkBu
   }
   verifyEventSignatures(inception, budget, verifiedPrefixLength < 1);
 
+  // One digest per event, computed once and reused twice: as the next event's `prior` target
+  // and as the state's spec-016 anchor. Both are `eventDigest` of the complete signed event, so
+  // an anchored record and a chained event name a state by the same value.
+  let previousDigest = eventDigest(inception);
+  const states: AnchoredKeyState[] = [
+    {
+      id: inception.id,
+      keys: inception.keys,
+      threshold: inception.threshold,
+      seq: inception.seq,
+      anchor: previousDigest
+    }
+  ];
+
   let previous = inception;
   let index = 1;
   for (const event of events.slice(1)) {
@@ -658,7 +779,7 @@ function replay(events: KeyEvent[], options: ReplayKeyLogOptions, budget: WorkBu
     if (Number(event.seq) !== Number(previous.seq) + 1) {
       throw new Error(`Key event sequence is not contiguous at ${event.seq}`);
     }
-    if (event.prior !== eventDigest(previous)) {
+    if (event.prior !== previousDigest) {
       throw new Error(`Key event ${event.seq} does not chain to the previous event`);
     }
     // The pre-rotation commitment covers the whole next key STATE — the ordered key list AND
@@ -717,39 +838,25 @@ function replay(events: KeyEvent[], options: ReplayKeyLogOptions, budget: WorkBu
       );
     }
     verifyEventSignatures(event, budget, index >= verifiedPrefixLength);
+    previousDigest = eventDigest(event);
+    states.push({
+      id: inception.id,
+      keys: event.keys,
+      threshold: event.threshold,
+      seq: event.seq,
+      anchor: previousDigest
+    });
     previous = event;
     index += 1;
   }
 
-  // Spec 003, "No two states may share a quorum": |keys(A) n keys(B)| < min(t_A, t_B) for
-  // EVERY pair of states this log commits.
-  //
-  // A LOG-LEVEL check, run after every event's own structure is validated, exactly as 003
-  // requires. It is the interim measure that closes the cross-state routes 015 documents: an
-  // attacker holding no key can delete and rearrange members of a signed record's signature
-  // array, every surviving member verifies under a key one of the original signers held, and
-  // for the edit to verify against a DIFFERENT state those keys must also be listed there in
-  // at least that state's threshold. The attack exists exactly when two states share a
-  // quorum, so forbidding that closes it — a record that verifies at all verifies against
-  // exactly one committed state.
-  //
-  // Over ALL pairs and not merely consecutive ones: records verify against any state a log
-  // ever committed (008, 012), so every pair is simultaneously live and a consecutive-only
-  // check leaves the route open between non-adjacent events.
-  //
-  // Costs nothing next to the signature work — set intersections over key lists already
-  // bounded to MAX_KEY_EVENT_KEYS, and the event count is bounded by MAX_KEY_LOG_EVENTS.
-  const violation = quorumViolation(events);
-  if (violation) {
-    throw new Error(
-      `Key events ${events[violation.first]!.seq} and ${events[violation.second]!.seq} share ${violation.shared} keys against a threshold of ${violation.minThreshold}: no two key states of one log may share a quorum`
-    );
-  }
+  // Two states of one log MAY share keys, and MAY share a quorum of them: a 2-of-3 rotation
+  // that retires one key and keeps two is a valid log. Spec 015's keyless cross-state routes
+  // (deleting or reordering members so an edited record conforms against a DIFFERENT state)
+  // are closed by spec 016 instead — a signature-set record names the one state it is judged
+  // against, so no record is ever offered to two states and there is nothing for an edit to
+  // move between. The rule this replaces constrained rotation shape to protect records; the
+  // protection now travels inside the record it protects.
 
-  return {
-    id: inception.id,
-    keys: previous.keys,
-    threshold: previous.threshold,
-    seq: previous.seq
-  };
+  return { current: states[states.length - 1]!, states };
 }

@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** the trust resolver — represents chains, and "what may this agent do"
-**Amended by:** 011
+**Amended by:** 011, 016
 
 ## Context
 
@@ -35,6 +35,9 @@ Grant {
   issuedAt:   string            // RFC 3339
   expiresAt?: string            // RFC 3339; absent = until revoked (participant audiences only,
                                 //   011)
+  anchor?:    Multihash         // 016: required iff issuerId is a ParticipantId — the 003 digest
+                                //   of one event of that issuer's key log; MUST be absent iff
+                                //   issuerId is a KeyRef (self-certifying, 011)
   signature:  Signature[]       // per the issuer's current threshold (003, 005)
 }
 ```
@@ -46,6 +49,8 @@ A presented Grant is valid iff, walking `proof` digests from the leaf to the roo
 1. Every link's `signature` verifies against its issuer **as a canonical signature set (015)**:
    a **participant** issuer resolves through its log (003, at threshold); a **key** issuer (011)
    is self-certifying — the signature verifies against the key itself, exactly one signature.
+   _Amended by 016: a participant issuer resolves through its log at the state the link's `anchor`
+   names, and at no other state; a key issuer carries no anchor._
 2. The root link is self-issued: `issuerId == subjectId`.
 3. Each non-root link's `issuerId` equals its parent's `audienceId` — authority is exercised
    only by the one it was granted to.
@@ -96,6 +101,12 @@ adds `A` before the chain returns revoked, giving the `9A` honest-denial ceiling
 spec or 011 describes needs more depth than that, and more depth is not worth seconds of blocked
 CPU per inbound request.
 
+_Amended by 016: the per-link search over the issuer's entire key history collapses to at most
+`MAX_KEY_EVENT_KEYS` verifications beyond the replay, since a link is verified against the single
+state its `anchor` names. The bounds above stand as written — the replay itself is unchanged, and
+a chain's link cap is what they exist to bound — but a concrete budget derived from them is
+re-derived rather than carried over._
+
 32 abilities is far above any observed grant, given that a parent path already covers its
 descendants.
 
@@ -138,7 +149,15 @@ not a primitive (#4).
   receipts. Request-time exercise is already covered by RFC 9421 signing (004) plus a presented
   chain; a receipt record is deferred until running code demands it.
 
+## History
+
+- 2026-08-18 — Amended by 016: a `Grant` with a participant issuer gains a required `anchor` and
+  is verified against the key state that anchor names; a bare-key issuer carries none. Chains are
+  re-issued root-down, since every link's digest moves and children name parents by digest.
+
 ## References
 
 - UCAN delegation 1.0 — the semantic model (subject/issuer/audience, attenuation, proofs)
-- Spec 001/005 (record format), 003 (digest rule, key resolution), 008 (revocation)
+- Spec 001/005 (record format), 003 (digest rule, key resolution), 008 (revocation), 011 (key
+  principals), 015 (canonical signature sets), 016 (record anchoring — `anchor` on a
+  participant-issued link, and the state chain rule 1 resolves at)

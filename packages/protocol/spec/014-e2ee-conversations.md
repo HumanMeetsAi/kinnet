@@ -3,6 +3,7 @@
 **Status:** Accepted
 **Blocks:** human-private conversations — the encrypted lane beside 010's authenticated
 plaintext, and the membership-change mechanism 012 deferred here
+**Amended by:** 016
 
 ## Context
 
@@ -91,6 +92,11 @@ additively extensible later (000 #6):
 
 Committed conformance fixtures pin credential bytes ↔ chain, `group_id` bytes ↔ conversation
 id, and the commit evidence binding, so a second implementation checks itself from bytes alone.
+
+_Amended by 016: the `group_id` derivation is unchanged, but the ids it derives from move — an
+owner-mode `Conversation` gains `anchor` inside its digested bytes, so every such conversation is
+re-signed, takes a new id, and backs a new MLS group. Existing groups are not migrated; the record
+layer cannot rewrite a `group_id` an MLS group already carries._
 
 ### The lane is declared in the signed record
 
@@ -225,6 +231,9 @@ ConversationUpdate {
   epoch:          string           // decimal, no leading zeros: the MLS epoch this record
                                    //   authorizes a commit to extend (see below)
   createdAt:      string           // RFC 3339, informational (010 stance)
+  anchor?:        Multihash        // 016: present iff owner mode — the 003 digest of the key
+                                   //   event in the actor's log whose state verifies this
+                                   //   record; absent iff delegated mode
   signature:      Signature[]      // 012's signing convention: owner mode (actor's key state at
                                    //   threshold) or delegated mode as a (record, chain) unit
                                    //   with abilities covering msg/conversation-update
@@ -274,8 +283,9 @@ SHOULD NOT author `device-add` for a participant whose pending self-`remove` evi
 
 It travels as **`type: "pn/conversation-update"`** (ability `msg/conversation-update` by
 012's generative rule) and is validated like `pn/conversation`: strict schema, duplicate
-JSON keys rejected, digest-checked, signature per 012's two modes against any replay-valid key
-state (008).
+JSON keys rejected, digest-checked, signature per 012's two modes.
+_Amended by 016: owner mode is verified against the key state the record's `anchor` names, not
+against any replay-valid state._
 
 **Delivery gate.** A `pn/conversation-update` envelope is gated against the **union of
 membership before and after the record it carries**, evaluated per target inbox (012's per-inbox
@@ -311,8 +321,12 @@ custodial creator on a later session could otherwise never do.
   relayed unit names the same digest in a commit binding as the authoring delivery did. Both
   record schemas are strict, so a `chain` key _inside_ a record — the one shape that would change
   its id — is malformed, not merely unwelcome.
-- **`chain` MUST be present, and MUST verify per the profile below, whenever owner-mode
-  verification of `record` fails.** A unit satisfying neither mode is invalid.
+- **The record declares its own mode: `record.anchor` is present if and only if `chain` is
+  absent.** A unit carrying both, or neither, is invalid (`mode_conflict`), and a present `chain`
+  MUST verify per the profile below. A unit satisfying neither mode is invalid.
+  _Amended by 016: this rule read "`chain` MUST be present … whenever owner-mode verification of
+  `record` fails", which made the mode a residue of a failed verification; the mode is now
+  structural and known before anything is verified._
 - **A unit carrying a chain that does not verify is invalid even if the record owner-verifies.**
   Fail closed: there is exactly one reason a unit is valid, and a presented chain is never
   decoration. The alternative — silently ignoring a malformed chain because the record happened
@@ -332,22 +346,30 @@ Members and nodes evaluate the same unit, so the rules are pinned here rather th
 implementation. Two of them are deliberate deviations from 011's bytes-alone profile; both are
 stated with their reasons, and the residual is disclosed rather than papered over.
 
-**Owner mode (`chain` absent):** resolve the actor's key **log** (003), replay it, and accept the
-record's threshold signature against **any replay-valid key state** — not only the current one. A
-current-state-only check silently invalidates every record a participant signed before their last
-rotation, which 012 already forbids for conversation records and which here would retroactively
-un-authorize committed membership.
+**Owner mode (`anchor` present, `chain` absent):** resolve the actor's key **log** (003), replay
+it, find the event whose digest equals `record.anchor`, and accept the record's threshold
+signature against **the key state that event carries** — not against any other state, and not
+against the current one. A current-state-only check silently invalidates every record a
+participant signed before their last rotation, which 012 forbids for conversation records and
+which here would retroactively un-authorize committed membership; an anchor names a historical
+state and a log is append-only, so a later rotation never invalidates an anchored record.
 
-**Delegated mode (`chain` present):**
+_Amended by 016: owner mode accepted the signature against **any** replay-valid key state; it now
+accepts against the one state the anchor names, and an anchor naming no event of the actor's log
+falls under the wait rule below._
+
+**Delegated mode (`anchor` absent, `chain` present):**
 
 1. **Structure**, per 009/011: the root link is self-issued, `proof` digests chain, each non-root
    issuer equals its parent's audience, `subjectId` is constant, abilities only attenuate.
 2. **Subject is the actor**: the chain's `subjectId` equals `record.actor`, and every
-   participant-issued link's signature resolves through **that** issuer's key log, at any
-   replay-valid state; key-issued links self-certify (011). Resolution failure is a **WAIT, never
-   a rejection** — the same rule, for the same reason, as an unresolvable evidence signature
-   above: key logs are monotone, so an honest member's verdict converges, and rejecting on a
-   cache miss would split the group.
+   participant-issued link's signature resolves through **that** issuer's key log, at the state
+   that link's `anchor` names (016); key-issued links carry no anchor and self-certify (011).
+   Resolution failure is a **WAIT, never a rejection** — the same rule, for the same reason, as an
+   unresolvable evidence signature above: key logs are monotone, so an honest member's verdict
+   converges, and rejecting on a cache miss would split the group. **An anchor naming no event of
+   the resolved log is a resolution failure in this sense**, so it waits here too, where a
+   request-time verifier rejects it (016).
 3. **Leaf binding**: the leaf `audienceId` is a `KeyRef`, and the record's single signature
    verifies against exactly that key.
 4. **Abilities**: the leaf's abilities cover `msg/conversation-update` under 009's path-prefix
@@ -962,7 +984,8 @@ revocable** rather than silent:
 Two residual weaknesses, disclosed:
 
 - **Rotation and custody exit do not retroactively kill minted credentials.** Grants verify
-  against any replay-valid key state (012), so a previously-minted credential stays valid until
+  against the key state their anchor names (016), which a rotation leaves untouched in the
+  append-only log, so a previously-minted credential stays valid until
   `expiresAt` even after a custody-exit ceremony — which is a pre-rotation ceremony leaving a
   stated window of residual custody, not an instant cut-off. Short leaf lifetimes are the
   mitigation; the exit ceremony SHOULD be followed by `device-remove` for every leaf the
@@ -1259,6 +1282,10 @@ records with their digests and per-record verification state, and the expected v
 - 2026-08-16 — Added the commit-validity conformance vectors
   (`packages/protocol/test/fixtures/commit-validity-vectors.json`), pinning the valid/invalid/wait
   verdict of each commit-binding case.
+- 2026-08-18 — Amended by 016: `ConversationUpdate` gains `anchor`, present iff owner mode; anchor
+  presence and chain absence became the structural mode discriminator, replacing the
+  try-owner-then-fall-back rule; owner mode and participant-issued chain links verify at the
+  anchored state; an unknown anchor waits rather than rejects, member-side.
 
 ## References
 
@@ -1269,4 +1296,5 @@ records with their digests and per-record verification state, and the expected v
   (revocation), 009/011 (grant chains, key principals, `aud`, (record, chain) units), 010
   (inbox), 012 (conversations — the container, the deferred membership question, the generative
   ability rule, the error-oracle open question), 013 (contentless events, T4, T13, namespace
-  reservation)
+  reservation), 015 (canonical signature sets), 016 (record anchoring — amends this spec:
+  `anchor` on `ConversationUpdate`, the structural mode rule, verification at the anchored state)

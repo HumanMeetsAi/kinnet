@@ -66,7 +66,22 @@ type Establishment = {
   nextKeys: KeyPair[];
   /** The threshold the NEXT event must declare — inside the commitment (003, _The committed next key state_). */
   nextThreshold: string;
+  /**
+   * The commitment to write into `next`, bypassing {@link commitToKeyState}.
+   *
+   * Only for the state-repeats-key vector: the helper refuses to commit to a state no
+   * conforming event could reveal, which is the right behaviour on the commit side and would
+   * make the REVEAL-side rule untestable from bytes. The value is what the helper would have
+   * computed — the digest of `{keys, threshold}` — so the vector still names a commitment a
+   * rotation can reproduce.
+   */
+  nextCommitment?: string;
 };
+
+/** The pre-rotation commitment this establishment carries (003, _The committed next key state_). */
+function commitment(shape: Establishment): string {
+  return shape.nextCommitment ?? commitToKeyState(shape.nextKeys.map(ref), shape.nextThreshold);
+}
 
 /** An honest inception: the participant id hashes exactly this establishment data (002). */
 function inception(shape: Establishment, signers = shape.keys): KeyEvent {
@@ -75,7 +90,7 @@ function inception(shape: Establishment, signers = shape.keys): KeyEvent {
     kind: "icp" as const,
     keys: shape.keys.map(ref),
     threshold: shape.threshold,
-    next: commitToKeyState(shape.nextKeys.map(ref), shape.nextThreshold)
+    next: commitment(shape)
   };
   const id = deriveParticipantId(establishment);
   return mint({ ...establishment, id, prior: null }, signers);
@@ -94,7 +109,7 @@ function rotation(
     kind: "rot",
     keys: shape.keys.map(ref),
     threshold: shape.threshold,
-    next: commitToKeyState(shape.nextKeys.map(ref), shape.nextThreshold),
+    next: commitment(shape),
     ...options.override
   };
   return mint(unsigned, options.signers ?? shape.keys);
@@ -133,7 +148,6 @@ type Rejection =
   | "signature_set_not_conforming"
   | "commitment_not_reproduced"
   | "state_repeats_key"
-  | "quorum_shared"
   | "work_budget_exceeded"
   | "participant_mismatch";
 
@@ -157,9 +171,6 @@ const CODES: Record<Rejection, string> = {
   state_repeats_key:
     "015 S0: the event's key list holds the same key twice, so the state is invalid and every " +
     "record checked against it is invalid with it.",
-  quorum_shared:
-    "003's 'no two states may share a quorum': two states this log commits share at least " +
-    "`min(t_A, t_B)` keys, which would let a signature set conform against both.",
   work_budget_exceeded:
     "The replay would spend more Ed25519 verifications than its budget allows. NOT a verdict on " +
     "the log — a refusal to spend CPU on attacker-supplied input — so it is a distinct class.",
@@ -401,8 +412,10 @@ const vectors: Vector[] = [
       "commitment check passes and 015 S0 is the only rule violated. Two signatures by the one " +
       "key would satisfy an INDEX-based reading of the threshold — one key counted twice — " +
       "which is why the state itself is invalid rather than the record merely failing against " +
-      "it. Recorded because the commitment helper does not dedupe: a log can commit to this " +
-      "shape and only discover on reveal that it has bricked the identity. `schemaValid` is " +
+      "it. The commitment is written directly rather than through `commitToKeyState`, which " +
+      "refuses to commit to a state no conforming event could reveal — the reveal-side rule is " +
+      "what this vector pins, and it must hold for bytes that arrive from anywhere. " +
+      "`schemaValid` is " +
       "false — `keyEventSchema` carries the same rule, so both gates hold it, which is the " +
       "state 015 S0 asked for after the rule spent a while living only in the replay.",
     (() => {
@@ -410,7 +423,8 @@ const vectors: Vector[] = [
         keys: [root],
         threshold: "1",
         nextKeys: [rotated, rotated],
-        nextThreshold: "2"
+        nextThreshold: "2",
+        nextCommitment: canonicalDigest({ keys: [ref(rotated), ref(rotated)], threshold: "2" })
       };
       const first = inception(repeats);
       return [
@@ -466,14 +480,21 @@ const vectors: Vector[] = [
     ],
     { valid: false, rejection: "commitment_not_reproduced" }
   ),
+  // -------------------------------------------------------------------------------------------
+  // Key reuse across states. Two states of one log may share keys, and may share a quorum of
+  // them (spec 016): the cross-state routes are closed by anchoring the RECORD, not by
+  // constraining rotation shape.
+  // -------------------------------------------------------------------------------------------
   vector(
-    "rejected — two committed states sharing a quorum",
-    "Both events are individually valid: the rotation reveals exactly the committed key state " +
-      "and carries exactly its two signatures. The LOG is still refused, because the two states " +
-      "share both keys against a threshold of two — records verify against any state a log ever " +
-      "committed, so a two-member signature set would conform against both, and 015's " +
-      "cross-state deletion and reordering routes reopen. A log-level rule, checked after every " +
-      "event's own structure.",
+    "accepted — two committed states sharing a quorum",
+    "A log whose rotation RE-REVEALS its own key set at the same threshold: the two states " +
+      "share both keys against a threshold of two. Valid, and deliberately pinned as valid. An " +
+      "earlier interim rule refused exactly this shape to keep 015's keyless cross-state " +
+      "deletion and reordering routes out of reach; spec 016 closes those routes inside the " +
+      "record instead — a signature-set record names the one state it is judged against — so " +
+      "rotation flexibility comes back and a 2-of-3 may again retain two keys. Both events are " +
+      "individually valid: the rotation reveals exactly the committed key state and carries " +
+      "exactly its two signatures in key order.",
     (() => {
       const shared: Establishment = {
         keys: committee,
@@ -492,7 +513,35 @@ const vectors: Vector[] = [
         })
       ];
     })(),
-    { valid: false, rejection: "quorum_shared" }
+    { valid: true }
+  ),
+  vector(
+    "accepted — a 2-of-3 rotation retaining two of its three keys",
+    "The partial rotation the interim rule cost and spec 016 gives back: the rotation retires " +
+      "one key, introduces one, and keeps two against a threshold of two — a shared quorum. It " +
+      "replays valid. Records signed under either state stay verifiable, each against the " +
+      "state its own anchor names, which is what makes the shared quorum harmless: no record " +
+      "is ever offered to both states.",
+    (() => {
+      const before = [keyPair(31), keyPair(32), keyPair(33)];
+      const after = [before[0]!, before[1]!, keyPair(34)];
+      const shape: Establishment = {
+        keys: before,
+        threshold: "2",
+        nextKeys: after,
+        nextThreshold: "2"
+      };
+      const first = inception(shape, before.slice(0, 2));
+      return [
+        first,
+        rotation(
+          first,
+          { keys: after, threshold: "2", nextKeys: [keyPair(35), keyPair(36)], nextThreshold: "2" },
+          { signers: after.slice(0, 2) }
+        )
+      ];
+    })(),
+    { valid: true }
   ),
 
   // -------------------------------------------------------------------------------------------
@@ -529,7 +578,7 @@ writeFileSync(
       note:
         "Replay conformance vectors for spec 003's key-history log — chaining, sequencing, " +
         "pre-rotation (including the committed THRESHOLD), spec 015's signature-set rules as " +
-        "the log applies them, the quorum rule, the work bound, and the participant binding. " +
+        "the log applies them, the work bound, and the participant binding. " +
         "Every vector is verifiable from bytes alone: `events` is the log exactly as delivered, " +
         "`signingInputs[i]` is the UTF-8 JCS of event i WITHOUT its `signature` field (the " +
         "spec-001 signing input), and `digests[i]` is the spec-003 multihash of the COMPLETE " +

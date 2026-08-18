@@ -1,5 +1,5 @@
 {
-  "description": "Trust-resolver conformance fixture (specs 008/009): an org -> agent represents chain with a bounding two-link grant chain, plus a revoked claim. The org log contains one rotation; the edge and claim are signed by the pre-rotation key.",
+  "description": "Trust-resolver conformance fixture (specs 008/009): an org -> agent represents chain with a bounding two-link grant chain, plus a revoked claim. The org log contains one rotation; the edge and claim are signed by the pre-rotation key and verify against any state (scalar signatures, outside spec 016), while the grants and the revocation carry a spec-016 anchor naming the post-rotation state.",
   "verifyAt": "2026-06-12T12:00:00.000Z",
   "organizationLog": [
     {
@@ -71,10 +71,11 @@
       "audienceId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
       "abilities": ["directory/curate"],
       "caveats": {},
-      "proof": "zQmdp7dkVBJ198DZkJqUDh4sq6UMPRG1AsPCb4xiapEX1vq",
+      "anchor": "zQmRocigrUNPE4JdEmjGESUJBKuzb62qj4obenbB42dP6VQ",
+      "proof": "zQmbzAQSgvmtvJP5fzUhrXkFD9mMCvSnsz1PUNfiNgaiJ7n",
       "issuedAt": "2026-06-12T00:00:00.000Z",
       "signature": [
-        "z2GSmZSr63jKyM7XiqWxdGHh3oTzau7jTY3c7P57FaW5u7dAQJVHyxK6Zn2P5xGoBCB5iFC7QPn1GreaAaXRYXT8q"
+        "z2zVPcgVgsnB2WkG1MYAatEo8FcZk4miYjb9bMDW8gYNfLcAU5zog3c6qoJCq6LpriDhCTHFDL4wjmk4ceBCFGzks"
       ]
     },
     {
@@ -83,10 +84,11 @@
       "audienceId": "pk_zQmQ5zu7HpmRH74nZ1fQEcU4Gok76R9h4KifWvkkMi4YqYH",
       "abilities": ["directory"],
       "caveats": {},
+      "anchor": "zQmS9skMmP5ysT4xqNh6ybzAxfVcesKBZjq2ce2Hqsah3B9",
       "proof": null,
       "issuedAt": "2026-06-12T00:00:00.000Z",
       "signature": [
-        "z34AL8fWXu9jJzVbRv5FpfAZjoS64CQQbe5NQQnmeFUJj5emonc5BwozFXF3Mspv1MDj4BVeKKEB1RwzXcEGTx8fP"
+        "zCgYwNgeGGYkp1yZpw6xmVffsrAW7Y211E8GYbp3t61HxBqgAR2qdzE1sPTJFqZTZYqkq4ioT9DLGtodqK4wzHEm"
       ]
     }
   ],
@@ -102,18 +104,19 @@
   "revocation": {
     "revokes": "zQmStmGqVXVbrusdpeYWH7PVaD59Cq8d89Ckm1T7VcA8Nbh",
     "issuerId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
+    "anchor": "zQmS9skMmP5ysT4xqNh6ybzAxfVcesKBZjq2ce2Hqsah3B9",
     "revokedAt": "2026-06-12T00:00:00.000Z",
     "reason": "domain handed back",
     "signature": [
-      "z21QvH9sDxqahvLdZnMTHH6JGDp9m7uyTguVi2w2S8Qf4DLSRQ8MJYJqgjG5uqepveDfnU61p27EgtGxnKvhqFw9h"
+      "z56URBPV1Cc3UEypQGR3ZB48bdvV6oajoV955zRuYARZxrssoSDNDVVqY3zzNk7uzyUoqzP1wBnBLwqNXCAaqe2pL"
     ]
   },
   "expect": {
     "organizationId": "pk_zQmfG3zz1pNyab3n3mJNn6GYBKJVAw6Nt4xyMkkRyghtw6t",
     "agentId": "pk_zQmWccc2ZzDMRGuzsKMZERxfTmgxfTMFBMKAzKDvMwqGDW7",
     "edgeDigest": "zQmNXiSoGEcEWymFkoTki24jAk7VV4gKFB7iyr1oHRmNMkv",
-    "rootGrantDigest": "zQmdp7dkVBJ198DZkJqUDh4sq6UMPRG1AsPCb4xiapEX1vq",
-    "leafGrantDigest": "zQmWGgp2jdsQ4kA9SLNyWUu7i6yFwM6G6V9tYAhJ3YQ57wS",
+    "rootGrantDigest": "zQmbzAQSgvmtvJP5fzUhrXkFD9mMCvSnsz1PUNfiNgaiJ7n",
+    "leafGrantDigest": "zQmPPhnswSmVAGQyh3uSqrB2kYeGLvneH8Xi4LzMhbAKkzy",
     "representsValid": true,
     "abilities": ["directory/curate"],
     "revokedClaimReason": "claim_revoked"

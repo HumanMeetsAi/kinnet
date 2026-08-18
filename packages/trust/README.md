@@ -61,6 +61,31 @@ const revocation = issueRevocation(org, canonicalDigest(grant), { reason: "engag
 Ed25519 signing here is deterministic, so the same fields re-sign to the same bytes and the same
 digest.
 
+### Anchors (spec 016)
+
+A Grant and a Revocation carry an `anchor`: the digest of the key event whose `(keys, threshold)`
+signed it. `issueGrant` and `issueRevocation` set it for you, to the issuer's log tip — the state
+`currentKeys` reveals — and it goes into the record **before** it is signed, so every member of
+the signature set covers it and rewriting it invalidates the record rather than moving it.
+
+What a verifier does with it is the point: it replays the issuer's log, finds the event whose
+digest equals `anchor`, and checks the signature set against **that state and no other**. A
+record whose anchor names no event of the issuer's log is invalid, reported as its own reason
+(`grant_issuer_anchor_unknown`) rather than as a bad signature. This replaces the older rule that
+a record verified against any state the issuer had ever held.
+
+Two consequences worth knowing:
+
+- **A rotation still does not orphan anything.** The anchor names a historical event, key logs
+  are append-only, and the named event stays where it is however many times the issuer rotates.
+- **Bare-key issuers take no anchor.** A grant issued by a KeyRef (spec 011's disposable session
+  key) has exactly one constructive state — the key itself — so `grantSchema` rejects it if it
+  carries the field, and rejects a participant-issued grant that omits it.
+
+`issueClaim` and `issueRelationship` are unchanged: a scalar signature is a one-member set with
+nothing to delete or reorder, so 016 leaves those two verifying against any state their issuer
+has held.
+
 Publishing is a separate concern: claims, relationships and revocations go to a discovery
 service through [`@kinnet/discovery-client`](../discovery-client), which this package does not
 depend on.

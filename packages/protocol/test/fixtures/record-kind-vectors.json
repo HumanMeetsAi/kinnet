@@ -1,5 +1,5 @@
 {
-  "description": "One shape-valid instance of every record kind and payload kind @kinnet/protocol defines (spec 001, 'Record kinds are non-confusable'). Each MUST validate under its own schema and be rejected by every other one. Signatures, key refs and digests are shape-valid rather than genuine: the property under test is record-kind membership, which is decided by the schema alone. The signed-bytes conformance fixtures for the kinds that have them live alongside this file.",
+  "description": "One shape-valid instance of every record kind and payload kind @kinnet/protocol defines (spec 001, 'Record kinds are non-confusable'). Each MUST validate under its own schema and be rejected by every other one. Signatures, key refs and digests are shape-valid rather than genuine: the property under test is record-kind membership, which is decided by the schema alone. Spec 016's `anchor` is present on every kind that carries one: required on the Revocation and on the participant-issued Grant, and present on the two conversation records because both units here are owner mode (a unit with no chain must carry an anchored record). The signed-bytes conformance fixtures for the kinds that have them live alongside this file.",
   "records": {
     "keyEvent": {
       "id": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
@@ -34,6 +34,7 @@
     "revocation": {
       "revokes": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
       "issuerId": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
+      "anchor": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
       "revokedAt": "2026-08-01T00:00:00.000Z",
       "signature": [
         "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
@@ -46,6 +47,7 @@
       "abilities": ["msg/send"],
       "caveats": {},
       "proof": null,
+      "anchor": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
       "issuedAt": "2026-08-01T00:00:00.000Z",
       "signature": [
         "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
@@ -75,7 +77,9 @@
       "to": "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS",
       "createdAt": "2026-08-01T00:00:00.000Z",
       "type": "text",
-      "payload": { "text": "hello" },
+      "payload": {
+        "text": "hello"
+      },
       "signature": "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
     },
     "conversation": {
@@ -86,6 +90,7 @@
       ],
       "createdAt": "2026-08-01T00:00:00.000Z",
       "title": "Fixture Conversation",
+      "anchor": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
       "signature": [
         "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
       ]
@@ -98,6 +103,7 @@
       "actor": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
       "epoch": "3",
       "createdAt": "2026-08-01T00:00:00.000Z",
+      "anchor": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
       "signature": [
         "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
       ]
@@ -112,6 +118,7 @@
           "pk_zQmbp3ezSrc4zX15UGJg6jpxTdFWU48zZnFXdEiSpQmpQeS"
         ],
         "createdAt": "2026-08-01T00:00:00.000Z",
+        "anchor": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
         "signature": [
           "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
         ]
@@ -126,12 +133,17 @@
         "actor": "pk_zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "epoch": "4",
         "createdAt": "2026-08-01T00:00:00.000Z",
+        "anchor": "zQmSaHL7ENaSZFdVaQpuCX4GMHVB9KV45tNrEL9dRbs18d3",
         "signature": [
           "z5rnVTAbdGrtjnu47AiPSJ3rr9iDskEANf6PLXXbEN6tfkP43izwMaLyBii1ZyqGYGdLVTXEBssdja39ZAqoXdjFx"
         ]
       }
     },
-    "mlsPayload": { "mlsMessage": "AAECAw_-" },
-    "welcomePayload": { "welcome": "AAECAw_-" }
+    "mlsPayload": {
+      "mlsMessage": "AAECAw_-"
+    },
+    "welcomePayload": {
+      "welcome": "AAECAw_-"
+    }
   }
 }

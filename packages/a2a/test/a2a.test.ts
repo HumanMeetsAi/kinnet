@@ -1,4 +1,10 @@
-import { canonicalDigest, createIdentity, signRecord, signThresholdRecord } from "@kinnet/crypto";
+import {
+  canonicalDigest,
+  createIdentity,
+  keyLogAnchor,
+  signRecord,
+  signThresholdRecord
+} from "@kinnet/crypto";
 import type { KeyEvent, ParticipantProfile, Relationship, Revocation } from "@kinnet/protocol";
 import { describe, expect, it } from "vitest";
 
@@ -245,7 +251,13 @@ describe("consuming agent cards", () => {
   it("reports unverified when the claimed represents chain is revoked", async () => {
     const edge = representsEdge();
     const revocation = signThresholdRecord(
-      { revokes: canonicalDigest(edge), issuerId: org.id, revokedAt: ISSUED_AT },
+      {
+        revokes: canonicalDigest(edge),
+        issuerId: org.id,
+        // Spec 016: a Revocation names the key state it was signed under.
+        anchor: keyLogAnchor(org.log),
+        revokedAt: ISSUED_AT
+      },
       [org.currentKeys[0]!.secretKey]
     ) as Revocation;
 

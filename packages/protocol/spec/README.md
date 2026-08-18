@@ -15,33 +15,33 @@ decide which.
 
 ## The specifications
 
-| #                                            | Spec                          | Defines                                                                             | Status   |
-| -------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- | -------- |
-| [000](./000-protocol-scope.md)               | Protocol scope & evolution    | What belongs in the protocol, how it changes, and when it freezes                   | Accepted |
-| [001](./001-canonical-serialization.md)      | Canonical serialization (JCS) | The exact bytes that are signed and hashed                                          | Accepted |
-| [002](./002-participant-id.md)               | Participant ID derivation     | How a participant's identifier is derived from its key                              | Accepted |
-| [003](./003-key-history.md)                  | Key-history log (KERI-lite)   | Rotation, recovery, and resolving an ID to its current key                          | Accepted |
-| [004](./004-discovery-write-auth.md)         | Discovery write authorization | How a write to a discovery service proves control of the participant's key          | Accepted |
-| [005](./005-signature-suite.md)              | Signature suite & agility     | The signature algorithms and how new ones are introduced without a format break     | Accepted |
-| [006](./006-module-config.md)                | ModuleConfig                  | The general configuration record for the typed content modules a node hosts         | Proposed |
-| [007](./007-asset-ref.md)                    | AssetRef                      | An integrity-checked reference to a file, image, or attachment                      | Proposed |
-| [008](./008-revocation.md)                   | Revocation                    | How a signed record is revoked, and how "not revoked" is checked from bytes         | Accepted |
-| [009](./009-grant.md)                        | Grant (UCAN-aligned)          | Scoped, attenuating, expiring, revocable delegation of authority                    | Accepted |
-| [010](./010-message-inbox.md)                | Message envelopes & inbox     | How a message is signed, delivered to a participant's node, and read                | Accepted |
-| [011](./011-device-key-grants.md)            | Device-key grants             | Per-device session keys acting under a participant's root identity                  | Accepted |
-| [012](./012-conversations.md)                | Conversations                 | Conversation records: membership, message-to-thread association, ordering           | Accepted |
-| [013](./013-realtime.md)                     | Realtime delivery (SSE)       | Push delivery from a node, and how a long-lived subscription stays authorized       | Accepted |
-| [014](./014-e2ee-conversations.md)           | Two-lane conversations (E2EE) | End-to-end encrypted human conversations alongside the authenticated-plaintext lane | Accepted |
-| [015](./015-signature-sets.md)               | Canonical signature sets      | Which signatures a record's digest covers; M-of-N and digest-addressed identity     | Accepted |
-| [017](./017-participant-profile-and-node.md) | Participant profile & node    | The public records that say what a participant is and where to reach it             | Proposed |
-| [018](./018-claims-and-relationships.md)     | Claims & relationships        | Signed assertions by one participant about another; the represents chain            | Proposed |
+| #                                            | Spec                          | Defines                                                                                       | Status   |
+| -------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| [000](./000-protocol-scope.md)               | Protocol scope & evolution    | What belongs in the protocol, how it changes, and when it freezes                             | Accepted |
+| [001](./001-canonical-serialization.md)      | Canonical serialization (JCS) | The exact bytes that are signed and hashed                                                    | Accepted |
+| [002](./002-participant-id.md)               | Participant ID derivation     | How a participant's identifier is derived from its key                                        | Accepted |
+| [003](./003-key-history.md)                  | Key-history log (KERI-lite)   | Rotation, recovery, and resolving an ID to its current key                                    | Accepted |
+| [004](./004-discovery-write-auth.md)         | Discovery write authorization | How a write to a discovery service proves control of the participant's key                    | Accepted |
+| [005](./005-signature-suite.md)              | Signature suite & agility     | The signature algorithms and how new ones are introduced without a format break               | Accepted |
+| [006](./006-module-config.md)                | ModuleConfig                  | The general configuration record for the typed content modules a node hosts                   | Proposed |
+| [007](./007-asset-ref.md)                    | AssetRef                      | An integrity-checked reference to a file, image, or attachment                                | Proposed |
+| [008](./008-revocation.md)                   | Revocation                    | How a signed record is revoked, and how "not revoked" is checked from bytes                   | Accepted |
+| [009](./009-grant.md)                        | Grant (UCAN-aligned)          | Scoped, attenuating, expiring, revocable delegation of authority                              | Accepted |
+| [010](./010-message-inbox.md)                | Message envelopes & inbox     | How a message is signed, delivered to a participant's node, and read                          | Accepted |
+| [011](./011-device-key-grants.md)            | Device-key grants             | Per-device session keys acting under a participant's root identity                            | Accepted |
+| [012](./012-conversations.md)                | Conversations                 | Conversation records: membership, message-to-thread association, ordering                     | Accepted |
+| [013](./013-realtime.md)                     | Realtime delivery (SSE)       | Push delivery from a node, and how a long-lived subscription stays authorized                 | Accepted |
+| [014](./014-e2ee-conversations.md)           | Two-lane conversations (E2EE) | End-to-end encrypted human conversations alongside the authenticated-plaintext lane           | Accepted |
+| [015](./015-signature-sets.md)               | Canonical signature sets      | Which signatures a record's digest covers; M-of-N and digest-addressed identity               | Accepted |
+| [016](./016-record-anchoring.md)             | Record anchoring              | Which key state a record's signature set is verified against; retires the interim quorum rule | Accepted |
+| [017](./017-participant-profile-and-node.md) | Participant profile & node    | The public records that say what a participant is and where to reach it                       | Proposed |
+| [018](./018-claims-and-relationships.md)     | Claims & relationships        | Signed assertions by one participant about another; the represents chain                      | Proposed |
 
 Numbering is by order of adoption, not importance. [000](./000-protocol-scope.md) is the
 meta-spec: the placement test that decides whether something belongs in the protocol at all, and
 the lifecycle that decides how freely it may change. 001–005 are the foundational format
 decisions every signed record depends on. 006 onward are further primitives admitted through the
 000 process; some amend earlier specs, and a spec amended by a later one says so in its header.
-Number 016 is reserved: 015 proposes it as _Record anchoring_, and it is not yet written.
 
 ## The five foundations
 
@@ -54,7 +54,8 @@ A record is _signed and verified_ only once five things are pinned: the **bytes*
 
 Each spec opens with a header — `# NNN — Title`, `**Status:**`, a one-line scope marker
 (usually `**Blocks:**`, what depends on this spec being settled; `**Governs:**` or
-`**Supersedes:**` where that fits better), and `**Amended by:**` when a later spec changes it.
+`**Supersedes:**` where that fits better), `**Amended by:**` when a later spec changes it, and
+optionally `**Amends:**` when the spec itself carries consequential amendments to earlier ones.
 The body's common spine, as applicable, is `Context`, `Decision`, `Threat model`, `Boundaries`,
 `Non-goals`, `Open questions`, `Design notes`, `History`, `References`; a spec adds sections of
 its own where its subject needs them.

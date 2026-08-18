@@ -14,13 +14,14 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z3zDZU6km75PuZa2bGVCAx96RRtMeJPpLdE2B92PvU1J24zW5su5ceq8ea6LPeLkBBzZ3P7UNVi6zf7RFxaF56mL9"
+          "z2go4WAHrnWGahd6hbezjibybMr8dxDMrAQwMYUkZboRyFkymve7z5cC9qmY2nF4m2eTrqTDoLkN4jeAKtfJBkTBk"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmQxpR8Wd4kh72RBqEwhBEoHVXN7uhmHDzdNfUK62BNz23",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmVmRiwaMjxEF6bRrAUgTW3NE6wFvDWirBBkmB7jkC43di",
       "matrix": [[true]]
     },
     {
@@ -40,15 +41,16 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
-          "z3o9ndLZryFebX2Dv3dNTh61jobYeNk7gyUvkm1TuDn76GEfeZrtmGUA79M8w5Z1BVqMNhm4zqAMEyynb9JkhsS5i",
-          "z5HRQXYGEGorAdfsZPnJW8qKhfSkCBC6v1YEH6S1yhkT5BdvmnkLkerAfZ3LLF4hemYunQtCPP1Vdzks5DSU9wUEv"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9",
+          "z38tcp1FY3KcAz174i6xfH463wUEDRA9DwEoT5F1UUJuA6LS2xPbHoVt7np9aniWbF9kuJB9Adz6TQ1yStd4V5fkw",
+          "zBFi59iSxr8n6eF8FfCk63dfUCHQouwADpYoRc2RQmcyzntLVGXCG97HB4kP63JwrcBrRPEwSXeR8GjbSNL1Kkt6"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmaD1kx9VFGz6xCuemkTZiy1AHcPjapTKPpEWgnDVKpnXB",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmWm1rqbRgcenqSZBavsb9aB8ZSwvi9fRL1ry9r32fH7HR",
       "matrix": [
         [true, false, false],
         [false, true, false],
@@ -72,14 +74,15 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
-          "z5HRQXYGEGorAdfsZPnJW8qKhfSkCBC6v1YEH6S1yhkT5BdvmnkLkerAfZ3LLF4hemYunQtCPP1Vdzks5DSU9wUEv"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9",
+          "zBFi59iSxr8n6eF8FfCk63dfUCHQouwADpYoRc2RQmcyzntLVGXCG97HB4kP63JwrcBrRPEwSXeR8GjbSNL1Kkt6"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmbdDkA4RsWC7twams5tJVQT3K11yCt924HkNyb3NhiPdM",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmNed1Ghq3RvEB9PRGP4NgWsnir44RH7Gderhgw2fmbqTo",
       "matrix": [
         [true, false, false],
         [false, false, true]
@@ -102,13 +105,14 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmVxSrQVt4Mw6PFkvf2Zuz8VRg9nL1K8FhqsxQvWnLcKTh",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmZr6z4Tgd4R2HbSwexK7jHc9cgddby9bgsqMEdsxe6qJu",
       "matrix": [[true, false, false]]
     },
     {
@@ -128,14 +132,15 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9",
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmdi4n9P88SQ6BDovrvJ7vM1eyrVrvAP8Dm2DTckY7L7uU",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmS5YeCwWdm81Q2URrZXpF6xc4xPsw15yqoAqoXHdDAfuh",
       "matrix": [
         [true, false, false],
         [true, false, false]
@@ -158,14 +163,15 @@
         "abilities": ["directory"],
         "caveats": {},
         "proof": null,
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "issuedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z2A89GjY6Nifi1A5sfdMBn3arUMkH1s7wZmuQcXjUBA1yPsuQYPrmJPtjG5DCCQ4RP9LDFDPjvCK2dNVeiuAzEe61",
-          "z4AjGde4ZzwTZ7QF5tbUtDnPnayoMMJHaQHKCYaxAUzFzKx5mbum1uXsuthdM3dA7XE7bohgkDKTBEkgvkpbeMqdv"
+          "z31kNkutg8J67o1YbasMDAe7PmrHzUgUtJZA2uDKCZGWQqHwmtVv6N6p5VE7FEgrkcwhm6rRDj6cUAtcYY1LmV5gi",
+          "z4MDB4TZWn3Y3m3xyVLcnEDrZdh4FoN5VsPvgDSrGKNzcmwtm9Gdu7jS5o9KKuhEuDkStxPhAAK75prQngAioKtDP"
         ]
       },
-      "signingInput": "{\"abilities\":[\"directory\"],\"audienceId\":\"pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC\",\"caveats\":{},\"issuedAt\":\"2026-06-12T00:00:00.000Z\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"proof\":null,\"subjectId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\"}",
-      "digest": "zQme7AVNCPFGMdj3n8QuoCsqvrxBRMyrERpQp2qxQdprYyB",
+      "signingInput": "{\"abilities\":[\"directory\"],\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"audienceId\":\"pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC\",\"caveats\":{},\"issuedAt\":\"2026-06-12T00:00:00.000Z\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"proof\":null,\"subjectId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\"}",
+      "digest": "zQmZtEFfdp88EWekmHWvJhWNmVbdHxXtvQppTrU9yzj7879",
       "matrix": [[true], [false]]
     },
     {
@@ -188,14 +194,15 @@
         "abilities": ["directory"],
         "caveats": {},
         "proof": null,
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "issuedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "zZmxe5BCHLbr6qnGhroPTeg7nAp18QWdhZcJdhjAV9kaDAGLyNWB1kfoPqn36Vfw8Yx8vdrR1WSMo9TV3t7BfZR5",
-          "z4AjGde4ZzwTZ7QF5tbUtDnPnayoMMJHaQHKCYaxAUzFzKx5mbum1uXsuthdM3dA7XE7bohgkDKTBEkgvkpbeMqdv"
+          "z4egNHWE3e273eF8pyhqQgb3nLjuVn9yJbxUCFxszweB5UA7hGsvGdcE3TQDXar46rnf2Vd1oVCZKb67kCGfFdJvX",
+          "z4MDB4TZWn3Y3m3xyVLcnEDrZdh4FoN5VsPvgDSrGKNzcmwtm9Gdu7jS5o9KKuhEuDkStxPhAAK75prQngAioKtDP"
         ]
       },
-      "signingInput": "{\"abilities\":[\"directory\"],\"audienceId\":\"pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC\",\"caveats\":{},\"issuedAt\":\"2026-06-12T00:00:00.000Z\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"proof\":null,\"subjectId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\"}",
-      "digest": "zQmd7BsCooQ5MEtogNXyiQcB8VoGUoEUNPacWatXzMgQbqX",
+      "signingInput": "{\"abilities\":[\"directory\"],\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"audienceId\":\"pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC\",\"caveats\":{},\"issuedAt\":\"2026-06-12T00:00:00.000Z\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"proof\":null,\"subjectId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\"}",
+      "digest": "zQmRpPLo5sPheqbH8WEt1aSdZ3VugCgLTtHdNMnzZg5Vt4c",
       "matrix": [
         [true, false],
         [false, false]
@@ -217,14 +224,15 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9",
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmdi4n9P88SQ6BDovrvJ7vM1eyrVrvAP8Dm2DTckY7L7uU",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmS5YeCwWdm81Q2URrZXpF6xc4xPsw15yqoAqoXHdDAfuh",
       "matrix": [
         [true, false],
         [true, false]
@@ -247,14 +255,15 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9",
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmdi4n9P88SQ6BDovrvJ7vM1eyrVrvAP8Dm2DTckY7L7uU",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmS5YeCwWdm81Q2URrZXpF6xc4xPsw15yqoAqoXHdDAfuh",
       "matrix": [
         [true, true, false],
         [true, true, false]
@@ -277,14 +286,15 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5HRQXYGEGorAdfsZPnJW8qKhfSkCBC6v1YEH6S1yhkT5BdvmnkLkerAfZ3LLF4hemYunQtCPP1Vdzks5DSU9wUEv",
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v"
+          "zBFi59iSxr8n6eF8FfCk63dfUCHQouwADpYoRc2RQmcyzntLVGXCG97HB4kP63JwrcBrRPEwSXeR8GjbSNL1Kkt6",
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmeWesmg6HwPAmULxAcC5pRCnNVcFoibDxNPMonTrNB2VB",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmSPNdp8oHmJ8MTeRTdpCTpmP6LnZWLhqHEampx4e9f7pC",
       "matrix": [
         [false, false, true],
         [true, false, false]
@@ -307,13 +317,14 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z3dWkR45EM13KegsxKX9hvfYF3mB1ceVUBzYngad1VhszQWeKR9iVbvTRPFqN9mJ458abQvW3r66DsPZoKtfmeUrY"
+          "z36Wyo13PckwcnK1ULwem79mrEMrJKA19GXb5ifBa4biDXTUNR84RnQHiRGwjJYnniXC7XutzKmySmvPDRFB8azxx"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmcQrnpyowKiXthi6JwY6bQgKeyEdvWvzR81ApLYDwqZEX",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmYbetghUZYAQihN34Ue9SJ3xXU89na4RWZ2JG61DTfpbz",
       "matrix": [[false, false, false]]
     },
     {
@@ -332,14 +343,15 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": [
-          "z5savJP9F2jCPY6ZfotBAjCfpQwBJkz7UqL6M5HmmUsqnwrKYjcntmQn1RooAu9SL9jZybxtnzH7EwcnW1zqhrJ1v",
-          "z3o9ndLZryFebX2Dv3dNTh61jobYeNk7gyUvkm1TuDn76GEfeZrtmGUA79M8w5Z1BVqMNhm4zqAMEyynb9JkhsS5i"
+          "z5uM1ExMbM8oPmQadpU9SL7ggd7msSLq3R8tP7uiLLd6TPDTyLLNspQqLh4cGxadxLT8JP4La9ncu2RtfLMBg3Ey9",
+          "z38tcp1FY3KcAz174i6xfH463wUEDRA9DwEoT5F1UUJuA6LS2xPbHoVt7np9aniWbF9kuJB9Adz6TQ1yStd4V5fkw"
         ]
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmQogX8LkPH7X46S3n4qwXZHZ4Uqjq7VVi7TokwHJ6axrv",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmbuvHhRHa2bNYy2SYMW5sybAcNyJDYP9b9GDotPA6J92k",
       "matrix": [
         [true, false],
         [false, true]
@@ -358,193 +370,13 @@
       "record": {
         "revokes": "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
         "issuerId": "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+        "anchor": "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
         "revokedAt": "2026-06-12T00:00:00.000Z",
         "signature": []
       },
-      "signingInput": "{\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
-      "digest": "zQmXYS5GvGBurmKvCQrL2Yppr7erTuZWYCRpVSUqR3DbAV4",
+      "signingInput": "{\"anchor\":\"zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq\",\"issuerId\":\"pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa\",\"revokedAt\":\"2026-06-12T00:00:00.000Z\",\"revokes\":\"zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm\"}",
+      "digest": "zQmSyzhKwS3bR7C1tx1ML41FxgqjYmuPN7vZ6CgA6Kw8fin",
       "matrix": []
-    }
-  ],
-  "logRuleNote": "Conformance vectors for spec 003's 'no two states may share a quorum' rule, the interim measure that closes the cross-state routes until record anchoring lands. Each vector is a sequence of key states one log commits, in order. `legal` is true iff |keys(A) n keys(B)| < min(threshold(A), threshold(B)) holds for EVERY pair of states, not merely consecutive ones — records verify against any state a log ever committed, so every pair is simultaneously live. These carry no records and no signatures: the rule constrains log SHAPE, and a third party can check every vector by intersecting the key lists.",
-  "logRuleVectors": [
-    {
-      "name": "illegal — route 3: the later state's keys are a SUBSET of the earlier state's",
-      "why": "The cross-state deletion route, as executed. A record signed by all three keys conforms against A; delete one member — no key required — and the remaining two conform against B. Shared keys 2, min threshold 2, so 2 < 2 is false and the log is rejected.",
-      "legal": false,
-      "states": [
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
-          ],
-          "threshold": "3"
-        },
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
-          ],
-          "threshold": "2"
-        }
-      ]
-    },
-    {
-      "name": "illegal — route 4: the later state is a PERMUTATION of the earlier state",
-      "why": "The cross-state reorder route, as executed. Same two keys, opposite order, so a record conforming against A conforms against B once its two members are swapped. Both thresholds are 2, which is why the m = t rule alone gives no protection here. Shared 2, min threshold 2.",
-      "legal": false,
-      "states": [
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"
-          ],
-          "threshold": "2"
-        },
-        {
-          "keys": [
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"
-          ],
-          "threshold": "2"
-        }
-      ]
-    },
-    {
-      "name": "illegal — variant G: the key set GROWS, which a backwards-looking rule misses",
-      "why": "The attack does not care which state came first. The m = 2 record conforming against B loses a member and conforms against A. B is not a subset of A, so a rule phrased as 'no state may be a subset of an EARLIER one' accepts this log; the intersection rule rejects it, shared 1 against min threshold 1.",
-      "legal": false,
-      "states": [
-        {
-          "keys": ["z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"],
-          "threshold": "1"
-        },
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"
-          ],
-          "threshold": "2"
-        }
-      ]
-    },
-    {
-      "name": "illegal — variant P: partial rotation with a lowered threshold",
-      "why": "THE case that killed the more permissive rule, kept so a future reader does not propose it again. The rotation retires K2, introduces K3 and keeps K0 and K1 — neither key set is a subset or a permutation of the other, so subset/permutation rules in BOTH the one-way and symmetric forms accept this log. It is still a working attack: drop one member from the m = 3 record conforming against A and the remaining two conform against B. Shared 2, min threshold 2. This is why the rule counts the intersection against the threshold rather than comparing key lists.",
-      "legal": false,
-      "states": [
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
-          ],
-          "threshold": "3"
-        },
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB"
-          ],
-          "threshold": "2"
-        }
-      ]
-    },
-    {
-      "name": "legal — 1-of-1 rotation, the shape every first-party log has",
-      "why": "A rotation that replaces its single key shares nothing: 0 < 1. Every documented first-party participant is this shape, which is why the rule costs zero migration.",
-      "legal": true,
-      "states": [
-        {
-          "keys": ["z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"],
-          "threshold": "1"
-        },
-        {
-          "keys": ["z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"],
-          "threshold": "1"
-        }
-      ]
-    },
-    {
-      "name": "legal — 3-of-5 retaining two old keys",
-      "why": "Key reuse is NOT forbidden, only reuse up to a quorum. Two keys carry over against a threshold of three: 2 < 3, so the log is legal. This is the boundary from the permissive side, and it is what makes the intersection rule strictly weaker than banning reuse.",
-      "legal": true,
-      "states": [
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb",
-            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB",
-            "z6MkuEUybFgDhSyrmvPMUbezRNH8hHdv8PYpg6PsTcrLXswS"
-          ],
-          "threshold": "3"
-        },
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6MkghLt1e8m1fmANsdJJco3aCLV8Xnigr5UWwC3u5iZFPd3",
-            "z6MkgopvLwZuxuvDkrEogYLLHQACmcQeX344dnMcPJb6VHQH",
-            "z6MktwtqAzuD5F77tAMBMwNs1KybZeff61EehV9xB1ZpXQG7"
-          ],
-          "threshold": "3"
-        }
-      ]
-    },
-    {
-      "name": "legal — 2-of-3 retaining exactly one old key",
-      "why": "The most a 2-of-3 may keep. One key carries over against a threshold of two: 1 < 2. Retaining TWO would share a quorum and be rejected — the restriction an operator most needs to know about, pinned here from the legal side.",
-      "legal": true,
-      "states": [
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb"
-          ],
-          "threshold": "2"
-        },
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB",
-            "z6MkuEUybFgDhSyrmvPMUbezRNH8hHdv8PYpg6PsTcrLXswS"
-          ],
-          "threshold": "2"
-        }
-      ]
-    },
-    {
-      "name": "illegal — a non-adjacent pair, so the rule is over ALL pairs not consecutive ones",
-      "why": "States 0 and 2 share both their keys against a threshold of two, while each is legal against the state between them. Records verify against ANY state a log ever committed, so every pair is live and the rule must be checked pairwise across the whole log. A replay that only compared consecutive events would accept this log and leave the route open.",
-      "legal": false,
-      "states": [
-        {
-          "keys": [
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a"
-          ],
-          "threshold": "2"
-        },
-        {
-          "keys": [
-            "z6MkihPywfVny5kpsEM7AYbwMm9gF4n6D3EL1p4W5fi3NZMb",
-            "z6MkmRCLe9s6EiyaSU3aJsq2iEtjVGHSjvkXoPWCfDSPZWpB",
-            "z6MkuEUybFgDhSyrmvPMUbezRNH8hHdv8PYpg6PsTcrLXswS"
-          ],
-          "threshold": "3"
-        },
-        {
-          "keys": [
-            "z6MkwEfJ4V5uWJ8dwxr6F8ASUA2f4jgYi6guf8KgTQBmaQ5a",
-            "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D"
-          ],
-          "threshold": "2"
-        }
-      ]
     }
   ]
 }

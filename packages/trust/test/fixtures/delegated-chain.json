@@ -1,5 +1,5 @@
 {
-  "description": "Trust-resolver conformance fixture (spec 011): a three-link delegated chain — the user self-issues 'msg' bound to one service, delegates to a disposable session key (key audience: expiry and aud mandatory), and the session key re-delegates an attenuated 'msg/send' sub-grant to the backend service (key-issued link: exactly one self-certifying signature). Verifiable from these bytes alone with the service as verifier.",
+  "description": "Trust-resolver conformance fixture (spec 011): a three-link delegated chain — the user self-issues 'msg' bound to one service, delegates to a disposable session key (key audience: expiry and aud mandatory), and the session key re-delegates an attenuated 'msg/send' sub-grant to the backend service (key-issued link: exactly one self-certifying signature, and — spec 016 — no anchor, unlike the two participant-issued links above). Verifiable from these bytes alone with the service as verifier.",
   "verifyAt": "2026-07-21T12:00:00.000Z",
   "verifierId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
   "userLog": [
@@ -40,11 +40,11 @@
       "caveats": {
         "aud": ["pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF"]
       },
-      "proof": "zQmPk5nrSbPpT4PeVoYkga5UQpy7weWuYVq6izurmXZ9Tk2",
+      "proof": "zQmZ5khJBTu6Gy5Smfaae6Gh5WXTvDM3hCYSbGS5f6nwWbg",
       "issuedAt": "2026-07-01T00:00:00.000Z",
       "expiresAt": "2026-08-01T00:00:00.000Z",
       "signature": [
-        "z3Xd2d52CoueiUy7ob9e7PNwKjewF3e1wGFzgtqVg6X19MSzyMw4abehR9ZVy4aqD9qmqvAKgRs3h3HqQ9TrGwbMy"
+        "zLAJbU36c6cSNJAAUdakgaZxquhxAWty41RJFvUYDD6cKbWbaohe9BA1KygG3cb63mawufNkNc4ButRBtrgyeSvQ"
       ]
     },
     {
@@ -55,11 +55,12 @@
       "caveats": {
         "aud": ["pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF"]
       },
-      "proof": "zQmbMLYvvCriS4P6PDFCDgMj7gawWFfoHw7y1wa24KEoHXD",
+      "anchor": "zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4",
+      "proof": "zQmRQtQQLFycinaaJkJMxk5ndajjXNYvh2N5oXURQK9eFYo",
       "issuedAt": "2026-07-01T00:00:00.000Z",
       "expiresAt": "2026-08-01T00:00:00.000Z",
       "signature": [
-        "z4dB56tutWo5CmvyetiCLRBVUd5xXUXh6dVk1rCEiE3sWEjbEEb9K6QgPX5HmTgUwxgGpUJUf6pUeGxSbWXJ9y4HV"
+        "z3qGHW1XBtrDAtJPC54dDZ5YAYhXZtovrwYiHNwRKWkYc524BaWviDFjYAQZgEo4f9YzGXsC6EtKZ3iyyFFyb2cwJ"
       ]
     },
     {
@@ -70,10 +71,11 @@
       "caveats": {
         "aud": ["pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF"]
       },
+      "anchor": "zQmXZjsktTobNF5n8UrgG61KMyTVN8zZ9wYvULYX1uDGZn4",
       "proof": null,
       "issuedAt": "2026-07-01T00:00:00.000Z",
       "signature": [
-        "z2RXe41iaZVcJmTxm8CoXfDt6aJ7sxVdgF5nkWg93syn32n5BVyXfL53e5GUsPb8914vn7q13gauiXn5r4s6J98jK"
+        "z4a4XQjz6qMsrhyWb2Trf4S4L1krpnxZSRD5dzXTdrPtQyncsQ7oxw4X6B7NxpBWfsYnMhzpqzsLiUPoMub6q3mXM"
       ]
     }
   ],
@@ -81,9 +83,9 @@
     "userId": "pk_zQmWPxNRJymjkxTg519WTzVo66cSEQVRvqwmbLeJJP8nbu5",
     "serviceId": "pk_zQmYfMGiGsr5JNt4axAynod5HTmH5pLfL6d1Xo7VtqQnHFF",
     "sessionKeyRef": "z6Mkn3sUaRJMRwT4iPbBtHUzTk42mHDSA3M3D8krGpZfGW8D",
-    "rootGrantDigest": "zQmbMLYvvCriS4P6PDFCDgMj7gawWFfoHw7y1wa24KEoHXD",
-    "sessionGrantDigest": "zQmPk5nrSbPpT4PeVoYkga5UQpy7weWuYVq6izurmXZ9Tk2",
-    "serviceGrantDigest": "zQmQVSwMBy5MJzheDPidGnWX9DRrzEhMMsd8Ygd2MuoenHd",
+    "rootGrantDigest": "zQmRQtQQLFycinaaJkJMxk5ndajjXNYvh2N5oXURQK9eFYo",
+    "sessionGrantDigest": "zQmZ5khJBTu6Gy5Smfaae6Gh5WXTvDM3hCYSbGS5f6nwWbg",
+    "serviceGrantDigest": "zQmeE86NuUdPd3og8h8WzbysRo2W2rdj2Dq35oHKKxgRcKo",
     "valid": true,
     "abilities": ["msg/send"]
   }

@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** the crypto primitives every signature depends on
+**Amended by:** 016
 
 ## Context
 
@@ -116,12 +117,16 @@ upgrade (see _Design notes_). Nothing else in the protocol is exempt.
 a signature of `R` = the identity point and `S` = 0 verifies under **every** small-order public
 key, for any message, and involves **no secret key at all** — small-order points have no discrete
 log to know, so this is not a forgery and nothing about it is infeasible. That makes one signature
-verify under many distinct keys, which is precisely the case 003's "no two states may share a
-quorum" rule excludes by assumption: its soundness argument counts surviving signature-set members
-against a key intersection, and that count is only valid if a signature verifies under exactly one
-key. 015's determinism and uniqueness properties inherit the same dependency. Both specs name this
-pin as their prerequisite; with it in place, the assumption they rest on holds **under the pinned
-mode**, which is the only sense in which it can hold.
+verify under many distinct keys, and therefore makes "the signature verifies" a statement about
+the verifier rather than about the bytes: two implementations calling themselves Ed25519 reach
+different verdicts on the same record, and 015's determinism and uniqueness properties — every one
+of which is stated as a property two conforming implementations agree on — are lost with it. 015
+names this pin as its prerequisite; with it in place, the properties it rests on hold **under the
+pinned mode**, which is the only sense in which they can hold.
+
+_Amended by 016: 003's "no two states may share a quorum" rule also rested on this pin, for its
+soundness rather than for determinism, and named it a prerequisite on that ground. 016 removed the
+rule; the pin's basis is determinism, and it is unchanged and still required._
 
 **What this pin does not settle.** Rules 1–3 fix point decoding, the `S` range, and the treatment
 of small-order public keys. They do **not** fix the form of the verification **equation**, which
@@ -194,8 +199,8 @@ here**: no existing standard states it, because RFC 8032 endorses the cofactored
 therefore admits small-order public keys. It is not invented from nothing — it is the rejection
 libsodium performs and the property the SBS/non-repudiation literature calls for — but this spec
 is its normative source, which matters to anyone tracing the rule back to a standard and finding
-none. What is bought with it is a soundness dependency that 003's quorum rule and 015's
-uniqueness property cannot otherwise discharge.
+none. What is bought with it is the determinism 015's uniqueness property cannot otherwise
+discharge — and, until 016 retired it, the soundness of 003's quorum rule as well.
 
 ## Open questions
 
@@ -211,6 +216,9 @@ uniqueness property cannot otherwise discharge.
 - 2026-08-13 — Canonical-encoding rule added (decode, re-encode, require exact textual equality,
   require the field's decoded byte length), after an external security review (2026-08) found
   validators disagreeing about which textual forms of one value to accept.
+- 2026-08-18 — Amended by 016: the pinned verification mode is no longer a prerequisite for 003's
+  quorum rule, which 016 removed. The mode itself is unchanged and still required, on the
+  determinism ground.
 
 ## References
 

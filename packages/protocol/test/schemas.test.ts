@@ -306,12 +306,14 @@ describe("size-limit conformance vectors (specs 003, 009)", () => {
     abilities: ["directory"],
     caveats: {},
     proof: null,
+    anchor: MULTIHASH,
     issuedAt: DATETIME,
     signature: [KEY_REF]
   };
   const revocation = {
     revokes: MULTIHASH,
     issuerId: PARTICIPANT_ID,
+    anchor: MULTIHASH,
     revokedAt: DATETIME,
     signature: [KEY_REF]
   };
@@ -570,10 +572,17 @@ describe("signed statements", () => {
     const revocation = {
       revokes: MULTIHASH,
       issuerId: PARTICIPANT_ID,
+      anchor: MULTIHASH,
       revokedAt: DATETIME,
       signature: [KEY_REF]
     };
     expect(revocationSchema.parse(revocation)).toBeTruthy();
+    // Spec 016: `anchor` is REQUIRED here — a Revocation's issuer is always a participant, so
+    // its signature set is always judged against a key state and the record must name which.
+    expect(revocationSchema.safeParse(omit(revocation, "anchor")).success).toBe(false);
+    expect(revocationSchema.safeParse({ ...revocation, anchor: "not-a-digest" }).success).toBe(
+      false
+    );
     expect(revocationSchema.parse({ ...revocation, reason: "device lost" })).toBeTruthy();
     expect(revocationSchema.safeParse({ ...revocation, revokes: "not-a-digest" }).success).toBe(
       false
@@ -603,10 +612,14 @@ describe("signed statements", () => {
       abilities: ["directory/curate"],
       caveats: {},
       proof: null,
+      anchor: MULTIHASH,
       issuedAt: DATETIME,
       signature: [KEY_REF]
     };
     expect(grantSchema.parse(grant)).toBeTruthy();
+    // Spec 016: a participant issuer signs against a key state, so the link names it.
+    expect(grantSchema.safeParse(omit(grant, "anchor")).success).toBe(false);
+    expect(grantSchema.safeParse({ ...grant, anchor: "not-a-digest" }).success).toBe(false);
     expect(grantSchema.parse({ ...grant, proof: MULTIHASH, expiresAt: DATETIME })).toBeTruthy();
     expect(grantSchema.safeParse({ ...grant, abilities: [] }).success).toBe(false);
     expect(grantSchema.safeParse({ ...grant, abilities: ["Not An Ability"] }).success).toBe(false);
@@ -833,6 +846,7 @@ describe("principals and the aud caveat (spec 011)", () => {
     abilities: ["directory/curate"],
     caveats: {},
     proof: null,
+    anchor: MULTIHASH,
     issuedAt: DATETIME,
     signature: [KEY_REF]
   };
@@ -876,10 +890,33 @@ describe("principals and the aud caveat (spec 011)", () => {
   });
 
   it("accepts a KeyRef issuerId with a participant audience (the multi-hop tail link)", () => {
+    // Spec 016: a bare-key issuer takes NO anchor — it is self-certifying against the single
+    // key `issuerId` names, which is one candidate state by construction and no key log to
+    // resolve a digest against.
+    expect(
+      grantSchema.parse({
+        ...omit(participantAudienceGrant, "anchor"),
+        issuerId: SESSION_KEY
+      })
+    ).toBeTruthy();
+  });
+
+  it("ties the anchor to the ISSUER's shape, in both directions (spec 016)", () => {
+    // Present iff the issuer is a participant, absent iff it is a KeyRef. Both halves are
+    // schema rules, so independent verifiers agree such a link is malformed rather than
+    // merely unwelcome.
+    expect(grantSchema.safeParse(omit(participantAudienceGrant, "anchor")).success).toBe(false);
+    expect(
+      grantSchema.safeParse({ ...participantAudienceGrant, issuerId: SESSION_KEY }).success
+    ).toBe(false);
+    // …and the audience's shape has nothing to do with it: a key AUDIENCE still anchors,
+    // because it is the issuer that signs.
     expect(
       grantSchema.parse({
         ...participantAudienceGrant,
-        issuerId: SESSION_KEY
+        audienceId: SESSION_KEY,
+        expiresAt: DATETIME,
+        caveats: { aud: SERVICE_ID }
       })
     ).toBeTruthy();
   });

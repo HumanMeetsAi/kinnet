@@ -7,7 +7,9 @@ import {
   canonicalDigest,
   createIdentity,
   encodeKeyRef,
+  eventDigest,
   generateKeyPair,
+  keyLogAnchor,
   rotateIdentity,
   signThresholdRecord
 } from "@kinnet/crypto";
@@ -75,6 +77,9 @@ function grant(
       audienceId: sessionKeyRef,
       abilities: ["msg/conversation-update"],
       caveats: { aud: [node.id] },
+      // Spec 016: a participant-issued grant names the key state it is signed under. These are
+      // all self-issued roots, so the issuer's log tip is that state.
+      anchor: keyLogAnchor(issuer.log),
       proof: null,
       issuedAt: ISSUED_AT,
       expiresAt: EXPIRES_AT,
@@ -99,12 +104,26 @@ function updateBody(overrides: UpdateFields = {}): Omit<ConversationUpdate, "sig
   };
 }
 
-/** Owner-signed evidence: the actor's own threshold key state signs the record. */
+/**
+ * Owner-signed evidence: the actor's own threshold key state signs the record, and — spec 016 —
+ * the record names that state with an `anchor`. The anchor is also what DECLARES owner mode: a
+ * unit whose record carries one must carry no chain.
+ *
+ * Anchored to the actor's inception event by default, which is the state
+ * `actor.currentKeys[0]` reveals. Tests that rotate the log keep this anchor deliberately: an
+ * anchor names a historical event and a later rotation must not orphan it.
+ */
 function ownerUpdate(overrides: UpdateFields = {}, secretKey = actor.currentKeys[0]!.secretKey) {
-  return signThresholdRecord(updateBody(overrides), [secretKey]) as ConversationUpdate;
+  return signThresholdRecord(updateBody({ anchor: keyLogAnchor(actor.log), ...overrides }), [
+    secretKey
+  ]) as ConversationUpdate;
 }
 
-/** Delegated-signed evidence: a session key signs the record; a chain authorizes the key. */
+/**
+ * Delegated-signed evidence: a session key signs the record; a chain authorizes the key. NO
+ * anchor — spec 016 makes its absence the declaration of delegated mode, and the leaf key has one
+ * constructive state to be judged against rather than a log to select within.
+ */
 function sessionUpdate(overrides: UpdateFields = {}, secretKey = session.secretKey) {
   return signThresholdRecord(updateBody(overrides), [secretKey]) as ConversationUpdate;
 }
@@ -115,9 +134,11 @@ const SELF_DEPARTURE: UpdateFields = { kind: "remove", members: [actor.id] };
 const DEVICE_ADD: UpdateFields = { kind: "device-add", members: [actor.id] };
 
 describe("verifyConversationUpdateUnit — owner mode (spec 014, chain absent)", () => {
-  it("accepts a record signed by a key state the actor has since rotated away from", async () => {
-    // The rule that matters: ANY replay-valid state, not just the current one. A
-    // current-state-only check would retroactively un-authorize committed membership.
+  it("accepts a record anchored to a key state the actor has since rotated away from", async () => {
+    // The rule that matters, restated by spec 016: an anchor names a HISTORICAL event, and key
+    // logs are append-only, so a rotation leaves the named event exactly where it was. A
+    // current-state-only check would retroactively un-authorize committed membership; anchoring
+    // narrows which state is tried without making the record expire.
     const record = ownerUpdate();
     const rotated = rotateIdentity(actor);
     const view = makeView({ logs: { [actor.id]: rotated.log } });
@@ -184,18 +205,18 @@ describe("verifyConversationUpdateUnit — owner mode (spec 014, chain absent)",
     ).toEqual({ valid: true });
   });
 
-  it("spends ONE allowance across the whole unit, not one per key state", async () => {
-    // BLOCKER 1. A budget handed fresh to every key state bounds nothing: one
-    // `verifyThresholdRecord` call now caps at one greedy walk over the keys, far under any
-    // sane outer ceiling, so reminting the allowance for each state would let a maximal
-    // `states x keys` walk appear metered. It must be shared across states and with replay.
+  it("spends ONE allowance across the replay and the anchored check", async () => {
+    // BLOCKER 1, and spec 016 has changed what the second spender costs without changing the
+    // property: the record's own check is one greedy walk against ONE state, so it can no
+    // longer dominate — but it is still work, and a budget reminted for it would let the
+    // replay's ceiling be exceeded silently. Replay and record check must draw on one allowance.
     let rotated = actor;
     for (let index = 0; index < 12; index += 1) {
       rotated = rotateIdentity(rotated);
     }
     const log = rotated.log;
-    // Signed by the ORIGINAL key, the oldest state, so the newest-first search must walk the
-    // whole history to reach it — the shape that actually spends.
+    // Signed by the ORIGINAL key and anchored to the inception event — the oldest state of a
+    // 13-event log, which under the search this replaces was the most expensive shape there was.
     const record = ownerUpdate({}, actor.currentKeys[0]!.secretKey);
 
     const view = (max: number): TrustView => ({
@@ -204,15 +225,16 @@ describe("verifyConversationUpdateUnit — owner mode (spec 014, chain absent)",
       getRevocations: async () => []
     });
 
-    // 13 events to replay plus 13 states to search: 26. Funded, it verifies.
+    // 13 events to replay plus ONE anchored check against the state the record names: 14. It
+    // was 26 while every state was searched, and the difference is exactly spec 016's.
     expect(
-      await verifyConversationUpdateUnit(record, null, view(26), { checkRevocation: true })
+      await verifyConversationUpdateUnit(record, null, view(14), { checkRevocation: true })
     ).toEqual({ valid: true });
 
-    // One short, it is refused ON COST — which is only possible if the replay and the search
+    // One short, it is refused ON COST — which is only possible if the replay and the check
     // draw on the same allowance. Per-call budgets would each see 13 and never fire.
     expect(
-      await verifyConversationUpdateUnit(record, null, view(25), { checkRevocation: true })
+      await verifyConversationUpdateUnit(record, null, view(13), { checkRevocation: true })
     ).toEqual({ valid: false, reason: "actor_key_log_too_expensive" });
   });
 
@@ -242,7 +264,7 @@ describe("verifyConversationUpdateUnit — owner mode (spec 014, chain absent)",
       })
     ).toEqual({ valid: true });
     const spent = 1_000_000 - funded.remaining;
-    expect(spent).toBe(26);
+    expect(spent).toBe(14);
 
     // Handed one that cannot pay, it refuses — even though the VIEW would have allowed it.
     // That is the whole assertion: the caller's allowance is what binds, not the view's.
@@ -401,7 +423,12 @@ describe("verifyConversationUpdateUnit — delegated mode (spec 014, chain prese
     const record = sessionUpdate();
     const chain = [grant(actor)];
     const revocation = signThresholdRecord(
-      { revokes: canonicalDigest(chain[0]!), issuerId: actor.id, revokedAt: CREATED_AT },
+      {
+        revokes: canonicalDigest(chain[0]!),
+        issuerId: actor.id,
+        anchor: keyLogAnchor(actor.log),
+        revokedAt: CREATED_AT
+      },
       [actor.currentKeys[0]!.secretKey]
     ) as Revocation;
     const revokedView = makeView({
@@ -432,10 +459,10 @@ describe("verifyConversationUpdateUnit — delegated mode (spec 014, chain prese
   });
 
   it("does not treat a chain-carrying unit's chain as decoration (decision D)", async () => {
-    // A record that owner-verifies perfectly, presented with a chain that verifies not at
-    // all. Fail closed: there is exactly one reason a unit is valid, and evaluation order
-    // must never decide the verdict.
-    const record = ownerUpdate();
+    // A delegated-mode record presented with a chain that verifies not at all. Fail closed:
+    // there is exactly one reason a unit is valid, and evaluation order must never decide the
+    // verdict.
+    const record = sessionUpdate();
     const garbage = [{ ...grant(actor), abilities: ["msg"] } as Grant];
 
     const verdict = await verifyConversationUpdateUnit(record, garbage, view, {
@@ -443,14 +470,17 @@ describe("verifyConversationUpdateUnit — delegated mode (spec 014, chain prese
     });
     expect(verdict.valid).toBe(false);
     expect(verdict).toEqual({ valid: false, reason: "chain_invalid:grant_signature_invalid" });
-    // …and the very same record verifies in owner mode when no chain is presented.
+    // …and the very same record verifies once the chain that authorizes it is the one presented.
     expect(
-      await verifyConversationUpdateUnit(record, null, view, { checkRevocation: true })
+      await verifyConversationUpdateUnit(record, [grant(actor)], view, { checkRevocation: true })
     ).toEqual({ valid: true });
   });
 
   it("rejects a present-but-empty chain rather than falling back to owner mode", async () => {
-    const record = ownerUpdate();
+    // A delegated-mode record — no anchor — with a chain that names no delegation. Spec 016
+    // decides the MODE before this: an empty chain is a present chain, so the record must carry
+    // no anchor to be in this branch at all, and the emptiness is then the chain's own defect.
+    const record = sessionUpdate();
 
     expect(await verifyConversationUpdateUnit(record, [], view, { checkRevocation: true })).toEqual(
       {
@@ -482,10 +512,17 @@ describe("verifyConversationRecordUnit — the same unit over spec 012's record"
     };
   }
 
+  /** Owner mode (spec 016): the record names the creator's key state and travels with no chain. */
+  function ownerConversationBody(
+    anchor = keyLogAnchor(actor.log)
+  ): Omit<Conversation, "signature"> {
+    return { ...conversationBody(), anchor };
+  }
+
   const view = makeView({ logs: { [actor.id]: actor.log, [other.id]: other.log } });
 
   it("accepts an owner-signed record against a rotated-away key state", async () => {
-    const record = signThresholdRecord(conversationBody(), [
+    const record = signThresholdRecord(ownerConversationBody(), [
       actor.currentKeys[0]!.secretKey
     ]) as Conversation;
     const rotated = rotateIdentity(actor);
@@ -526,7 +563,7 @@ describe("verifyConversationRecordUnit — the same unit over spec 012's record"
   });
 
   it("waits — never throws — when the creator's key log cannot be resolved", async () => {
-    const record = signThresholdRecord(conversationBody(), [
+    const record = signThresholdRecord(ownerConversationBody(), [
       actor.currentKeys[0]!.secretKey
     ]) as Conversation;
 
@@ -580,9 +617,10 @@ describe("substituted key logs — a view serving another participant's valid lo
   });
 
   it("rejects an owner-mode conversation record the attacker signed as the creator", async () => {
-    const record = signThresholdRecord(conversationBody, [
-      attacker.currentKeys[0]!.secretKey
-    ]) as Conversation;
+    const record = signThresholdRecord(
+      { ...conversationBody, anchor: keyLogAnchor(attacker.log) },
+      [attacker.currentKeys[0]!.secretKey]
+    ) as Conversation;
 
     expect(
       await verifyConversationRecordUnit(record, null, substituted, { checkRevocation: false })
@@ -732,7 +770,8 @@ describe("UNIT_COST_REASONS is sound — every listed reason is reachable", () =
         {
           creator: actor.id,
           participants: [actor.id, other.id].sort(),
-          createdAt: CREATED_AT
+          createdAt: CREATED_AT,
+          anchor: keyLogAnchor(actor.log)
         },
         [actor.currentKeys[0]!.secretKey]
       ) as Conversation;
@@ -840,6 +879,177 @@ describe("record-unit budget normalization", () => {
         { ...view, maxSignatureVerifications: 2 },
         { checkRevocation: true }
       )
+    ).toEqual({ valid: true });
+  });
+});
+
+/**
+ * Spec 016's unit rules: the record declares its own mode, and the anchor selects the one key
+ * state its signature set is judged against.
+ */
+describe("record anchoring (spec 016)", () => {
+  const view = makeView({ logs: { [actor.id]: actor.log, [other.id]: other.log } });
+
+  it("waits when the anchor names a key event this view's copy of the log does not carry", async () => {
+    // The member-side disposition 016 pins: an anchor a verifier cannot resolve is a WAIT, never
+    // a rejection. Key logs are monotone, so an honest verifier's verdict converges once its view
+    // catches up; rejecting on a cache miss would split the group — the same argument that makes
+    // an unresolvable key log a wait.
+    const record = ownerUpdate({ anchor: canonicalDigest({ anchor: "no event of this log" }) });
+
+    const verdict = await verifyConversationUpdateUnit(record, null, view, {
+      checkRevocation: true
+    });
+    expect(verdict).toEqual({ valid: false, reason: "actor_key_log_anchor_unknown" });
+    expect(isUnitWaitReason("actor_key_log_anchor_unknown")).toBe(true);
+    // A WAIT, and not a COST refusal: nothing here was declined for want of allowance.
+    expect(isUnitCostReason("actor_key_log_anchor_unknown")).toBe(false);
+  });
+
+  it("waits on an unknown anchor for a conversation record too", async () => {
+    const record = signThresholdRecord(
+      {
+        creator: actor.id,
+        participants: [actor.id, other.id].sort(),
+        createdAt: CREATED_AT,
+        lane: "e2ee",
+        groupNonce: GROUP_NONCE,
+        anchor: canonicalDigest({ anchor: "no event of this log" })
+      },
+      [actor.currentKeys[0]!.secretKey]
+    ) as Conversation;
+
+    const verdict = await verifyConversationRecordUnit(record, null, view, {
+      checkRevocation: true
+    });
+    expect(verdict).toEqual({ valid: false, reason: "creator_key_log_anchor_unknown" });
+    expect(isUnitWaitReason("creator_key_log_anchor_unknown")).toBe(true);
+  });
+
+  it("reports an unknown anchor separately from a signature that does not verify", async () => {
+    // 016 requires the two be distinguishable, and this is the pair that shows they are: same
+    // record shape, same view, one wrong in the anchor and one wrong in the signature. Collapsing
+    // them would turn a stale view into a permanent rejection on one side, and a forgery into a
+    // wait-forever on the other.
+    const unknownAnchor = ownerUpdate({
+      anchor: canonicalDigest({ anchor: "no event of this log" })
+    });
+    const badSignature = ownerUpdate({}, other.currentKeys[0]!.secretKey);
+
+    expect(
+      await verifyConversationUpdateUnit(unknownAnchor, null, view, { checkRevocation: true })
+    ).toEqual({ valid: false, reason: "actor_key_log_anchor_unknown" });
+    expect(
+      await verifyConversationUpdateUnit(badSignature, null, view, { checkRevocation: true })
+    ).toEqual({ valid: false, reason: "signature_invalid" });
+    expect(isUnitWaitReason("signature_invalid")).toBe(false);
+  });
+
+  it("verifies a record anchored to a non-tip state after the actor rotates", async () => {
+    // The anchor names an event, not the current state, so appending rotations to the log leaves
+    // it verifying — and the state it names is genuinely no longer the tip, which is what makes
+    // this more than the trivial case.
+    let rotated = actor;
+    for (let index = 0; index < 3; index += 1) {
+      rotated = rotateIdentity(rotated);
+    }
+    const record = ownerUpdate();
+    expect(record.anchor).toBe(eventDigest(rotated.log[0]!));
+    expect(record.anchor).not.toBe(keyLogAnchor(rotated.log));
+
+    expect(
+      await verifyConversationUpdateUnit(
+        record,
+        null,
+        makeView({ logs: { [actor.id]: rotated.log } }),
+        {
+          checkRevocation: true
+        }
+      )
+    ).toEqual({ valid: true });
+  });
+
+  it("refuses a record anchored to a state OTHER than the one that signed it", async () => {
+    // The heart of 016: exactly one state is tried. This record is signed by the actor's
+    // inception key — the state a rotated log still commits — but names the rotation's state, so
+    // the set is checked against keys that did not sign it and no fallback is attempted.
+    const rotated = rotateIdentity(actor);
+    const record = signThresholdRecord(updateBody({ anchor: keyLogAnchor(rotated.log) }), [
+      actor.currentKeys[0]!.secretKey
+    ]) as ConversationUpdate;
+
+    expect(
+      await verifyConversationUpdateUnit(
+        record,
+        null,
+        makeView({ logs: { [actor.id]: rotated.log } }),
+        {
+          checkRevocation: true
+        }
+      )
+    ).toEqual({ valid: false, reason: "signature_invalid" });
+  });
+
+  it("rejects a unit carrying BOTH an anchor and a chain", async () => {
+    // 016's mode rule. Both present names two authorities for one record, and picking either
+    // would leave the other unexamined — which is the try-owner-then-fall-back evaluation order
+    // the rule exists to remove.
+    const record = ownerUpdate();
+
+    expect(
+      await verifyConversationUpdateUnit(record, [grant(actor)], view, { checkRevocation: true })
+    ).toEqual({ valid: false, reason: "mode_conflict" });
+    // A REJECTION, not a wait: nothing about it converges as a view catches up.
+    expect(isUnitWaitReason("mode_conflict")).toBe(false);
+    expect(isUnitCostReason("mode_conflict")).toBe(false);
+  });
+
+  it("rejects a unit carrying NEITHER an anchor nor a chain", async () => {
+    // The other half, and the one that closes the gap: without it, a delegated-signed record
+    // stripped of its chain would be offered to owner-mode verification.
+    const record = sessionUpdate();
+
+    expect(
+      await verifyConversationUpdateUnit(record, null, view, { checkRevocation: true })
+    ).toEqual({ valid: false, reason: "mode_conflict" });
+  });
+
+  it("applies the same mode rule to a conversation record", async () => {
+    const owner = signThresholdRecord(
+      {
+        creator: actor.id,
+        participants: [actor.id, other.id].sort(),
+        createdAt: CREATED_AT,
+        lane: "e2ee",
+        groupNonce: GROUP_NONCE,
+        anchor: keyLogAnchor(actor.log)
+      },
+      [actor.currentKeys[0]!.secretKey]
+    ) as Conversation;
+    const delegated = signThresholdRecord(
+      {
+        creator: actor.id,
+        participants: [actor.id, other.id].sort(),
+        createdAt: CREATED_AT,
+        lane: "e2ee",
+        groupNonce: GROUP_NONCE
+      },
+      [session.secretKey]
+    ) as Conversation;
+    const chain = [grant(actor, { abilities: ["msg/conversation"] })];
+
+    expect(
+      await verifyConversationRecordUnit(owner, chain, view, { checkRevocation: true })
+    ).toEqual({ valid: false, reason: "mode_conflict" });
+    expect(
+      await verifyConversationRecordUnit(delegated, null, view, { checkRevocation: true })
+    ).toEqual({ valid: false, reason: "mode_conflict" });
+    // …and each verifies in the mode it declares.
+    expect(
+      await verifyConversationRecordUnit(owner, null, view, { checkRevocation: true })
+    ).toEqual({ valid: true });
+    expect(
+      await verifyConversationRecordUnit(delegated, chain, view, { checkRevocation: true })
     ).toEqual({ valid: true });
   });
 });

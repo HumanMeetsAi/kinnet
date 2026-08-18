@@ -15,6 +15,7 @@ import {
   createIdentity,
   encodeKeyRef,
   generateKeyPair,
+  keyLogAnchor,
   rotateIdentity,
   signRecord,
   signThresholdRecord
@@ -54,6 +55,9 @@ const rootGrant = signThresholdRecord(
     audienceId: admin.id,
     abilities: ["directory"],
     caveats: {},
+    // Spec 016: a participant-issued grant names the key state it is signed under. The org
+    // signs with its ROTATED keys, so the anchor is its log's tip.
+    anchor: keyLogAnchor(org.log),
     proof: null,
     issuedAt: ISSUED_AT
   },
@@ -67,6 +71,7 @@ const leafGrant = signThresholdRecord(
     audienceId: agent.id,
     abilities: ["directory/curate"],
     caveats: {},
+    anchor: keyLogAnchor(admin.log),
     proof: canonicalDigest(rootGrant),
     issuedAt: ISSUED_AT
   },
@@ -90,6 +95,8 @@ const revocation = signThresholdRecord(
   {
     revokes: canonicalDigest(revokedClaim),
     issuerId: org.id,
+    // Spec 016: required on every Revocation.
+    anchor: keyLogAnchor(org.log),
     revokedAt: REVOKED_AT,
     reason: "domain handed back"
   },
@@ -100,7 +107,9 @@ const fixture = {
   description:
     "Trust-resolver conformance fixture (specs 008/009): an org -> agent represents " +
     "chain with a bounding two-link grant chain, plus a revoked claim. The org log " +
-    "contains one rotation; the edge and claim are signed by the pre-rotation key.",
+    "contains one rotation; the edge and claim are signed by the pre-rotation key and " +
+    "verify against any state (scalar signatures, outside spec 016), while the grants " +
+    "and the revocation carry a spec-016 anchor naming the post-rotation state.",
   verifyAt: "2026-06-12T12:00:00.000Z",
   organizationLog: org.log,
   adminLog: admin.log,
@@ -146,6 +155,7 @@ const delegatedRoot = signThresholdRecord(
     audienceId: user.id,
     abilities: ["msg"],
     caveats: { aud: [service.id] },
+    anchor: keyLogAnchor(user.log),
     proof: null,
     issuedAt: DELEGATED_ISSUED_AT
   },
@@ -161,6 +171,7 @@ const sessionGrant = signThresholdRecord(
     audienceId: sessionKeyRef,
     abilities: ["msg"],
     caveats: { aud: [service.id] },
+    anchor: keyLogAnchor(user.log),
     proof: canonicalDigest(delegatedRoot),
     issuedAt: DELEGATED_ISSUED_AT,
     expiresAt: SESSION_EXPIRES_AT
@@ -177,6 +188,8 @@ const serviceGrant = signThresholdRecord(
     audienceId: service.id,
     abilities: ["msg/send"],
     caveats: { aud: [service.id] },
+    // NO anchor: a bare-key issuer has no key log and exactly one constructive state, so
+    // spec 016 forbids the field here and `grantSchema` rejects a link that carries it.
     proof: canonicalDigest(sessionGrant),
     issuedAt: DELEGATED_ISSUED_AT,
     expiresAt: SESSION_EXPIRES_AT
@@ -190,7 +203,8 @@ const delegatedFixture = {
     "the user self-issues 'msg' bound to one service, delegates to a disposable " +
     "session key (key audience: expiry and aud mandatory), and the session key " +
     "re-delegates an attenuated 'msg/send' sub-grant to the backend service " +
-    "(key-issued link: exactly one self-certifying signature). Verifiable from " +
+    "(key-issued link: exactly one self-certifying signature, and — spec 016 — no " +
+    "anchor, unlike the two participant-issued links above). Verifiable from " +
     "these bytes alone with the service as verifier.",
   verifyAt: "2026-07-21T12:00:00.000Z",
   verifierId: service.id,
@@ -229,6 +243,7 @@ const audlessRoot = signThresholdRecord(
     audienceId: appService.id,
     abilities: ["msg"],
     caveats: {},
+    anchor: keyLogAnchor(user.log),
     proof: null,
     issuedAt: DELEGATED_ISSUED_AT
   },
@@ -242,6 +257,7 @@ const audlessLeaf = signThresholdRecord(
     audienceId: service.id,
     abilities: ["msg/send"],
     caveats: {},
+    anchor: keyLogAnchor(appService.log),
     proof: canonicalDigest(audlessRoot),
     issuedAt: DELEGATED_ISSUED_AT
   },
@@ -297,6 +313,7 @@ const financialRoot = signThresholdRecord(
     audienceId: opsService.id,
     abilities: ["payments"],
     caveats: {},
+    anchor: keyLogAnchor(treasury.log),
     proof: null,
     issuedAt: FINANCIAL_ISSUED_AT
   },
@@ -317,6 +334,7 @@ const financialLeaf = signThresholdRecord(
       currency: "USD",
       beneficiary: ["acct:vendor-7", "acct:vendor-9"]
     },
+    anchor: keyLogAnchor(opsService.log),
     proof: canonicalDigest(financialRoot),
     issuedAt: FINANCIAL_ISSUED_AT
   },

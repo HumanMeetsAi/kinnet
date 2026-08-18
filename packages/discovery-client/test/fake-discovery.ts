@@ -18,9 +18,12 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import {
+  checkAnchoredSignatureSet,
   replayKeyLogFor,
+  replayKeyLogStatesFor,
   verifyRequest,
   verifyThresholdRecord,
+  type AnchoredKeyState,
   type KeyState
 } from "@kinnet/crypto";
 import {
@@ -87,6 +90,22 @@ export async function startFakeDiscovery(): Promise<FakeDiscovery> {
     }
     try {
       return replayKeyLogFor(id, events);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Every state the stored log commits, tagged with its event digest — what spec 016's `anchor`
+   * resolves against. The real service memoizes this; a fake replays.
+   */
+  function keyStates(id: string): AnchoredKeyState[] | null {
+    const events = store.keyLogs.get(id);
+    if (events === undefined) {
+      return null;
+    }
+    try {
+      return replayKeyLogStatesFor(id, events).states;
     } catch {
       return null;
     }
@@ -329,8 +348,18 @@ export async function startFakeDiscovery(): Promise<FakeDiscovery> {
       ) {
         return refuse(400, "revocation_id_mismatch");
       }
-      if (!verifyThresholdRecord(revocation, writer.keys, writer.threshold)) {
-        return refuse(422, "revocation_signature_invalid");
+      // Spec 016, mirroring `@kinnet/discovery-api`: the revocation is decided against the
+      // state its own `anchor` names, and an anchor this log commits no event for is refused
+      // separately — this fake is a discovery host, so it holds the log and has nothing staler
+      // to refetch.
+      const verdict = checkAnchoredSignatureSet(revocation, keyStates(pathId) ?? []);
+      if (!verdict.ok) {
+        return refuse(
+          422,
+          verdict.code === "anchor_unknown"
+            ? "revocation_anchor_unknown"
+            : "revocation_signature_invalid"
+        );
       }
       const rows = store.revocations.get(revocation.revokes) ?? [];
       store.revocations.set(revocation.revokes, [

@@ -38,6 +38,7 @@ import {
   decodeChainAccessToken,
   encodeChainAccessToken,
   encodeKeyRef,
+  keyLogAnchor,
   signThresholdRecord,
   verifyThresholdRecord,
   type Identity
@@ -144,6 +145,9 @@ function link(spec: Link): Grant {
     abilities: spec.abilities,
     caveats: spec.caveats ?? {},
     proof: spec.parent === undefined ? null : canonicalDigest(spec.parent),
+    // Spec 016: a participant-issued link names the key state it is signed under. Every issuer
+    // here signs with its current key, so the anchor is its log's tip.
+    anchor: keyLogAnchor(spec.issuer.log),
     issuedAt: ISSUED_AT,
     expiresAt: EXPIRES_AT
   };
@@ -336,6 +340,7 @@ const UNEXPIRING_KEY_AUDIENCE_LEAF = signThresholdRecord(
     abilities: ["photos/read"],
     caveats: { aud: resource.id },
     proof: null,
+    anchor: keyLogAnchor(person.log),
     issuedAt: ISSUED_AT
   },
   [person.currentKeys[0]!.secretKey]

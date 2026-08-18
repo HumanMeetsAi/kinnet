@@ -1,6 +1,6 @@
 {
   "name": "@kinnet/discovery-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Client for a Kinnet discovery service: build the two self-records, publish key logs, profiles, nodes, claims, relationships and revocations as doubly-signed writes (spec 004), and read the public directory back.",
   "license": "Apache-2.0",
   "type": "module",

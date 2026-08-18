@@ -209,17 +209,19 @@ describe("Conversation lane and groupNonce (spec 014)", () => {
     ).toBe(false);
   });
 
-  it("leaves every pre-014 record valid, byte-identical, and pinned to the same id", () => {
-    // The backward-compatibility claim, stated as bytes: the committed pre-014 fixture still
-    // schema-validates, the validated value carries neither field (so nothing was injected),
-    // and the digest of those bytes is still the pinned conversationId.
+  it("leaves the machine-lane fixture valid, byte-identical, and pinned to its id", () => {
+    // The committed machine-lane fixture still schema-validates, the validated value carries
+    // neither 014 field (so nothing was injected), and the digest of those bytes is the pinned
+    // conversationId. The record is owner mode, so it carries 016's anchor — which is inside
+    // the signed bytes, and is why this id differs from the pre-016 one.
     const parsed = conversationSchema.parse(machineLaneFixture.conversation);
     expect(parsed.lane).toBeUndefined();
     expect(parsed.groupNonce).toBeUndefined();
+    expect(parsed.anchor).toBeDefined();
     expect(parsed).toEqual(machineLaneFixture.conversation);
     expect(digestId(parsed)).toBe(machineLaneFixture.conversationId);
     expect(machineLaneFixture.conversationId).toBe(
-      "zQmW3ubn3FGrQ9uysAEWzZZqLmWcpNgknm77L5QwqikBF1M"
+      "zQmWUaRZLrt2d1wUZCw4BMivzioXvF92UQsD4tXRESxcxvx"
     );
   });
 });
@@ -414,6 +416,8 @@ describe("the (record, chain) unit payloads (spec 014)", () => {
       abilities: ["msg/conversation-update"],
       caveats: { aud: NODE_ID },
       proof: null,
+      // Spec 016: a participant-issued link names the key state it was signed under.
+      anchor: MULTIHASH,
       issuedAt: DATETIME,
       expiresAt: DATETIME,
       signature: [KEY_REF],
@@ -435,19 +439,51 @@ describe("the (record, chain) unit payloads (spec 014)", () => {
     };
   }
 
+  /** The committed E2EE record: owner mode, so it carries spec 016's anchor. */
   const conversation = e2eeFixture.conversation;
 
+  /** The same record in delegated mode — 016 says the anchor is absent there. */
+  function delegatedConversation(): Record<string, unknown> {
+    const record = { ...conversation };
+    delete record["anchor"];
+    return record;
+  }
+
   it("accepts a unit with no chain — owner mode", () => {
-    expect(conversationUpdatePayloadSchema.parse({ record: update() }).chain).toBeUndefined();
+    expect(
+      conversationUpdatePayloadSchema.parse({ record: update({ anchor: MULTIHASH }) }).chain
+    ).toBeUndefined();
     expect(conversationPayloadSchema.parse({ record: conversation }).chain).toBeUndefined();
   });
 
   it("accepts a unit carrying a chain — delegated mode", () => {
     const unit = conversationUpdatePayloadSchema.parse({ record: update(), chain: [grant()] });
     expect(unit.chain).toHaveLength(1);
+    expect(unit.record.anchor).toBeUndefined();
     expect(
-      conversationPayloadSchema.parse({ record: conversation, chain: [grant()] }).chain
+      conversationPayloadSchema.parse({ record: delegatedConversation(), chain: [grant()] }).chain
     ).toHaveLength(1);
+  });
+
+  it("requires the record's anchor and the unit's chain to agree (spec 016)", () => {
+    // The mode discriminator. `anchor` present means owner mode and names the state; a chain
+    // means delegated mode and the leaf key is the state. A unit carrying BOTH names two
+    // authorities for one record; a unit carrying NEITHER names none, and a verifier handed it
+    // can only ever wait. This replaces 014's "try owner mode, then fall back" evaluation
+    // order with a rule the unit declares.
+    expect(
+      conversationUpdatePayloadSchema.safeParse({
+        record: update({ anchor: MULTIHASH }),
+        chain: [grant()]
+      }).success
+    ).toBe(false);
+    expect(conversationUpdatePayloadSchema.safeParse({ record: update() }).success).toBe(false);
+    expect(
+      conversationPayloadSchema.safeParse({ record: conversation, chain: [grant()] }).success
+    ).toBe(false);
+    expect(conversationPayloadSchema.safeParse({ record: delegatedConversation() }).success).toBe(
+      false
+    );
   });
 
   it("rejects a bare record that is not wrapped in the unit", () => {
@@ -461,9 +497,9 @@ describe("the (record, chain) unit payloads (spec 014)", () => {
     expect(conversationUpdatePayloadSchema.safeParse({ record: update(), chain: [] }).success).toBe(
       false
     );
-    expect(conversationPayloadSchema.safeParse({ record: conversation, chain: [] }).success).toBe(
-      false
-    );
+    expect(
+      conversationPayloadSchema.safeParse({ record: delegatedConversation(), chain: [] }).success
+    ).toBe(false);
   });
 
   it("rejects a malformed chain entry", () => {
@@ -481,7 +517,8 @@ describe("the (record, chain) unit payloads (spec 014)", () => {
         conversationUpdatePayloadSchema.safeParse({ record: update(), chain: [entry] }).success
       ).toBe(false);
       expect(
-        conversationPayloadSchema.safeParse({ record: conversation, chain: [entry] }).success
+        conversationPayloadSchema.safeParse({ record: delegatedConversation(), chain: [entry] })
+          .success
       ).toBe(false);
     }
     // One bad link poisons an otherwise well-formed chain — chains are verified whole.
@@ -512,7 +549,7 @@ describe("the (record, chain) unit payloads (spec 014)", () => {
     // record's digest id, so it is malformed rather than merely unwelcome.
     expect(
       conversationUpdatePayloadSchema.safeParse({
-        record: { ...update(), chain: [grant()] }
+        record: { ...update({ anchor: MULTIHASH }), chain: [grant()] }
       }).success
     ).toBe(false);
     expect(
@@ -522,10 +559,14 @@ describe("the (record, chain) unit payloads (spec 014)", () => {
 
   it("does not soften the record's own rules", () => {
     expect(
-      conversationUpdatePayloadSchema.safeParse({ record: update({ epoch: "01" }) }).success
+      conversationUpdatePayloadSchema.safeParse({
+        record: update({ epoch: "01", anchor: MULTIHASH })
+      }).success
     ).toBe(false);
     expect(
-      conversationUpdatePayloadSchema.safeParse({ record: update({ kind: "rename" }) }).success
+      conversationUpdatePayloadSchema.safeParse({
+        record: update({ kind: "rename", anchor: MULTIHASH })
+      }).success
     ).toBe(false);
     expect(
       conversationPayloadSchema.safeParse({ record: { ...conversation, lane: "machine" } }).success
@@ -592,35 +633,45 @@ describe("(record, chain) unit conformance vectors (spec 014)", () => {
     }
   );
 
-  it("evidence: the record's digest id is identical with and without the chain", () => {
+  it("evidence: the record's digest id does not depend on the unit that carries it", () => {
     // The chain sits ALONGSIDE the record. Record identity is a function of `record` alone,
     // which is what makes a re-delivered or relayed unit name the same digest in a commit
-    // binding as the authoring delivery did.
+    // binding as the authoring delivery did. The entry is a DELEGATED record — spec 016 says
+    // an unanchored record is the one a chain accompanies — so the unit it belongs in is the
+    // one carrying that chain.
     const entry = fixture.digestIdentity.conversationUpdate;
+    expect(entry.record["anchor"]).toBeUndefined();
     expect(digestId(entry.record)).toBe(entry.recordId);
-    const bare = conversationUpdatePayloadSchema.parse({ record: entry.record });
+
     const withChain = conversationUpdatePayloadSchema.parse({
       record: entry.record,
       chain: entry.chain
     });
-    expect(digestId(bare.record)).toBe(entry.recordId);
     expect(digestId(withChain.record)).toBe(entry.recordId);
     expect(withChain.chain).toHaveLength(2);
     // The unit is not the record: digesting the wrapper would be a different id entirely.
     expect(digestId(withChain)).not.toBe(entry.recordId);
+
+    // …and the same bytes wrapped WITHOUT the chain are no longer a valid unit (016's mode
+    // rule), while the record's id is unchanged — validity is the unit's property, identity
+    // is the record's.
+    expect(conversationUpdatePayloadSchema.safeParse({ record: entry.record }).success).toBe(false);
+    expect(digestId(entry.record)).toBe(entry.recordId);
   });
 
-  it("conversation: the record's digest id is identical with and without the chain", () => {
+  it("conversation: the owner-mode record's id is the committed conversation fixture's", () => {
     const entry = fixture.digestIdentity.conversation;
     expect(digestId(entry.record)).toBe(entry.recordId);
     expect(entry.recordId).toBe(e2eeFixture.conversationId);
+    // Owner mode: the record names its key state, so the unit carries no chain.
     const bare = conversationPayloadSchema.parse({ record: entry.record });
-    const withChain = conversationPayloadSchema.parse({
-      record: entry.record,
-      chain: entry.chain
-    });
+    expect(bare.chain).toBeUndefined();
     expect(digestId(bare.record)).toBe(entry.recordId);
-    expect(digestId(withChain.record)).toBe(entry.recordId);
+    // Adding a chain to an anchored record is refused, and does not touch its id either.
+    expect(
+      conversationPayloadSchema.safeParse({ record: entry.record, chain: entry.chain }).success
+    ).toBe(false);
+    expect(digestId(entry.record)).toBe(entry.recordId);
   });
 
   it("pins the evidence unit's record id to committed bytes", () => {
@@ -662,6 +713,10 @@ describe("credential links: the grant amendments (spec 014)", () => {
     abilities: [ABILITY_E2EE_LEAF],
     caveats: {},
     proof: null,
+    // Spec 016: the issuer is a participant, so the link names the key state it was signed
+    // under. The credential rules below are about the AUDIENCE and the abilities, which the
+    // anchor is independent of.
+    anchor: MULTIHASH,
     issuedAt: DATETIME,
     signature: [KEY_REF]
   };

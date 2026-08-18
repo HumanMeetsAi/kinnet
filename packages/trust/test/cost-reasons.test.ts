@@ -23,7 +23,7 @@
  * assertion over a scan, a failure here names the reason that could not be reached rather than
  * inviting the reader to delete it.
  */
-import { createIdentity, signRecord, signThresholdRecord } from "@kinnet/crypto";
+import { createIdentity, keyLogAnchor, signRecord, signThresholdRecord } from "@kinnet/crypto";
 import type { Claim, Grant, Relationship } from "@kinnet/protocol";
 import { describe, expect, it } from "vitest";
 
@@ -61,6 +61,7 @@ const rootGrant = (): Grant =>
       audienceId: agent.id,
       abilities: ["msg"],
       caveats: {},
+      anchor: keyLogAnchor(issuer.log),
       proof: null,
       issuedAt: ISSUED_AT
     },

@@ -32,10 +32,11 @@ export function sign(message: Uint8Array, secretKey: Uint8Array): Uint8Array {
  * `decodeKeyRef` accepts. Measured against `@noble/curves` 2.2.0: the default and
  * `{zip215: true}` accept 8/8, `{zip215: false}` accepts 0/8.
  *
- * That is why this is not merely an interop wart. Spec 003's "no two states may share a
- * quorum" rule has a soundness argument resting on the assumption that a signature verifies
- * under exactly one key, and cofactored verification makes that assumption false. Both 003
- * and 015 name this pin as the prerequisite for their own guarantees.
+ * That is why this is not merely an interop wart. Under the cofactored mode one such signature
+ * satisfies a whole threshold at once — 015's record-layer construction passes a 3-of-3 with no
+ * key at all — so the pin is what makes a signature set's member count mean anything. Spec 005
+ * makes the mode normative and 003 and 015 both cite it; the conformance vectors in
+ * `test/fixtures/ed25519-verification-vectors.json` commit the construction.
  *
  * `verify` below takes no options parameter, deliberately: the mode is not a caller's choice,
  * so a new call site cannot silently inherit the library default. Keep direct

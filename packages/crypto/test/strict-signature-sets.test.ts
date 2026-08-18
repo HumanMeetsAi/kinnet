@@ -1,5 +1,5 @@
 /**
- * Spec 015 S0–S3 and spec 003's quorum rule, rule by rule.
+ * Spec 015 S0–S3, and spec 016's anchored lookup on top of them, rule by rule.
  *
  * `signature-sets.test.ts` checks the committed conformance vectors — the artifact a third
  * party verifies from bytes alone. This file is the enforcement battery: for each rule it
@@ -28,10 +28,12 @@ import {
   encodeSignature,
   eventDigest,
   generateKeyPair,
-  quorumViolation,
+  keyLogAnchor,
   replayKeyLog,
+  replayKeyLogStates,
   rotateIdentity,
   sign,
+  verifyAnchoredRecord,
   verifyThresholdRecord,
   type KeyPair
 } from "../src/index.js";
@@ -220,163 +222,53 @@ describe("spec 015 S2/S3 — every member verifies, under a distinct key, in key
   });
 });
 
-describe("spec 015 S5 — the existential over states stays outside the per-state check", () => {
-  it("a record signed under an old state still verifies after a rotation", () => {
-    // S5 is a property of the CALLER: `checkSignatureSet` judges one set against one state,
-    // and the `∃ state` quantifier composes on the outside. Pinned here as the shape callers
-    // must keep — `states.some(state => check(record, state))` — because collapsing it (for
-    // instance by unioning every state's keys into one list) would both weaken the check and
-    // orphan records the participant already signed.
+describe("spec 016 — the record names its state, and no other state is tried", () => {
+  it("keeps a record signed under an old state valid after a rotation", () => {
+    // What 012 protects, under the anchored rule: an anchor names a HISTORICAL state, and the
+    // log is append-only, so a later rotation cannot invalidate a record already signed. This
+    // is the difference between anchoring and "verify against the current state".
     const identity = createIdentity({ currentSeed: seed(150), nextSeed: seed(151) });
+    const anchor = keyLogAnchor(identity.log);
+    const record = { ...RECORD, anchor };
+    const signed = { ...record, signature: [signOver(identity.currentKeys[0]!, record)] };
+
     const rotated = rotateIdentity(identity, { nextSeeds: [seed(152)] });
-    const record = setOf([signOver(identity.currentKeys[0]!)]);
-
-    const states = rotated.log.map((event) => ({ keys: event.keys, threshold: event.threshold }));
+    const { states, current } = replayKeyLogStates(rotated.log);
     expect(states).toHaveLength(2);
+    expect(current.anchor).not.toBe(anchor);
 
-    // The record conforms against the INCEPTION state and not the current one, and the
-    // existential is what makes it valid.
-    expect(verifyThresholdRecord(record, states[0]!.keys, states[0]!.threshold)).toBe(true);
-    expect(verifyThresholdRecord(record, states[1]!.keys, states[1]!.threshold)).toBe(false);
-    expect(states.some((state) => verifyThresholdRecord(record, state.keys, state.threshold))).toBe(
+    expect(verifyAnchoredRecord(signed, states)).toBe(true);
+  });
+
+  it("refuses a record whose set another state of the same log would accept", () => {
+    // The lookup, stated as the property that distinguishes it from 015 S5's existential: the
+    // set here satisfies the CURRENT state and the record names the inception, so a verifier
+    // searching the log would accept it and an anchored verifier must not.
+    const identity = createIdentity({ currentSeed: seed(160), nextSeed: seed(161) });
+    const inceptionAnchor = keyLogAnchor(identity.log);
+    const rotated = rotateIdentity(identity, { nextSeeds: [seed(162)] });
+    const { states } = replayKeyLogStates(rotated.log);
+
+    const record = { ...RECORD, anchor: inceptionAnchor };
+    // Signed by the key of the state at seq 1, while naming the state at seq 0.
+    const signed = { ...record, signature: [signOver(rotated.currentKeys[0]!, record)] };
+
+    expect(verifyThresholdRecord(signed, states[1]!.keys, states[1]!.threshold)).toBe(true);
+    expect(states.some((state) => verifyThresholdRecord(signed, state.keys, state.threshold))).toBe(
       true
     );
-
-    // Unioning the states into one key list is NOT the same question, and is the collapse
-    // this test exists to forbid: it would make a one-member set fail `m = t` against a
-    // two-key state at threshold 1 only by accident, and it destroys per-state thresholds.
-    const union = [...states[0]!.keys, ...states[1]!.keys];
-    expect(verifyThresholdRecord(record, union, states[0]!.threshold)).toBe(true);
-    expect(union).toHaveLength(2);
-  });
-});
-
-describe("spec 003 — no two states of one log may share a quorum", () => {
-  const pool = keyPairs(6, 180);
-  const k = pool.map((pair) => encodeKeyRef(pair.publicKey));
-
-  it.each([
-    ["route 3 — the later state's keys are a subset", [[0, 1, 2], "3"], [[0, 2], "2"], false],
-    ["route 4 — the later state is a permutation", [[0, 1], "2"], [[1, 0], "2"], false],
-    ["variant G — the key set grows", [[0], "1"], [[0, 1], "2"], false],
-    ["variant P — partial rotation, lowered threshold", [[0, 1, 2], "3"], [[0, 1, 3], "2"], false],
-    ["legal — a 1-of-1 rotation", [[0], "1"], [[1], "1"], true],
-    ["legal — a 2-of-3 retaining exactly one key", [[0, 1, 2], "2"], [[0, 3, 4], "2"], true]
-  ])("%s", (_name, first, second, legal) => {
-    const state = ([indices, threshold]: unknown[]) => ({
-      keys: (indices as number[]).map((index) => k[index]!),
-      threshold: threshold as string
-    });
-    expect(quorumViolation([state(first as unknown[]), state(second as unknown[])]) === null).toBe(
-      legal
-    );
+    expect(verifyAnchoredRecord(signed, states)).toBe(false);
   });
 
-  it("checks ALL pairs, not merely consecutive ones", () => {
-    const states = [
-      { keys: [k[0]!, k[1]!], threshold: "2" },
-      { keys: [k[2]!, k[3]!, k[4]!], threshold: "3" },
-      { keys: [k[1]!, k[0]!], threshold: "2" }
-    ];
-    // Each consecutive pair is legal on its own...
-    expect(quorumViolation([states[0]!, states[1]!])).toBeNull();
-    expect(quorumViolation([states[1]!, states[2]!])).toBeNull();
-    // ...and the log is still illegal, because states 0 and 2 share a quorum.
-    const violation = quorumViolation(states);
-    expect(violation).toEqual({ first: 0, second: 2, shared: 2, minThreshold: 2 });
-  });
+  it("refuses an anchor that names no event of the log, rather than falling back to a search", () => {
+    const identity = createIdentity({ currentSeed: seed(170), nextSeed: seed(171) });
+    const { states } = replayKeyLogStates(identity.log);
+    const record = { ...RECORD, anchor: canonicalDigest({ not: "a key event" }) };
+    const signed = { ...record, signature: [signOver(identity.currentKeys[0]!, record)] };
 
-  it("agrees with the committed log-rule vectors", async () => {
-    const { readFileSync } = await import("node:fs");
-    const fixture = JSON.parse(
-      readFileSync(new URL("./fixtures/signature-set-vectors.json", import.meta.url), "utf8")
-    ) as {
-      logRuleVectors: {
-        name: string;
-        legal: boolean;
-        states: { keys: string[]; threshold: string }[];
-      }[];
-    };
-    expect(fixture.logRuleVectors.length).toBeGreaterThanOrEqual(8);
-    for (const vector of fixture.logRuleVectors) {
-      expect([vector.name, quorumViolation(vector.states) === null]).toEqual([
-        vector.name,
-        vector.legal
-      ]);
-    }
-  });
-
-  it("replayKeyLog rejects a log whose two states share a quorum", () => {
-    // A real, otherwise fully valid two-event log: the hash chain, the pre-rotation
-    // commitment, the participant-id derivation, the sequence and every signature check out,
-    // and each event on its own satisfies S0–S3. Only spec 003's log-level quorum rule
-    // refuses it. Before this change the replay looked at no cross-state overlap at all, so
-    // this log replayed clean and returned a key state.
-    //
-    // The shape is a log that RE-REVEALS its own current key set — which 003 names explicitly
-    // as now illegal, and which was legal before this section existed, because a rotation was
-    // defined purely by the pre-rotation commitment.
-    const held = keyPairs(2, 200);
-    const after = keyPairs(2, 220);
-    const keyRefs = held.map((key) => encodeKeyRef(key.publicKey));
-
-    const establishment = {
-      seq: "0",
-      kind: "icp" as const,
-      keys: keyRefs,
-      threshold: "2",
-      // The rotation below re-reveals this very key set at threshold "2", so that is the
-      // state committed here — the commitment must reproduce or the replay stops at the
-      // commitment check and never reaches the quorum rule this test is about.
-      next: commitToKeyState(keyRefs, "2")
-    };
-    const id = deriveParticipantId(establishment);
-    const inceptionUnsigned = { ...establishment, id, prior: null };
-    const inception = {
-      ...inceptionUnsigned,
-      signature: held.map((key) => signOver(key, inceptionUnsigned))
-    };
-
-    const rotationUnsigned = {
-      id,
-      seq: "1",
-      prior: eventDigest(inception),
-      kind: "rot" as const,
-      keys: keyRefs,
-      threshold: "2",
-      next: commitToKeyState(
-        after.map((key) => encodeKeyRef(key.publicKey)),
-        "2"
-      )
-    };
-    const rotation = {
-      ...rotationUnsigned,
-      signature: held.map((key) => signOver(key, rotationUnsigned))
-    };
-
-    // Each event replays fine on its own — so the refusal below is the LOG rule and not an
-    // event rule wearing its hat.
-    expect(replayKeyLog([inception]).seq).toBe("0");
-    expect(() => replayKeyLog([inception, rotation])).toThrow(/share a quorum/);
-    expect(() => replayKeyLog([inception, rotation])).toThrow(
-      /share 2 keys against a threshold of 2/
-    );
-  });
-
-  it("leaves every honest 1-of-1 rotation legal, however long the log", () => {
-    // The migration claim, executed rather than asserted: every documented first-party log is
-    // 1-of-1, and a 1-of-1 rotation shares zero keys against min(t) = 1.
-    let identity = createIdentity({ currentSeed: seed(240), nextSeed: seed(241) });
-    for (let index = 0; index < 6; index += 1) {
-      identity = rotateIdentity(identity);
-    }
-    expect(identity.log).toHaveLength(7);
-    expect(replayKeyLog(identity.log).seq).toBe("6");
-    expect(
-      quorumViolation(
-        identity.log.map((event) => ({ keys: event.keys, threshold: event.threshold }))
-      )
-    ).toBeNull();
+    // The set is honest against the only state the log commits; the anchor is not.
+    expect(verifyThresholdRecord(signed, states[0]!.keys, states[0]!.threshold)).toBe(true);
+    expect(verifyAnchoredRecord(signed, states)).toBe(false);
   });
 });
 
@@ -384,10 +276,13 @@ describe("spec 003 — no two states of one log may share a quorum", () => {
  * COMPOSITION — the rules taken singly versus the rule set as a whole.
  *
  * S0–S3 each hold within one key state, and a combination none of them refuses still exists:
- * spec 015 calls it route 3 (cross-state deletion) and route 4 (cross-state reorder), and is
- * explicit that "the existential is where this spec's guarantee stops". The construction
- * below is that combination, executed rather than described, and it shows exactly two things:
- * S0–S3 alone DO admit it, and spec 003's quorum rule is what refuses it.
+ * spec 015 calls it route 3 (cross-state deletion) and route 4 (cross-state reorder). The
+ * constructions below are that combination, executed rather than described, and they show
+ * exactly two things: S0–S3 alone DO admit it, and spec 016's anchor is what refuses it.
+ *
+ * The logs are legal. Two states of one log may share keys, and may share a quorum of them —
+ * an earlier interim rule forbade that shape to keep the routes out of reach, and 016 replaces
+ * it with a rule that travels inside the record instead of constraining rotation.
  */
 describe("composition — S0-S3 hold singly and still admit a keyless cross-state edit", () => {
   it("route 3: stripping a member moves a record from one conforming state to another", () => {
@@ -410,20 +305,9 @@ describe("composition — S0-S3 hold singly and still admit a keyless cross-stat
     expect(verifyThresholdRecord(edited, stateB.keys, stateB.threshold)).toBe(true);
 
     // Two valid records with two different digests, from one keyless edit. Neither S0, nor
-    // S1, nor S2, nor S3 refuses this — the rules are stated against ONE state and the
-    // quantifier over states sits outside them.
+    // S1, nor S2, nor S3 refuses this — the rules are stated against ONE state, and which
+    // state applies is not their question.
     expect(canonicalDigest(original)).not.toBe(canonicalDigest(edited));
-
-    // What closes it is spec 003's log-level rule: a log committing both states shares two
-    // keys against min(t) = 2, so the LOG is invalid and no conforming log ever puts both
-    // states in play. That is a closure in practice, conditional on the verifier enforcing
-    // the log rule; record anchoring (proposed as spec 016) is what makes it structural.
-    expect(quorumViolation([stateA, stateB])).toEqual({
-      first: 0,
-      second: 1,
-      shared: 2,
-      minThreshold: 2
-    });
   });
 
   it("route 4: swapping two members moves a record between two permuted states", () => {
@@ -441,14 +325,13 @@ describe("composition — S0-S3 hold singly and still admit a keyless cross-stat
     expect(verifyThresholdRecord(original, stateA.keys, stateA.threshold)).toBe(true);
     expect(verifyThresholdRecord(swapped, stateB.keys, stateB.threshold)).toBe(true);
     expect(canonicalDigest(original)).not.toBe(canonicalDigest(swapped));
-
-    expect(quorumViolation([stateA, stateB])).not.toBeNull();
   });
 
-  it("a log committing a route-3 or route-4 pair does not replay", () => {
-    // The closure, end to end rather than through `quorumViolation` alone: build the route-3
-    // state pair as a real log and watch `replayKeyLog` refuse it. Both events are
-    // individually valid — the refusal is the pair.
+  it("anchoring refuses the route-3 edit on a log that commits both states", () => {
+    // The closure, end to end: build the route-3 state pair as a real log, watch it REPLAY
+    // (it commits two states sharing a quorum, which is legal), anchor the honest record to
+    // the inception, and watch the keyless deletion fail against that one state — while the
+    // narrower state the remainder satisfies is never consulted.
     const all = keyPairs(3, 300);
     const refs = all.map((key) => encodeKeyRef(key.publicKey));
     const subset = [refs[0]!, refs[2]!];
@@ -484,6 +367,17 @@ describe("composition — S0-S3 hold singly and still admit a keyless cross-stat
     };
 
     expect(replayKeyLog([icp]).seq).toBe("0");
-    expect(() => replayKeyLog([icp, rot])).toThrow(/share a quorum/);
+    const { states } = replayKeyLogStates([icp, rot]);
+    expect(states.map((state) => state.seq)).toEqual(["0", "1"]);
+
+    const record = { ...RECORD, anchor: states[0]!.anchor };
+    const original = { ...record, signature: all.map((key) => signOver(key, record)) };
+    const edited = { ...record, signature: [original.signature[0]!, original.signature[2]!] };
+
+    expect(verifyAnchoredRecord(original, states)).toBe(true);
+    // The edited set satisfies the LATER state — and is refused, because the record names the
+    // earlier one and exactly one state is tried.
+    expect(verifyThresholdRecord(edited, states[1]!.keys, states[1]!.threshold)).toBe(true);
+    expect(verifyAnchoredRecord(edited, states)).toBe(false);
   });
 });

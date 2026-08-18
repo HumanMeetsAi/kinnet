@@ -38,12 +38,20 @@ const soleKey = generateKeyPair(seed(45));
 
 const ORG_ID = "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa";
 const ADMIN_ID = "pk_zQmRKW8VtVdmgjKaz6N11iFC4EJB1s1sy7BNkz8YQXoetwC";
+/**
+ * Spec 016's `anchor`: the key event the record's signature set is judged against. A stand-in
+ * digest here — these vectors carry `state` directly rather than a key log, because the rule
+ * under test is 015's decision procedure GIVEN a state. `record-anchoring-vectors.json` is the
+ * suite that resolves an anchor against a real log.
+ */
+const ANCHOR = "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq";
 
 type Unsigned = Record<string, unknown>;
 
 const revocation: Unsigned = {
   revokes: REVOKED_DIGEST,
   issuerId: ORG_ID,
+  anchor: ANCHOR,
   revokedAt: REVOKED_AT
 };
 
@@ -54,6 +62,7 @@ const grant: Unsigned = {
   abilities: ["directory"],
   caveats: {},
   proof: null,
+  anchor: ANCHOR,
   issuedAt: ISSUED_AT
 };
 
@@ -314,131 +323,6 @@ const vectors: Vector[] = [
   )
 ];
 
-// ------------------------------------------------------------------------------------------
-// Spec 003's "no two states may share a quorum" rule, adopted as the interim measure that
-// closes the cross-state routes until record anchoring (015 -> 016) lands. These vectors are
-// about KEY LOG SHAPE, not about any one record's signature set, so they carry key states
-// rather than records: |keys(A) n keys(B)| < min(t_A, t_B) for EVERY pair of committed states.
-// ------------------------------------------------------------------------------------------
-
-/** Eight distinct keys, enough for a 5-key state plus a disjoint replacement set. */
-const pool: KeyPair[] = [61, 62, 63, 64, 65, 66, 67, 68].map((n) => generateKeyPair(seed(n)));
-const k = pool.map((pair) => encodeKeyRef(pair.publicKey));
-
-type LogRuleVector = {
-  name: string;
-  why: string;
-  legal: boolean;
-  states: { keys: string[]; threshold: string }[];
-};
-
-const logRuleVectors: LogRuleVector[] = [
-  {
-    name: "illegal — route 3: the later state's keys are a SUBSET of the earlier state's",
-    why:
-      "The cross-state deletion route, as executed. A record signed by all three keys conforms " +
-      "against A; delete one member — no key required — and the remaining two conform against B. " +
-      "Shared keys 2, min threshold 2, so 2 < 2 is false and the log is rejected.",
-    legal: false,
-    states: [
-      { keys: [k[0]!, k[1]!, k[2]!], threshold: "3" },
-      { keys: [k[0]!, k[2]!], threshold: "2" }
-    ]
-  },
-  {
-    name: "illegal — route 4: the later state is a PERMUTATION of the earlier state",
-    why:
-      "The cross-state reorder route, as executed. Same two keys, opposite order, so a record " +
-      "conforming against A conforms against B once its two members are swapped. Both " +
-      "thresholds are 2, which is why the m = t rule alone gives no protection here. Shared 2, " +
-      "min threshold 2.",
-    legal: false,
-    states: [
-      { keys: [k[0]!, k[1]!], threshold: "2" },
-      { keys: [k[1]!, k[0]!], threshold: "2" }
-    ]
-  },
-  {
-    name: "illegal — variant G: the key set GROWS, which a backwards-looking rule misses",
-    why:
-      "The attack does not care which state came first. The m = 2 record conforming against B " +
-      "loses a member and conforms against A. B is not a subset of A, so a rule phrased as " +
-      "'no state may be a subset of an EARLIER one' accepts this log; the intersection rule " +
-      "rejects it, shared 1 against min threshold 1.",
-    legal: false,
-    states: [
-      { keys: [k[0]!], threshold: "1" },
-      { keys: [k[0]!, k[1]!], threshold: "2" }
-    ]
-  },
-  {
-    name: "illegal — variant P: partial rotation with a lowered threshold",
-    why:
-      "THE case that killed the more permissive rule, kept so a future reader does not propose " +
-      "it again. The rotation retires K2, introduces K3 and keeps K0 and K1 — neither key set " +
-      "is a subset or a permutation of the other, so subset/permutation rules in BOTH the " +
-      "one-way and symmetric forms accept this log. It is still a working attack: drop one " +
-      "member from the m = 3 record conforming against A and the remaining two conform against " +
-      "B. Shared 2, min threshold 2. This is why the rule counts the intersection against the " +
-      "threshold rather than comparing key lists.",
-    legal: false,
-    states: [
-      { keys: [k[0]!, k[1]!, k[2]!], threshold: "3" },
-      { keys: [k[0]!, k[1]!, k[3]!], threshold: "2" }
-    ]
-  },
-  {
-    name: "legal — 1-of-1 rotation, the shape every first-party log has",
-    why:
-      "A rotation that replaces its single key shares nothing: 0 < 1. Every documented " +
-      "first-party participant is this shape, which is why the rule costs zero migration.",
-    legal: true,
-    states: [
-      { keys: [k[0]!], threshold: "1" },
-      { keys: [k[1]!], threshold: "1" }
-    ]
-  },
-  {
-    name: "legal — 3-of-5 retaining two old keys",
-    why:
-      "Key reuse is NOT forbidden, only reuse up to a quorum. Two keys carry over against a " +
-      "threshold of three: 2 < 3, so the log is legal. This is the boundary from the permissive " +
-      "side, and it is what makes the intersection rule strictly weaker than banning reuse.",
-    legal: true,
-    states: [
-      { keys: [k[0]!, k[1]!, k[2]!, k[3]!, k[4]!], threshold: "3" },
-      { keys: [k[0]!, k[1]!, k[5]!, k[6]!, k[7]!], threshold: "3" }
-    ]
-  },
-  {
-    name: "legal — 2-of-3 retaining exactly one old key",
-    why:
-      "The most a 2-of-3 may keep. One key carries over against a threshold of two: 1 < 2. " +
-      "Retaining TWO would share a quorum and be rejected — the restriction an operator most " +
-      "needs to know about, pinned here from the legal side.",
-    legal: true,
-    states: [
-      { keys: [k[0]!, k[1]!, k[2]!], threshold: "2" },
-      { keys: [k[0]!, k[3]!, k[4]!], threshold: "2" }
-    ]
-  },
-  {
-    name: "illegal — a non-adjacent pair, so the rule is over ALL pairs not consecutive ones",
-    why:
-      "States 0 and 2 share both their keys against a threshold of two, while each is legal " +
-      "against the state between them. Records verify against ANY state a log ever committed, " +
-      "so every pair is live and the rule must be checked pairwise across the whole log. A " +
-      "replay that only compared consecutive events would accept this log and leave the route " +
-      "open.",
-    legal: false,
-    states: [
-      { keys: [k[0]!, k[1]!], threshold: "2" },
-      { keys: [k[2]!, k[3]!, k[4]!], threshold: "3" },
-      { keys: [k[1]!, k[0]!], threshold: "2" }
-    ]
-  }
-];
-
 const target = new URL("../test/fixtures/signature-set-vectors.json", import.meta.url);
 writeFileSync(
   target,
@@ -455,23 +339,11 @@ writeFileSync(
         "repeated in the state, and a threshold in ^[1-9][0-9]*$. `schemaValid` is the separate " +
         "question of whether @kinnet/protocol's schema for `schema` accepts the record shape. " +
         "Regenerate with packages/crypto/scripts/generate-signature-set-fixtures.ts.",
-      vectors,
-      logRuleNote:
-        "Conformance vectors for spec 003's 'no two states may share a quorum' rule, the " +
-        "interim measure that closes the cross-state routes until record anchoring lands. Each " +
-        "vector is a sequence of key states one log commits, in order. `legal` is true iff " +
-        "|keys(A) n keys(B)| < min(threshold(A), threshold(B)) holds for EVERY pair of states, " +
-        "not merely consecutive ones — records verify against any state a log ever committed, " +
-        "so every pair is simultaneously live. These carry no records and no signatures: the " +
-        "rule constrains log SHAPE, and a third party can check every vector by intersecting " +
-        "the key lists.",
-      logRuleVectors
+      vectors
     },
     null,
     2
   )}\n`
 );
 
-console.log(
-  `Wrote ${vectors.length} signature-set vectors and ${logRuleVectors.length} log-rule vectors to ${target.pathname}`
-);
+console.log(`Wrote ${vectors.length} signature-set vectors to ${target.pathname}`);

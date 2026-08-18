@@ -3,6 +3,7 @@
 **Status:** Accepted
 **Blocks:** revocation-by-digest (008), digest-addressed record identity (012), M-of-N
 multi-signature (003, 004)
+**Amended by:** 016
 
 ## Context
 
@@ -92,10 +93,11 @@ bytes that already exist.
   005 pins the mode rather than leaving it to a runtime's default. A conforming implementation
   MUST use the mode 005 pins rather than its runtime's default; one that does not can still
   conform to every counting rule below and disagree with a conforming verifier — on inputs no
-  honest producer emits, but disagree. **And the stakes are higher than determinism:** the pin is
-  also a prerequisite for the soundness of 003's intersection rule, because cofactored
-  verification makes one signature verify under many distinct keys with no secret key involved.
-  See _Soundness basis_ under _Anchoring_ for the construction, and
+  honest producer emits, but disagree. The pin was **also** a prerequisite for the soundness of
+  003's intersection rule, because cofactored verification makes one signature verify under many
+  distinct keys with no secret key involved; 016 removed that rule, and with it that second role,
+  so determinism is what the pin now carries — and it carries it alone. See _Soundness basis_
+  under _Anchoring_ for the construction, and
   `packages/crypto/test/fixtures/ed25519-verification-vectors.json` for the committed vectors.
 
 ### S0 — The key state must be well-formed
@@ -237,46 +239,41 @@ MAY retain a not-yet-verified record keyed by its digest purely as a lookup key 
 store waits on exactly such records), provided nothing is asserted from that key — no identity,
 no chaining, no revocation reasoning — until the signature set has been checked.
 
-### S5 — Composition with "any key state the log ever committed"
+### S5 — Composition with the anchored key state
 
-008 and 012 fix that a record verifies against **any** key state the issuer's log replays to, not
-merely the current one, so that a rotation does not orphan records the participant already
-signed. Strictness MUST NOT quietly narrow that.
+_Amended by 016: the existential over every state the issuer's log ever committed is replaced by
+the lookup below._
 
-The rules compose per state, with the existential quantifier on the outside:
+008 and 012 fix that a rotation must not orphan records a participant already signed, so a record
+is **not** verified against the issuer's current key state. 016 supplies the state it _is_ verified
+against, and the rules compose as a lookup rather than a search:
 
-> A record is validly signed by a participant iff **there exists** a key state in that
-> participant's replay-valid key log against which the record's signature set satisfies S1–S3 in
-> full.
+> A record is validly signed by a participant iff the issuer's key log replays valid (003), that
+> log contains a key event whose digest equals the record's `anchor`, and the record's signature
+> set satisfies S0–S3 in full against the key state that event carries.
+
+No other state is tried. A record whose set fails against the anchored state is invalid even where
+another state would accept it, and a record whose anchor names no event of the issuer's log is
+invalid for that distinct reason. Records with no `anchor` field have exactly one constructive
+state — a bare key, a chain leaf, or a key event's own committed state — and are checked against
+it; 016 fixes which records carry the field.
 
 Consequences worth stating, because each is a place an implementation could get it wrong:
 
-- It is **not** "conforming against every state". A record signed under state 3 will normally fail
-  S2 against state 4, whose keys are different; that is expected and is not a rejection.
 - It is **not** "conforming against the current state". Records signed before a rotation stay
-  valid, exactly as 008 and 012 require.
-- S3's ordering is relative to **the key order of the state under test**, since that is the only
-  key order in play for that state. A record's byte order is fixed, so it conforms against
-  whichever states admit that order; there is no ambiguity to resolve.
-- "Extra" is a per-state judgment, and this does not weaken the fix. A junk member verifies under
-  no key of _any_ state, so every state rejects it and the record is invalid — which is precisely
-  the attack in _Context_.
-- **`m = t` binds ONE record to one threshold — which is not the property that matters.** Because
-  the member count is fixed by the bytes, every state that can accept **a given record** has the
-  same threshold, equal to that count. That is true, and it is the answer to the wrong question.
-  The attack is not "two states accept the same record"; it is "state A accepts the original and a
-  **different** state B accepts a keyless **edit** of it". The original and the edit have different
-  member counts, so they are free to match different states' thresholds — and routes 3 and 4 under
-  _What this guarantees_ do exactly that (in the reorder case both thresholds are even equal). So
-  `m = t` offers no reassurance across states.
-- A verifier MAY stop at the first state that accepts. Whether it stops early cannot change the
-  verdict.
-
-**The existential is where this spec's guarantee stops.** S1–S3 are stated against one state, and
-`∃ state` re-opens across states what `m = t` closed within one — see routes 3 and 4 under _What
-this guarantees_. Cost carries the same shape: the existential is over up to `MAX_KEY_LOG_EVENTS`
-states, so a record check costs up to `E` runs of the walk, not one. Both the correctness hole and
-the cost factor have the same cause and the same fix, specified under _Anchoring_.
+  valid, exactly as 008 and 012 require: the anchor names a historical event, and the log is
+  append-only.
+- S3's ordering is relative to **the key order of the anchored state**, which is now the only key
+  order in play for the record at all.
+- "Extra" is judged against the anchored state and nowhere else. A junk member verifies under no
+  key of that state, so the record is invalid — which is precisely the attack in _Context_.
+- **`m = t` now binds where it needs to.** The member count is fixed by the bytes and the state is
+  fixed by the anchor, so a keyless edit has no second state to be judged against: it is judged
+  against the anchored state, where S1–S3 refuse it, or it is invalid. Routes 3 and 4 under
+  _What this guarantees_ are exactly the cases the old existential left open here, and they are
+  closed by that fact.
+- A verifier performs **one** run of the S3 walk, not one per committed state. The `E` factor in
+  _Cost_ is gone.
 
 ### S6 — One delivered byte string, one record
 
@@ -310,16 +307,15 @@ perturbed (S2), and cannot have any other field altered without invalidating eve
 (the signing input is the whole record less the signature array). The set of conforming byte-forms
 therefore has exactly one element per (content, state, signature values).
 
-**The hedge in that sentence is load-bearing, and it must not be dropped.** "A fixed accepting key
-state" is a real precondition, not throat-clearing: S5 lets a record be judged against _any_ state
-the issuer's log ever committed, and the uniqueness argument above is stated **within one state**.
-Across states it does not hold, and every attack below lives in exactly that gap. The unqualified
-form — "no byte-level transformation of a conforming record yields a second conforming record" —
-is **false**.
+**The hedge in that sentence was load-bearing, and 016 discharged it.** "A fixed accepting key
+state" was a real precondition, not throat-clearing: S5 once let a record be judged against _any_
+state the issuer's log ever committed, while the uniqueness argument above is stated **within one
+state**. Across states it did not hold, and the keyless attacks below lived in exactly that gap.
 
-Stated correctly: **within a single key state**, a conforming record admits no byte-level
-transformation into a second conforming record. Across the set of states a log commits, it does,
-and closing that is the work item _Anchoring_ below specifies.
+_Amended by 016: the record now names the one state it is judged against, and the anchor is inside
+the signed and digested bytes, so there is no second state for an edit to land in. The unqualified
+form — no byte-level transformation of a conforming record yields a second conforming record —
+holds._
 
 **What is still not guaranteed.** The residual routes fall into two groups: the first two are
 properties of the signers, which no counting or ordering rule can remove; the rest are **keyless**
@@ -342,17 +338,18 @@ tracked below with their fixes.
    intersection rule. A record signed `[σ₀,σ₁,σ₂]` is conforming against state A. Strip `σ₁` — no
    key required — and `[σ₀,σ₂]` is **not** conforming
    against A (`m = 2 ≠ 3`) but **is** conforming against B: two members, distinct keys, increasing
-   order, `m = t = 2`. Two valid records, two digests, one keyless edit. **Closed in practice** by
-   003's intersection rule, which makes that log invalid (the states share two keys against a
-   threshold of two); closed **structurally** by anchoring, proposed as 016.
+   order, `m = t = 2`. Two valid records, two digests, one keyless edit. **Closed structurally by
+   016**: the record names one state, so state B is never tried and the edit is judged — and
+   refused — against A. The interim closure, 003's intersection rule making that log invalid, was
+   retired with 016 and the log shape is legal again.
 4. **KEYLESS — cross-state reorder.** The same shape against S3. `icp [K₀,K₁] t=2` →
    `rot [K₁,K₀] t=2`, the same two keys permuted, which 003 permitted before the intersection rule
    and which the ordered-list commitment in `next` distinguishes. `[σ₀,σ₁]` conforms against A and
    `[σ₁,σ₀]` conforms against B, so S3's "a set in any other order is invalid" is true **within** a
    state and false **across** them.
    Note this one also defeats the `m = t` narrowing claimed under S5 — both states have threshold
-   2, so equal thresholds are no protection. **Closed in practice** by 003's intersection rule (the
-   two states share both keys); closed **structurally** by anchoring, proposed as 016.
+   2, so equal thresholds are no protection. **Closed structurally by 016**, for the same reason as
+   route 3; 003's intersection rule, which closed it in practice, was retired with 016.
 5. **KEYLESS — member replacement through a repeated key entry.** Against state `[K₀,K₀,K₁]` with
    `t = 2`, both the honest `[σ₀,σ₁]` and the mutant `[σ₀,σ₀]` satisfy an index-based reading of
    S2, giving two digests from one keyless edit. **Closed in this spec** by S0 (a state with a
@@ -392,11 +389,12 @@ to mistake for it:
   per-signer audit trail, per-signer revocation) would need to state it separately. Such a member
   is not hypothetical — see the low-order construction under _Soundness basis_ — but it costs this
   spec nothing, because the verdict does not depend on which assignment the walk chooses.
-- **Two different key states may both accept the same record.** That is S5 working as designed —
-  the existential is over states — and it yields one record, not two. This is genuinely not
-  malleability, but it must not be confused with routes 3 and 4, which are: those turn on state A
-  accepting the **original** and state B accepting an **edit**, which is a different proposition
-  and is not covered by anything in this bullet.
+- **Two different key states may both accept the same record's bytes.** It yields one record, not
+  two, so it was never malleability — and it must not be confused with routes 3 and 4, which turn
+  on state A accepting the **original** while state B accepts an **edit**, a different proposition
+  entirely. _Amended by 016: under the lookup only the anchored state is ever tried, so the
+  question no longer arises for a verifier; the distinction is kept because conflating the two
+  propositions is how the routes were missed._
 
 **One assumption this spec rests on and does not establish:** that the verifier is judging the
 record against the _right participant's_ key log. If an attacker can make a verifier resolve
@@ -415,6 +413,11 @@ the whole subtree dies with it. Narrowing this further (issuer-scoped or content
 revocation) is out of scope here; see _Open questions_.
 
 ## Anchoring — closing the existential
+
+_The requirement and the options analysis below are the rationale for **016**, which specifies the
+mechanism: the field, its placement, the verification rule, the vectors and the migration. This
+section is kept because it is where the choice was made and argued; where the two overlap, 016 is
+the normative text._
 
 **Requirement.** A signature-set record MUST be verifiable against **exactly one** key state, known
 before verification begins. The existential of S5 becomes a lookup: not "does some state accept
@@ -497,10 +500,11 @@ already abnormal, but 003 permits it today.
 
 ### Decision
 
-**Adopt (a) with a key-event-digest anchor.** The interim measure is the intersection rule now
-adopted normatively in 003. The obvious narrow forms of (d) are unsound, for the reason set out
-next, and the sound forms cost more than they first appear; the analysis below is the basis for the
-intersection rule.
+**Adopt (a) with a key-event-digest anchor**, specified as 016. The interim measure was the
+intersection rule, adopted normatively in 003 and retired by 016 once the anchor landed. The
+obvious narrow forms of (d) are unsound, for the reason set out next, and the sound forms cost
+more than they first appear; the analysis below is the basis for the intersection rule and for
+why it was only ever an interim.
 
 ### Why the narrow forms of (d) do not work
 
@@ -558,13 +562,14 @@ call a counterexample a forgery and therefore infeasible; it is neither. Under c
 **every** small-order public key, for any message, and involves **no secret key at all**:
 small-order points have no discrete log to know. All 8 canonical small-order points accept it, and
 all 8 encode as `KeyRef`s a conforming decoder accepts; strict RFC 8032 with low-order public-key
-rejection rejects all 8. So the verification mode this spec requires of 005 under _Terms_ is a
-**prerequisite for the intersection rule's soundness**, not merely for determinism. 005's
-_Verification mode_ section makes it normative, the construction is committed as conformance
-vectors — including the record-layer case where one keyless signature satisfies a 3-of-3 threshold
-under the forbidden mode — and 003 carries the same cross-reference. The assumption therefore
-holds **under the pinned mode** and not as a fact about Ed25519, which is why a verifier that
-ignores the pin reopens the hole silently while still accepting every honest record. Bounded, and
+rejection rejects all 8. So the verification mode this spec requires of 005 under _Terms_ was a
+**prerequisite for the intersection rule's soundness**, not merely for determinism — a dependency
+that ended with the rule, since anchoring assumes nothing of the kind. 005's
+_Verification mode_ section makes the mode normative and the construction is committed as
+conformance vectors, including the record-layer case where one keyless signature satisfies a 3-of-3
+threshold under the forbidden mode. The assumption therefore held **under the pinned mode** and not
+as a fact about Ed25519, which is why a verifier that ignored the pin reopened the hole silently
+while still accepting every honest record. Bounded, and
 worth saying: exploiting it needs the issuer's own state to list two or more small-order keys,
 which only that issuer can publish and which gains it nothing it could not get by setting
 `threshold: "1"` — self-harm, not an outsider attack.
@@ -574,26 +579,24 @@ shared its single key would not be a rotation at all, since `|I| = 0 < 1 = min(t
 rules are therefore free for single-key logs, and the cost of either falls only on later M-of-N
 rotations.
 
-**Decided: the intersection rule is adopted as the interim**, and is stated normatively in 003
-under _No two states may share a quorum_, with the replay check and the rotation shapes it forbids.
-It was chosen over the blanket ban on key reuse because it is strictly more permissive at identical
-soundness and identical migration cost — a 3-of-5 may retain two old keys where a blanket ban
-allows none — and over shipping no interim because a keyless malleability in the revocation path
-should not stay open for the length of a record-shape change.
+**Decided: the intersection rule was adopted as the interim**, stated normatively in 003 under _No
+two states may share a quorum_. It was chosen over the blanket ban on key reuse because it is
+strictly more permissive at identical soundness and identical migration cost — a 3-of-5 may retain
+two old keys where a blanket ban allows none — and over shipping no interim because a keyless
+malleability in the revocation path should not stay open for the length of a record-shape change.
 
-**What that changes, and what it does not.** With 003's rule in force, routes 3 and 4 are closed
-**in practice**: a log that would enable them is invalid, so no conforming log commits two states an
-edit can move between. That is a real closure and the vectors pin it. It is not the same thing as
-anchoring, and three differences matter:
+**What the interim changed, and what it did not.** With 003's rule in force, routes 3 and 4 were
+closed **in practice**: a log that would enable them was invalid, so no conforming log committed
+two states an edit could move between. That was a real closure. It was not the same thing as
+anchoring, and the three differences are why 016 retired it rather than keeping both:
 
-- It is **conditional on the cryptographic assumption** above; anchoring is structural.
-- It is **conditional on the verifier enforcing 003's log rule**. A verifier that checks signature
-  sets but not log shape gets none of it, whereas an anchor travels inside the record it protects.
-- It **buys the closure with rotation flexibility** — a 2-of-3 can no longer retain two keys — where
-  anchoring gives that back.
+- It was **conditional on the cryptographic assumption** above; anchoring is structural.
+- It was **conditional on the verifier enforcing 003's log rule**. A verifier that checks signature
+  sets but not log shape got none of it, whereas an anchor travels inside the record it protects.
+- It **bought the closure with rotation flexibility** — a 2-of-3 could not retain two keys — which
+  anchoring gives back.
 
-So the interim closes the routes; 016 is what makes them impossible. No sentence in this spec should
-be read as saying the interim does anchoring's job.
+So the interim closed the routes; 016 made them impossible, and the rule went with it.
 
 ### Key events anchor themselves
 
@@ -611,30 +614,19 @@ candidate "state" — one key, `t = 1`, `m = 1` — so both are already anchored
 neither takes a field.
 
 Anchoring therefore adds a field to exactly four record types: `Revocation`, `Grant` with a
-participant issuer, `Conversation`, and `ConversationUpdate`.
+participant issuer, `Conversation`, and `ConversationUpdate`. **016 carries the normative
+placement rule**, including the general rule that governs record types added later.
 
 ### Re-issuance under anchoring
 
-S0–S6 require no re-issuance. **Anchoring does.** Stated concretely rather than generally:
-
-- **`Revocation`, `Grant`, `Conversation`, `ConversationUpdate`** gain a field inside the signed
-  bytes, so every stored record of those types must be **re-signed by its original issuer** — there
-  is no in-place repair, because the new field changes the signing input and therefore both the
-  signatures and the digest.
-- **Conversation ids change**, and with them the MLS `group_id`s derived from them (014). This is
-  the heaviest consequence and it is a migration of live conversation data, not a paperwork
-  exercise.
-- **Grant `proof` pointers change**, so a chain must be re-issued from the root down: a child names
-  its parent by digest, and every parent's digest moves.
-- **Key logs and participant IDs are unaffected.** `KeyEvent` gains no field, so no log is rewritten
-  and **no participant identifier changes** — the 002 ID hashes inception establishment data, which
-  is untouched. Identity survives the migration intact, which is what makes it a migration rather
-  than a restart.
-- **The adopted interim requires no re-issuance.** The intersection rule constrains rotation
-  shape rather than record shape, so every record valid when it landed keeps its bytes and digest.
-
-Stage 0 has no external implementations, so this is affordable — but it is a real cost and it is
-why (d) is worth taking first rather than waiting.
+S0–S6 require no re-issuance. **Anchoring does**: a field inside the signed bytes changes the
+signing input, so there is no in-place repair for a record of the four types — every stored
+`Revocation`, participant-issued `Grant`, owner-mode `Conversation` and owner-mode
+`ConversationUpdate` is re-signed by its original issuer, conversation ids move (and with them the
+MLS `group_id`s derived from them), and grant chains re-issue root-down because every parent's
+digest moves. Key logs and participant identifiers are untouched. **016 §_Migration and impact_
+carries the accounting**; Stage 0 has no external implementations, which is what makes it
+affordable.
 
 ### This deserves its own spec
 
@@ -643,12 +635,11 @@ its own conformance vectors, and a migration with an ordering constraint. 015 is
 signature set is checked **given** a state; anchoring is about **which** state, and folding it in
 would give one spec two decisions and make neither reviewable on its own.
 
-**Proposed: `016 — Record anchoring`**, covering: the anchor field and its placement on each of the
-four record types; the verification rule replacing S5's existential; the treatment of key events,
-bare-key issuers and delegated mode as implicitly anchored; conformance vectors including routes 3
-and 4 as rejection cases; and the migration order (whichever interim rule is chosen first, then the
-field, then dropping the interim). 015 states the requirement and the analysis; 016 specifies the
-mechanism. Until 016 lands, S5's existential stands as written and routes 3 and 4 are open.
+**That spec is `016 — Record anchoring`.** It carries the field and its placement, the verification
+rule replacing S5's existential, the treatment of key events, bare-key issuers and delegated mode
+as implicitly anchored, the vectors including routes 3 and 4 as rejection cases, and the migration
+— including the retirement of the interim rule this section argued for. 015 states the requirement
+and the analysis; 016 specifies the mechanism.
 
 ## Placement test (000)
 
@@ -704,8 +695,8 @@ What these rules make invalid, relative to a count-only threshold check:
 6. **A record carrying more signatures than the accepting state's threshold** — the `m = t` rule.
    This is the class added by the strict-count decision, and it is the one worth reading twice: a
    record that previously verified because it over-satisfied a low threshold now fails against that
-   state. It may still be accepted by a _different_ state whose threshold equals its member count,
-   since S5's existential is unchanged.
+   state. _Amended by 016: such a record was also accepted by any other state whose threshold
+   equalled its member count; only the anchored state is tried now, so there is no second chance._
 
 ### `m = t` checked against each record type
 
@@ -738,12 +729,12 @@ key event and every record signed under it conforms under S0–S6 unchanged and 
 bytes and exact digest. Any record that does violate these rules must be re-signed by its issuer;
 there is no in-place repair, because the fix changes the bytes and therefore the digest.
 
-**Anchoring is the exception, and it flips this claim.** The requirement under _Anchoring_ adds a
-field to four record types, so when 016 lands, every stored `Revocation`, participant-issued
-`Grant`, `Conversation` and `ConversationUpdate` must be re-issued, conversation ids and MLS group
-ids move, and grant chains are re-issued root-first. Key logs and participant IDs are untouched.
-The full accounting is in that section; it is repeated here because "re-issuance: none" would
-otherwise read as covering the whole spec, and it does not.
+**Anchoring is the exception, and it flips this claim — and it is now in force.** 016 adds the
+field to four record types, so every stored `Revocation`, participant-issued `Grant`, owner-mode
+`Conversation` and owner-mode `ConversationUpdate` is re-issued, conversation ids and MLS group ids
+move, and grant chains are re-issued root-first. Key logs and participant IDs are untouched. The
+full accounting is 016's; it is noted here because "re-issuance: none" would otherwise read as
+covering the whole spec, and it does not.
 
 What does **not** change: signing inputs, the digest rule, the encoding of keys or signatures,
 every field of every record, and the digest of any record that was already conforming. A record
@@ -768,7 +759,16 @@ whose threshold exceeds its key count; and a degenerate threshold.
 **The cross-state routes are covered by a second vector set**, `logRuleVectors` in the same file,
 because they are attacks on log **shape** rather than on any one signature set: each vector is a
 sequence of key states and a verdict under 003's intersection rule, checkable by intersecting key
-lists with no signatures involved. Eight vectors, both verdicts represented:
+lists with no signatures involved.
+
+_Amended by 016: the intersection rule is retired, so these vectors no longer state a validity
+verdict for a log — every one of these logs is valid now. They are kept as the record of what the
+interim rule refused and why, and the same attacks appear as record-level rejections against the
+anchored state in
+`packages/crypto/test/fixtures/record-anchoring-vectors.json`;
+`packages/crypto/test/fixtures/key-log-rejection-vectors.json` pins the acceptances._
+
+Eight vectors, both verdicts represented:
 
 - **Rejections:** route 3 (later state a subset), route 4 (later state a permutation), variant G
   (the key set grows, which a backwards-looking rule misses), **variant P** (partial rotation with a
@@ -813,7 +813,7 @@ procedure, so a vector cannot claim something the bytes do not support.
 - Not a change to `canonicalDigest` or the signing input.
 - **Not the anchor mechanism itself.** 015 establishes that a record MUST resolve to exactly one
   key state, evaluates the options and decides the shape; the field, its placement, its vectors and
-  its migration are 016's. Until 016 lands, S5 stands as written and routes 3 and 4 are open.
+  its migration are 016's, and S5 above states the composed rule as 016 left it.
 - Not a rule about **which** state a key event is checked against — that is 003's (_The
   committed next key state_); this spec says only how a set is checked once a state is chosen.
 
@@ -903,12 +903,13 @@ key-log resolution and discovery's signed first-write bootstrap, and never a typ
 The S3 walk changes the **shape** of that cost, not just its constant. Pairing becomes a single
 forward pass that performs **at most `K` verifications per state** — one per listed key, regardless
 of how many signatures the record carries. The signature count `S` is no longer a dimension of the
-cost, and `K` drops from a multiplicand to the whole of it. Total cost is at most `E · K`: 1024 at
-the maxima, a factor of `S` below the old search.
+cost, and `K` drops from a multiplicand to the whole of it. Against every committed state that
+would be at most `E · K`: 1024 at the maxima, a factor of `S` below the old search.
 
-Anchoring then removes the last factor. With a record verified against exactly one state, `E`
-becomes 1 and a record check costs **at most `K` verifications** — 8 at the schema maxima, against
-the former 8192. The two changes are complementary: the walk removes `S`, the anchor removes `E`.
+Anchoring removes the last factor, and 016 landed it. **`E = 1`**: a record is verified against
+exactly one state, so a record check costs **at most `K` verifications** — 8 at the schema maxima,
+against the former 8192 — beyond the issuer's log replay, which a verifier performs anyway. The two
+changes are complementary: the walk removes `S`, the anchor removes `E`.
 
 All of these are consequences of the rules, derived from the procedure under S3 and **not**
 measurements. A verification interface that accepts runtime-sized key lists is not bounded by this
@@ -944,6 +945,10 @@ is what makes `S > 1` reachable in practice and would bake the search in.
   `MessageEnvelope` (010); the lifting rule was always meant to reach them.
 - 2026-08-16 — S4 clarified: digest-keyed retention of an unverified record as a lookup key is
   permitted; assertion from the digest is not, until the set is checked.
+- 2026-08-18 — Amended by 016: S5's existential over every committed key state became a lookup on
+  the state a record's `anchor` names, closing routes 3 and 4 structurally and taking `E` to 1;
+  003's intersection rule, and the pinned verification mode's second role as that rule's soundness
+  prerequisite, were retired with it.
 
 ## References
 
@@ -953,12 +958,16 @@ is what makes `S > 1` reachable in practice and would bake the search in.
   are not separately tagged; _Verification mode_ — strict RFC 8032 plus low-order public-key
   rejection; _Canonical encodings — one value, one text_), 008 (revocation by digest, any-state
   verification), 009 (chain verification, `MAX_RECORD_SIGNATURES` and the question it deferred),
-  011 (bare-key issuers), 012 (digest as identity, threshold intent, any-state rule, parse
-  strictness), 014 (`leaves` uniqueness)
+  011 (bare-key issuers), 012 (digest as identity, threshold intent, parse strictness), 014
+  (`leaves` uniqueness), 016 (record anchoring — amends this spec: the `anchor` field, S5's
+  lookup, `E = 1`, and the retirement of the interim rule this spec's _Anchoring_ section argued
+  for)
 - RFC 8032 — Ed25519, deterministic signing
 - ZIP-215 — Zcash's explicit Ed25519 validation criteria (the cofactored convention this spec
   names and does not adopt)
 - RFC 8785 — JSON Canonicalization Scheme (array order is preserved, and therefore signed)
 - Conformance vectors: `packages/crypto/test/fixtures/signature-set-vectors.json` (signature sets,
-  and the log-shape vectors for the intersection rule);
-  `packages/crypto/test/fixtures/ed25519-verification-vectors.json` (verification mode)
+  and the log-shape vectors recording the retired intersection rule);
+  `packages/crypto/test/fixtures/ed25519-verification-vectors.json` (verification mode);
+  `packages/crypto/test/fixtures/record-anchoring-vectors.json` (the same cross-state routes as
+  record-level rejections against the anchored state, 016)

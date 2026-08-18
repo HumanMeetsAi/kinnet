@@ -16,6 +16,7 @@ import {
   encodeKeyRef,
   signRecord,
   signRequest,
+  keyLogAnchor,
   signThresholdRecord,
   type Identity
 } from "@kinnet/crypto";
@@ -49,15 +50,19 @@ type GrantFields = {
 };
 
 function makeGrant(signer: Identity, fields: GrantFields): Grant {
-  return signThresholdRecord({ caveats: {}, issuedAt: ISSUED_AT, ...fields }, [
-    signer.currentKeys[0]!.secretKey
-  ]) as Grant;
+  // Spec 016: every issuer here is a participant signing with its own current keys, so the
+  // anchor is the signer's log tip.
+  return signThresholdRecord(
+    { caveats: {}, issuedAt: ISSUED_AT, anchor: keyLogAnchor(signer.log), ...fields },
+    [signer.currentKeys[0]!.secretKey]
+  ) as Grant;
 }
 
 function revoke(signer: Identity, issuerId: ParticipantId, digest: string): Revocation {
-  return signThresholdRecord({ revokes: digest, issuerId, revokedAt: PAST }, [
-    signer.currentKeys[0]!.secretKey
-  ]) as Revocation;
+  return signThresholdRecord(
+    { revokes: digest, issuerId, anchor: keyLogAnchor(signer.log), revokedAt: PAST },
+    [signer.currentKeys[0]!.secretKey]
+  ) as Revocation;
 }
 
 /** Root: the organization self-issues. Leaf: the admin attenuates down to the agent. */
@@ -144,9 +149,15 @@ describe("createStaticTrustView serves the TrustView contract from records in ha
     const digest = canonicalDigest(leafGrant);
     const duplicateByOrg = [
       revoke(org, org.id, digest),
-      signThresholdRecord({ revokes: digest, issuerId: org.id, revokedAt: ISSUED_AT }, [
-        org.currentKeys[0]!.secretKey
-      ]) as Revocation
+      signThresholdRecord(
+        {
+          revokes: digest,
+          issuerId: org.id,
+          anchor: keyLogAnchor(org.log),
+          revokedAt: ISSUED_AT
+        },
+        [org.currentKeys[0]!.secretKey]
+      ) as Revocation
     ];
     const view = createStaticTrustView({
       keyLogs: [org.log, admin.log],
@@ -231,13 +242,25 @@ describe("verifyGrantChain runs against a static view with no network at all", (
       keyLogs: [org.log, admin.log, agent.log],
       revocations: [
         revoke(org, org.id, leafDigest),
-        signThresholdRecord({ revokes: leafDigest, issuerId: org.id, revokedAt: ISSUED_AT }, [
-          org.currentKeys[0]!.secretKey
-        ]) as Revocation,
+        signThresholdRecord(
+          {
+            revokes: leafDigest,
+            issuerId: org.id,
+            anchor: keyLogAnchor(org.log),
+            revokedAt: ISSUED_AT
+          },
+          [org.currentKeys[0]!.secretKey]
+        ) as Revocation,
         revoke(admin, admin.id, leafDigest),
-        signThresholdRecord({ revokes: leafDigest, issuerId: admin.id, revokedAt: ISSUED_AT }, [
-          admin.currentKeys[0]!.secretKey
-        ]) as Revocation
+        signThresholdRecord(
+          {
+            revokes: leafDigest,
+            issuerId: admin.id,
+            anchor: keyLogAnchor(admin.log),
+            revokedAt: ISSUED_AT
+          },
+          [admin.currentKeys[0]!.secretKey]
+        ) as Revocation
       ]
     });
 

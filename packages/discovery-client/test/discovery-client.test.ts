@@ -4,7 +4,13 @@
  * own signature at the issuer's threshold, path-to-record id binding, strict parsing, and JSON
  * error codes. Nothing between the client and the socket is stubbed.
  */
-import { canonicalDigest, createIdentity, signRecord, signThresholdRecord } from "@kinnet/crypto";
+import {
+  canonicalDigest,
+  createIdentity,
+  keyLogAnchor,
+  signRecord,
+  signThresholdRecord
+} from "@kinnet/crypto";
 import type { Claim, Relationship, Revocation } from "@kinnet/protocol";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -53,7 +59,14 @@ function claim(id: string): Claim {
 
 function revocation(revokes: string): Revocation {
   return signThresholdRecord(
-    { revokes, issuerId: org.id, revokedAt: "2026-07-02T00:00:00.000Z", reason: "superseded" },
+    {
+      revokes,
+      issuerId: org.id,
+      // Spec 016: a Revocation names the key state it was signed under.
+      anchor: keyLogAnchor(org.log),
+      revokedAt: "2026-07-02T00:00:00.000Z",
+      reason: "superseded"
+    },
     org.currentKeys.map((keyPair) => keyPair.secretKey)
   ) as Revocation;
 }

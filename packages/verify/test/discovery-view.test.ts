@@ -448,14 +448,18 @@ describe("issuer-targeted revocation lookup over HTTP", () => {
   // A real multihash: `revocationSchema` rejects anything else, and this view parses every
   // record it returns, so a made-up digest string would make these tests vacuous.
   const DIGEST = canonicalDigest({ revoked: "record" });
+  const ANCHOR = canonicalDigest({ keyEvent: "fixture" });
   // Schema-valid participant ids: base58btc has no "l", so "pk_zAlice" would be rejected by
   // `revocationSchema` and every assertion below would pass vacuously on an empty list.
   const ALICE = "pk_zAaa";
   const BOB = "pk_zBbb";
 
+  // `anchor` is required by `revocationSchema` (spec 016); these rows are shape fixtures for the
+  // view's own parsing, so any well-formed multihash serves — nothing here verifies a signature.
   const revocation = (issuerId: string) => ({
     revokes: DIGEST,
     issuerId,
+    anchor: ANCHOR,
     revokedAt: "2026-06-10T00:00:00.000Z",
     signature: ["zRevSig"]
   });
@@ -540,6 +544,7 @@ describe("issuer-targeted revocation lookup over HTTP", () => {
 
 describe("issuer-targeted revocation lookup past the route's per-request bound", () => {
   const DIGEST = canonicalDigest({ revoked: "big-chain-record" });
+  const ANCHOR = canonicalDigest({ keyEvent: "fixture" });
 
   // base58btc has no 0, O, I or l, so ids have to be built from its alphabet or
   // `revocationSchema` rejects them and every assertion here would pass on an empty list.
@@ -554,9 +559,12 @@ describe("issuer-targeted revocation lookup past the route's per-request bound",
     return `pk_z${BASE58[Math.floor(index / 58)]!}${BASE58[index % 58]!}`;
   }
 
+  // `anchor` is required by `revocationSchema` (spec 016); these rows are shape fixtures for the
+  // view's own parsing, so any well-formed multihash serves — nothing here verifies a signature.
   const revocation = (issuerId: string) => ({
     revokes: DIGEST,
     issuerId,
+    anchor: ANCHOR,
     revokedAt: "2026-06-10T00:00:00.000Z",
     signature: ["zRevSig"]
   });

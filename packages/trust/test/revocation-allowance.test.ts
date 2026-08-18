@@ -6,12 +6,17 @@
  * Each slot was an unbounded `states x keys x signatures` search over records an untrusted view
  * chose to send, which is why a conforming chain cost multiples of what its callers believed.
  *
- * Spec 015 has since collapsed the per-slot search to `states x keys`: the greedy walk spends at
- * most one verification per listed key whatever the record's signature count, and a count that
- * is not exactly the threshold is refused on its LENGTH before any curve work. The slot COUNT is
- * untouched, so the composition is still unbounded without the sub-allowance — what changed is
- * how much a hostile view gets per slot, and therefore how long a log it needs to reach the
- * bound. The fixtures below run at `MAX_KEY_LOG_EVENTS` for that reason.
+ * Spec 015 collapsed the per-slot search to `states x keys` (the greedy walk spends at most one
+ * verification per listed key whatever the record's signature count, and a count that is not
+ * exactly the threshold is refused on its LENGTH before any curve work), and spec 016 has since
+ * removed the `states` factor too: an anchored candidate names the ONE key state it is judged
+ * against, so a slot costs at most `K = MAX_KEY_EVENT_KEYS`. The slot COUNT is untouched, so the
+ * composition is still the view's to choose and the sub-allowance is still what bounds it — what
+ * moved is the price of a slot, and with it the allowance, re-derived here as `2K`.
+ *
+ * The fixtures still run at `MAX_KEY_LOG_EVENTS`, but for a different reason: the log length is
+ * now what the REPLAY costs, not what a candidate costs, and the replay is what a hostile answer
+ * still buys per issuer it names.
  *
  * Every expectation here is an expression in the IMPORTED protocol constants and in the log
  * length the fixture actually builds. Writing the products as literals would assert nothing:
@@ -53,6 +58,9 @@ const K = MAX_KEY_EVENT_KEYS;
 const L = MAX_GRANT_CHAIN_LINKS;
 const S = MAX_RECORD_SIGNATURES;
 const R = MAX_REVOCATION_CANDIDATE_VERIFICATIONS;
+
+/** A well-formed multihash that is the digest of no key event of any log (spec 016). */
+const NO_SUCH_EVENT = canonicalDigest({ anchor: "no key event of any log" });
 
 const NOW = new Date("2026-06-12T00:00:00.000Z");
 const ISSUED_AT = new Date(NOW.getTime() - 11 * 86_400_000).toISOString();
@@ -113,13 +121,19 @@ function wideIdentity(events: number): WideIdentity {
   return { id, log, states: states.slice(0, events) };
 }
 
-/** The honest worst case for a state search: the last key of the OLDEST state. */
+/** The honest worst case for one walk: the LAST key of the oldest state. */
 const oldestKey = (identity: WideIdentity): KeyPair =>
   identity.states[0]![identity.states[0]!.length - 1]!;
 
+/** Spec 016's anchor for the oldest state — the inception event these fixtures sign under. */
+const oldestAnchor = (identity: WideIdentity): string => eventDigest(identity.log[0]!);
+
 /**
- * A leaf-first chain of `L` links over `L + 1` identities, every link signed under its issuer's
- * oldest state so that each signature search walks the issuer's whole history.
+ * A leaf-first chain of `L` links over `L + 1` identities, every link signed under — and, per
+ * spec 016, ANCHORED to — its issuer's oldest state. Anchoring to the oldest rather than the tip
+ * is a producer's prerogative (016 _Producer rules_: any state whose keys it still holds), and
+ * it keeps these fixtures honest worst cases: the signing key is last in the state's key list,
+ * so each link's walk spends the full `K`.
  */
 function grantChain(identities: WideIdentity[]): Grant[] {
   const chain: Grant[] = [];
@@ -132,6 +146,7 @@ function grantChain(identities: WideIdentity[]): Grant[] {
       audienceId: identities[depth + 1]!.id,
       abilities: ["msg"],
       caveats: {},
+      anchor: oldestAnchor(issuer),
       proof: previous === null ? null : canonicalDigest(previous),
       issuedAt: ISSUED_AT
     };
@@ -142,9 +157,19 @@ function grantChain(identities: WideIdentity[]): Grant[] {
   return chain.reverse();
 }
 
-function revocationOf(digest: string, issuerId: ParticipantId, secretKeys: Uint8Array[]) {
+/**
+ * A revocation candidate. `anchor` is required (spec 016) and is what decides whether the
+ * candidate reaches curve work at all: an anchor naming a real event of the issuer's log costs
+ * the walk, and one naming no event is skipped for free.
+ */
+function revocationOf(
+  digest: string,
+  issuerId: ParticipantId,
+  secretKeys: Uint8Array[],
+  anchor: string
+) {
   return signThresholdRecord(
-    { revokes: digest, issuerId, revokedAt: ISSUED_AT },
+    { revokes: digest, issuerId, anchor, revokedAt: ISSUED_AT },
     secretKeys
   ) as Revocation;
 }
@@ -188,19 +213,20 @@ describe("revocation candidate sub-allowance", () => {
    * The honest ceiling the sub-allowance is sized from, and the proof it cannot refuse it.
    *
    * Discovery signature-checks a revocation against its issuer's then-current key state before
-   * storing it, so an honest candidate always verifies; what it costs is decided by how far the
-   * issuer has rotated since. `signedByAnyState` searches states newest-first, so the honest
-   * WORST case is a revocation issued before a full rotation history — `E * K`, the whole
-   * search — and that is exactly what "a record verifies against any state a participant has
-   * held" exists for. Measured, not assumed.
+   * storing it, so an honest candidate verifies and the loop returns on it. Spec 016 decides what
+   * that costs: the candidate names ONE state and exactly that state is walked, so the honest
+   * ceiling is `K` — one verification per listed key, and the fixture puts the signing key LAST
+   * so the full `K` is spent. The log's length does not enter it, which is the whole of 016's
+   * effect here: the same record cost `E * K` when it was offered to every state the log had
+   * committed. Measured, not assumed.
    *
-   * WATCHED TO FAIL: set `MAX_REVOCATION_CANDIDATE_VERIFICATIONS` to
-   * `MAX_KEY_LOG_EVENTS * MAX_KEY_EVENT_KEYS` / 2 — half the honest ceiling. The verdict turns
-   * from `grant_revoked` into `grant_signature_check_too_expensive`, i.e. the bound starts
-   * refusing an honest revocation check, which is the failure this test exists to catch.
+   * WATCHED TO FAIL: set `MAX_REVOCATION_CANDIDATE_VERIFICATIONS` to `MAX_KEY_EVENT_KEYS / 2` —
+   * half the honest ceiling. The verdict turns from `grant_revoked` into
+   * `grant_signature_check_too_expensive`, i.e. the bound starts refusing an honest revocation
+   * check, which is the failure this test exists to catch.
    */
   it(
-    "never refuses an honest revocation signed under the oldest state of a full-length log",
+    "never refuses an honest revocation anchored to the oldest state of a full-length log",
     async () => {
       const events = MAX_KEY_LOG_EVENTS;
       const identities = Array.from({ length: L + 1 }, () => wideIdentity(events));
@@ -211,36 +237,44 @@ describe("revocation candidate sub-allowance", () => {
 
       const view = viewOf(identities, (digest) =>
         digest === leafDigest
-          ? [revocationOf(digest, leafIssuer.id, [oldestKey(leafIssuer).secretKey])]
+          ? [
+              revocationOf(
+                digest,
+                leafIssuer.id,
+                [oldestKey(leafIssuer).secretKey],
+                oldestAnchor(leafIssuer)
+              )
+            ]
           : []
       );
 
       const { verdict, spent } = await meter(chain, view);
       expect(verdict).toEqual({ valid: false, reason: "grant_revoked" });
 
-      // The lookup itself: one replay and one link-signature search precede it, each `E * K`.
-      const beforeTheLookup = 2 * events * K;
-      expect(spent - beforeTheLookup).toBe(events * K);
+      // The lookup itself: one replay (`E * K`) and one anchored link check (`K`) precede it.
+      const beforeTheLookup = events * K + K;
+      expect(spent - beforeTheLookup).toBe(K);
       // ...which is the honest ceiling, and the allowance clears it by exactly its headroom.
-      expect(R).toBe(2 * MAX_KEY_LOG_EVENTS * K);
-      expect(R / (MAX_KEY_LOG_EVENTS * K)).toBe(2);
+      expect(R).toBe(2 * K);
+      expect(R / K).toBe(2);
     },
     TEST_BACKSTOP_MS
   );
 
   /**
-   * The second half of `R = 2A` is for an answer that makes the verifier spend a complete
-   * conforming search before it reaches the genuine record. Both candidates have the required
-   * one-member signature set: the first member is absent from every state, while the second is
-   * the genuine issuer's last key in its oldest state. Each therefore costs exactly `A`.
+   * The second half of `R = 2K` is for an answer that makes the verifier pay a complete
+   * conforming check before it reaches the genuine record. Both candidates carry the one-member
+   * signature set these `threshold: "1"` issuers require, and both anchor to a real event of
+   * their own issuer's log, so both reach the walk: the first member verifies under no listed
+   * key, the second is the genuine issuer's last key in its oldest state. Each costs exactly `K`.
    *
    * WATCHED TO FAIL: subtract one from `MAX_REVOCATION_CANDIDATE_VERIFICATIONS`. The genuine
-   * candidate then reaches its last key with no allowance remaining and the verdict changes
-   * from `grant_revoked` to `grant_signature_check_too_expensive`. This is the exact boundary;
-   * the one-candidate test above remains the control that `A` alone still clears.
+   * candidate then reaches its last key with no allowance remaining and the verdict changes from
+   * `grant_revoked` to `grant_signature_check_too_expensive`. This is the exact boundary; the
+   * one-candidate test above remains the control that `K` alone still clears.
    */
   it(
-    "admits one full rejected search followed by one full genuine search at exactly 2A",
+    "admits one full rejected check followed by one full genuine check at exactly 2K",
     async () => {
       const events = MAX_KEY_LOG_EVENTS;
       const A = events * K;
@@ -255,18 +289,29 @@ describe("revocation candidate sub-allowance", () => {
       const view = viewOf(identities, (digest) =>
         digest === leafDigest
           ? [
-              revocationOf(digest, upstreamIssuer.id, [stranger.secretKey]),
-              revocationOf(digest, leafIssuer.id, [oldestKey(leafIssuer).secretKey])
+              revocationOf(
+                digest,
+                upstreamIssuer.id,
+                [stranger.secretKey],
+                oldestAnchor(upstreamIssuer)
+              ),
+              revocationOf(
+                digest,
+                leafIssuer.id,
+                [oldestKey(leafIssuer).secretKey],
+                oldestAnchor(leafIssuer)
+              )
             ]
           : []
       );
 
       const { verdict, spent } = await meter(chain, view);
       expect(verdict).toEqual({ valid: false, reason: "grant_revoked" });
-      expect(R).toBe(2 * A);
-      // Leaf replay + leaf signature + first replay of the upstream issuer precede the two
-      // candidate searches. Removing those three exact `A` terms isolates the sub-allowance.
-      expect(spent - 3 * A).toBe(R);
+      expect(R).toBe(2 * K);
+      // Two replays (the leaf issuer's and the upstream issuer's, the latter driven by the lookup
+      // itself) and one anchored link check precede the two candidate checks. Removing those
+      // isolates the sub-allowance, which the two candidates fill exactly.
+      expect(spent - (2 * A + K)).toBe(R);
     },
     TEST_BACKSTOP_MS
   );
@@ -276,41 +321,41 @@ describe("revocation candidate sub-allowance", () => {
    * that catches "each call bounded, composition unbounded" — and composition is precisely what
    * was unbounded here, since the per-link lookups were each finite and their sum was not.
    *
-   * WATCHED TO FAIL: measured with the sub-allowance removed — drop `candidateAllowance` from
-   * the `signedByAnyState` call in `findRevocation` — this chain spends 18,432, which is
-   * `L * 2E * K + (L(L+1)/2) * E * K`, and returns `valid: true`. The verdict assertion below
-   * fails, and the closed-form ceiling it asserts (16,384) is exceeded by 2048.
+   * WATCHED TO FAIL: drop `candidateAllowance` from the `signedAtAnchor` call in
+   * `findRevocation`. Every candidate of every slot then completes, the leaf lookup pays `L * K`
+   * instead of `R`, nothing is refused, and the verdict assertion below fails with
+   * `valid: true`.
    */
   it(
     "bounds a hostile revocation answer to the closed form the callers can add up",
     async () => {
-      // At the schema's MAXIMUM log length, and that is now what makes the bound bite. Under spec
-      // 015's walk a candidate's state search costs `E * K` however many signatures it carries,
-      // so one candidate costs 1024 here, TWO exactly fill the 2048 sub-allowance, and the third
-      // is refused — the bound is exercised rather than merely present. A shorter log no longer
-      // reaches it: at 32 events a candidate costs 256 and the four a leaf lookup may be given
-      // total 1024, inside the allowance. Measured — the same hostile answer over 32-event logs
-      // completes at 4608 verifications and returns `valid: true`.
+      // One candidate per REQUESTED issuer — the most a view may return without the oversized
+      // answer being rejected outright — each carrying EXACTLY ONE signature, by a key in
+      // nobody's log, and each ANCHORED to a real event of the issuer it names.
+      //
+      // Both of those choices are what makes the answer expensive, and both are inversions worth
+      // stating. A candidate padded to `MAX_RECORD_SIGNATURES` is refused by S1's `m = t` length
+      // check against these `threshold: "1"` issuers, before any curve work; and a candidate
+      // whose anchor names no event of its issuer's log is skipped by 016's lookup, also before
+      // any curve work. Padding and mis-anchoring are the CHEAP answers; the expensive one is a
+      // candidate that conforms in count and names a real state, and whose members verify under
+      // no listed key. Both cheap shapes are pinned below.
       const events = MAX_KEY_LOG_EVENTS;
       const identities = Array.from({ length: L + 1 }, () => wideIdentity(events));
+      const byId = new Map(identities.map((identity) => [identity.id, identity]));
       const chain = grantChain(identities);
       const stranger = generateKeyPair(nextSeed());
 
-      // One candidate per REQUESTED issuer — the most a view may return without the oversized
-      // answer being rejected outright — each carrying EXACTLY ONE signature, by a key in
-      // nobody's log, so every one forces the full states x keys search.
-      //
-      // One signature and not `MAX_RECORD_SIGNATURES`, and the inversion is worth stating: under
-      // spec 015 the issuers here have `threshold: "1"`, so a padded candidate is refused by S1's
-      // `m = t` LENGTH check before any curve work and costs the verifier nothing at all. Padding
-      // is now the cheap answer; the expensive one is a candidate whose member count conforms and
-      // whose members verify under no listed key. Pinned below rather than merely stated here:
-      // the padded answer this test used to send is now the WEAKER one.
       let answers = 0;
       const view = viewOf(identities, (digest, issuerIds) => {
         answers += 1;
         return issuerIds.map((issuerId) =>
-          revocationOf(digest, issuerId as ParticipantId, [stranger.secretKey])
+          revocationOf(
+            digest,
+            issuerId as ParticipantId,
+            [stranger.secretKey],
+            oldestAnchor(byId.get(issuerId as ParticipantId)!)
+          )
         );
       });
 
@@ -319,30 +364,21 @@ describe("revocation candidate sub-allowance", () => {
       // Fails closed: an exhausted lookup is a cost refusal, never "not revoked".
       expect(verdict).toEqual({ valid: false, reason: "grant_signature_check_too_expensive" });
 
-      // BELOW their sum: the closed form beside `verifyGrantChain`. `S` is absent from it now —
-      // a link's own search costs `E * K` whatever the record's signature count, because the walk
-      // is bounded by the key list and a non-conforming count never reaches the walk.
-      const chainCeiling = L * (events * K) + L * (events * K) + L * R;
+      // BELOW their sum: the closed form beside `verifyGrantChain`. Neither `S` nor `E` is in the
+      // record terms now — a link's own check costs `K` and a candidate's costs `K`, because the
+      // walk is bounded by one state's key list and a non-conforming count never reaches it.
+      const chainCeiling = L * (events * K) + L * K + L * R;
       expect(spent).toBeLessThanOrEqual(chainCeiling);
-      // ...and below the unbounded term this replaced, which is what the old code spent.
-      expect(spent).toBeLessThan(((L * (L + 1)) / 2) * events * K);
-      // ABOVE the individual stages: more than one link's own work, and more than one lookup's
-      // allowance, so the assertion is not passing because nothing ran.
-      expect(spent).toBeGreaterThan(events * K);
+      // ...and below the term this bounds: the candidate slots a chain opens, unbounded by R.
+      expect(spent).toBeLessThan(L * (events * K) + L * K + ((L * (L + 1)) / 2) * K);
+      // ABOVE the individual stages: more than one lookup's allowance, so the assertion is not
+      // passing because nothing ran.
       expect(spent).toBeGreaterThan(R);
       expect(answers).toBeGreaterThan(0);
 
-      // And the inversion, pinned rather than described. The SAME answer padded to
-      // `MAX_RECORD_SIGNATURES` — the shape this test sent while a signature set only had to
-      // contain a threshold's worth of valid members — is now refused by S1's `m = t` length
-      // check against these `threshold: "1"` issuers, before any curve work. Every one of the
-      // `L(L+1)/2` padded candidates therefore costs ZERO, nothing exhausts, and the chain runs
-      // to completion.
-      //
-      // Its TOTAL is higher than the refused run above (8192 against 6144) and that is not a
-      // contradiction: the refused run stopped part-way. What the two numbers say together is
-      // that padding buys a hostile view no verifier work at all, so the answer it has to send
-      // to reach the sub-allowance is the conforming-count one.
+      // The PADDING inversion, pinned rather than described: the same answer padded to
+      // `MAX_RECORD_SIGNATURES` is refused on its length before any curve work, so every one of
+      // the `L(L+1)/2` slots costs ZERO and the chain runs to completion.
       const padded = await meter(
         chain,
         viewOf(identities, (digest, issuerIds) =>
@@ -350,16 +386,30 @@ describe("revocation candidate sub-allowance", () => {
             revocationOf(
               digest,
               issuerId as ParticipantId,
-              Array.from({ length: S }, () => stranger.secretKey)
+              Array.from({ length: S }, () => stranger.secretKey),
+              oldestAnchor(byId.get(issuerId as ParticipantId)!)
             )
           )
         )
       );
       expect(padded.verdict.valid).toBe(true);
-      // Nothing but the chain's own work is in it: `L` replays plus `L` link searches, each
-      // `E * K`, and not one verification for any of the `L(L+1)/2` padded candidates. Equality,
-      // not a bound — a padded candidate that cost even one verification would break it.
-      expect(padded.spent).toBe(L * 2 * events * K);
+      // Nothing but the chain's own work is in it: `L` replays plus `L` anchored link checks, and
+      // not one verification for any padded candidate. Equality, not a bound.
+      expect(padded.spent).toBe(L * events * K + L * K);
+
+      // The ANCHOR inversion, and it is new with 016. The same conforming-count candidates,
+      // anchored to a digest no key log carries: each is skipped before any curve work, so the
+      // hostile answer costs exactly what the padded one does.
+      const unanchored = await meter(
+        chain,
+        viewOf(identities, (digest, issuerIds) =>
+          issuerIds.map((issuerId) =>
+            revocationOf(digest, issuerId as ParticipantId, [stranger.secretKey], NO_SUCH_EVENT)
+          )
+        )
+      );
+      expect(unanchored.verdict.valid).toBe(true);
+      expect(unanchored.spent).toBe(L * events * K + L * K);
     },
     TEST_BACKSTOP_MS
   );
@@ -369,66 +419,58 @@ describe("revocation candidate sub-allowance", () => {
    * CANDIDATE it would bound nothing: the cost would still scale with however many records the
    * view chose to send, which is the amplification it exists to remove.
    *
-   * WATCHED TO FAIL: move the `candidateAllowance` object inside the `for (const candidate)`
-   * loop in `findRevocation`. Each candidate then gets a fresh 2048, which is twice what one
-   * costs, so every slot completes: measured, the chain verifies `valid: true` at 18,432
-   * verifications and blows through the 7168 bound below.
+   * WATCHED TO FAIL: move the `candidateAllowance` object inside the `for (const candidate)` loop
+   * in `findRevocation`. Each candidate then gets a fresh `2K`, which is twice what one costs, so
+   * every slot completes, nothing is refused, and the verdict below turns `valid: true`.
    */
   it(
     "shares one allowance across a lookup's candidates rather than minting one each",
     async () => {
-      // Full-length logs and single-signature candidates, for the reason spelled out in the test
-      // above: a candidate's cost is `E * K` and no longer scales with its signature count, so
-      // the sub-allowance is only reached when one candidate's state search is a large enough
-      // fraction of it.
       const events = MAX_KEY_LOG_EVENTS;
       const identities = Array.from({ length: L + 1 }, () => wideIdentity(events));
+      const byId = new Map(identities.map((identity) => [identity.id, identity]));
       const chain = grantChain(identities);
       const stranger = generateKeyPair(nextSeed());
       const view = viewOf(identities, (digest, issuerIds) =>
         issuerIds.map((issuerId) =>
-          revocationOf(digest, issuerId as ParticipantId, [stranger.secretKey])
+          revocationOf(
+            digest,
+            issuerId as ParticipantId,
+            [stranger.secretKey],
+            oldestAnchor(byId.get(issuerId as ParticipantId)!)
+          )
         )
       );
 
       const { verdict, spent } = await meter(chain, view);
       expect(verdict).toEqual({ valid: false, reason: "grant_signature_check_too_expensive" });
-      // The refusal lands inside the LEAF's lookup, so everything spent up to it is: every
-      // replay the chain can drive (the signer memo caps them at one per distinct issuer, and a
-      // lookup asking about upstream issuers is what drives the ones the loop has not reached
-      // yet), the leaf link's own single-signature search, and ONE sub-allowance across all of
-      // that lookup's candidates. Minted per candidate instead, the same lookup would spend one
-      // allowance per requested issuer and blow straight through this.
-      //
-      // Measured at 6144 against a bound of 7168: the leaf's lookup exhausts the sub-allowance on
-      // its second candidate, so the third's replay is paid for and its search is not.
-      expect(spent).toBeLessThanOrEqual(L * (events * K) + events * K + R);
+      // The refusal lands inside the LEAF's lookup, so everything spent up to it is: every replay
+      // the chain can drive (the signer memo caps them at one per distinct issuer, and a lookup
+      // asking about upstream issuers is what drives the ones the loop has not reached yet), the
+      // leaf link's own anchored check, and ONE sub-allowance across all of that lookup's
+      // candidates. Minted per candidate instead, the same lookup would spend one allowance per
+      // requested issuer and blow straight through this.
+      expect(spent).toBeLessThanOrEqual(L * (events * K) + K + R);
     },
     TEST_BACKSTOP_MS
   );
 
   /**
-   * Exhaustion may never read as "not revoked". A genuine revocation hidden behind enough
-   * padded decoys must produce a cost refusal, not an authorization.
+   * Exhaustion may never read as "not revoked". A genuine revocation hidden behind enough decoys
+   * must produce a cost refusal, not an authorization.
    *
-   * WATCHED TO FAIL: replace the `signedByAnyState(...)` call in `findRevocation` with one
-   * wrapped in `try { ... } catch { continue; }`. The genuine revocation is then never CHECKED
-   * — its own search throws on the exhausted allowance and the throw is swallowed — the lookup
-   * returns null, and the chain verifies `valid: true` at 10,240 verifications. Measured. That
-   * is the silent downgrade of the one check that withdraws authority.
+   * WATCHED TO FAIL: replace the `signedAtAnchor(...)` call in `findRevocation` with one wrapped
+   * in `try { ... } catch { continue; }`. The genuine revocation is then never CHECKED — its own
+   * walk throws on the exhausted allowance and the throw is swallowed — the lookup returns null,
+   * and the chain verifies `valid: true`. That is the silent downgrade of the one check that
+   * withdraws authority.
    */
   it(
     "refuses rather than reporting not-revoked when decoys exhaust the allowance",
     async () => {
-      // Full-length logs, and they are what makes the decoys expensive enough to exhaust the
-      // sub-allowance at all. Under spec 015 a candidate's cost is `E * K` — its signature count
-      // drops out — so at 32 events three decoys cost 768 against an allowance of 2048 and the
-      // genuine revocation is reached: measured, that shape now returns `grant_revoked` at 2304
-      // verifications, which is a correct verdict but not the property this test is for. At
-      // `E = MAX_KEY_LOG_EVENTS` a decoy costs 1024, two exhaust the allowance, and the third
-      // decoy's search is refused before the genuine record behind it is ever examined.
       const events = MAX_KEY_LOG_EVENTS;
       const identities = Array.from({ length: L + 1 }, () => wideIdentity(events));
+      const byId = new Map(identities.map((identity) => [identity.id, identity]));
       const chain = grantChain(identities);
       const leaf = chain[0]!;
       const leafIssuer = identities.find((identity) => identity.id === leaf.issuerId)!;
@@ -440,22 +482,38 @@ describe("revocation candidate sub-allowance", () => {
           return [];
         }
         // Decoys first, the genuine revocation last: a hostile host chooses the order. Each decoy
-        // carries exactly one signature, matching these issuers' `threshold: "1"`, so it clears
-        // S1's `m = t` length check and forces the whole `E * K` state search — a decoy padded to
-        // `MAX_RECORD_SIGNATURES` would be refused on its length and cost nothing.
+        // carries exactly one signature, matching these issuers' `threshold: "1"`, and anchors to
+        // a real event of its own issuer's log — so it clears both of the free rejections and
+        // costs the full `K`. The leaf has `L` authorized revokers, so `L - 1` decoys precede the
+        // genuine record and the allowance of `2K` is gone before it is reached.
         const decoys = issuerIds
           .filter((issuerId) => issuerId !== leafIssuer.id)
-          .map((issuerId) => revocationOf(digest, issuerId as ParticipantId, [stranger.secretKey]));
-        return [...decoys, revocationOf(digest, leafIssuer.id, [oldestKey(leafIssuer).secretKey])];
+          .map((issuerId) =>
+            revocationOf(
+              digest,
+              issuerId as ParticipantId,
+              [stranger.secretKey],
+              oldestAnchor(byId.get(issuerId as ParticipantId)!)
+            )
+          );
+        return [
+          ...decoys,
+          revocationOf(
+            digest,
+            leafIssuer.id,
+            [oldestKey(leafIssuer).secretKey],
+            oldestAnchor(leafIssuer)
+          )
+        ];
       });
 
       const { verdict, spent } = await meter(chain, view);
       expect(verdict).toEqual({ valid: false, reason: "grant_signature_check_too_expensive" });
       expect(verdict.valid).toBe(false);
-      // The genuine record is the fourth candidate and the allowance is gone by the third, so the
-      // run stops one replay past the exhaustion: `L` replays, the leaf's own search, and the two
-      // decoy searches the sub-allowance paid for. Measured at 7168.
-      expect(spent).toBe(L * (events * K) + events * K + R);
+      // The genuine record is the last candidate and the allowance is gone by the decoy before
+      // it, so the run stops one replay past the exhaustion: the replays the lookup drove, the
+      // leaf's own anchored check, and the two decoy checks the sub-allowance paid for.
+      expect(spent).toBe(L * (events * K) + K + R);
     },
     TEST_BACKSTOP_MS
   );
@@ -488,12 +546,14 @@ describe("revocation candidate sub-allowance", () => {
       const stranger = generateKeyPair(nextSeed());
 
       const view = viewOf(identities, (digest) =>
-        digest === leafDigest ? [revocationOf(digest, upstream.id, [stranger.secretKey])] : []
+        digest === leafDigest
+          ? [revocationOf(digest, upstream.id, [stranger.secretKey], oldestAnchor(upstream))]
+          : []
       );
 
-      // Enough for the leaf's own replay and signature search and nothing like enough for a
+      // Enough for the leaf's own replay and anchored link check and nothing like enough for a
       // second replay, which is what the lookup is about to drive.
-      const budget: VerificationBudget = { remaining: 2 * events * K + K };
+      const budget: VerificationBudget = { remaining: events * K + K };
       const verdict = await verifyGrantChain(chain, view, { now: NOW, purpose: "request", budget });
       expect(verdict).toEqual({
         valid: false,
@@ -507,19 +567,18 @@ describe("revocation candidate sub-allowance", () => {
 /**
  * The chain-cost arithmetic itself, pinned.
  *
- * The closed form beside `verifyGrantChain` had `L * 2E * K` written as 9216 in one sentence and
- * 8192 in another, twelve lines apart, and nothing in the suite noticed. These measure the two
- * quantities the derivations actually claim, so the numbers in the prose cannot drift from the
- * code without a red test.
+ * The closed form beside `verifyGrantChain` once had one product written two different ways
+ * twelve lines apart, and nothing in the suite noticed. These measure the quantities the
+ * derivation actually claims — under spec 016 a replay per distinct issuer plus `K` per record —
+ * so the numbers in the prose cannot drift from the code without a red test.
  */
 describe("the chain cost arithmetic", () => {
   /**
-   * WATCHED TO FAIL: change the expectation to `L * 2 * E * K + 2 * E * K` — one honest
-   * revocation search too many, which is the shape the "10,240" typo described. It fails by
-   * exactly `E * K`.
+   * WATCHED TO FAIL: change the expectation to `L * (E * K) + L * K + 2 * K` — one honest
+   * revocation check too many. It fails by exactly `K`.
    */
   it(
-    "spends exactly L*2E*K + E*K on a chain the view honestly reports revoked at the ROOT",
+    "spends exactly L*E*K + L*K + K on a chain the view honestly reports revoked at the ROOT",
     async () => {
       // The ROOT link, so every link above it is verified in full before the lookup that finds
       // anything — this is the maximal honest chain, not an early exit.
@@ -532,56 +591,70 @@ describe("the chain cost arithmetic", () => {
 
       const view = viewOf(identities, (digest) =>
         digest === rootDigest
-          ? [revocationOf(digest, rootIssuer.id, [oldestKey(rootIssuer).secretKey])]
+          ? [
+              revocationOf(
+                digest,
+                rootIssuer.id,
+                [oldestKey(rootIssuer).secretKey],
+                oldestAnchor(rootIssuer)
+              )
+            ]
           : []
       );
 
       const { verdict, spent } = await meter(chain, view);
       expect(verdict).toEqual({ valid: false, reason: "grant_revoked" });
-      expect(spent).toBe(L * 2 * events * K + events * K);
-      // Spelled out, because the prose got this product wrong: L*2E*K is 8192, not 9216.
-      expect(L * 2 * events * K).toBe(8192);
-      expect(spent).toBe(9216);
+      expect(spent).toBe(L * (events * K) + L * K + K);
+      // Spelled out, because this is the product the prose beside `verifyGrantChain` claims: the
+      // replays dominate, and the record terms are `K` each rather than `E * K` each.
+      expect(L * (events * K)).toBe(4096);
+      expect(spent).toBe(4136);
     },
     TEST_BACKSTOP_MS
   );
 
   /**
-   * THE THIRD CASE. A candidate that parses, targets the right digest and comes from a requested
-   * issuer but FAILS its signature check costs `E * K`, the lookup returns null, and the chain
-   * CARRIES ON — so the rejection adds to the chain's cost instead of replacing part of it, and
-   * the verdict is still `valid: true`. The revocation search and the rest are NOT alternatives:
-   * reading them as "never both" understates the cost.
+   * THE THIRD CASE. A candidate that parses, targets the right digest, comes from a requested
+   * issuer and names a real key state but FAILS its signature check costs `K`, the lookup returns
+   * null, and the chain CARRIES ON — so the rejection adds to the chain's cost instead of
+   * replacing part of it, and the verdict is still `valid: true`. The revocation lookup and the
+   * rest are NOT alternatives: reading them as "never both" understates the cost.
    *
-   * WATCHED TO FAIL: assert `spent` equals the no-revocation cost `L * 2 * E * K`, which is what
-   * "never both" implies. It fails by `L * E * K` = 4096.
+   * WATCHED TO FAIL: assert `spent` equals the no-revocation cost `L * (E * K) + L * K`, which is
+   * what "never both" implies. It fails by `L * K` = 32.
    */
   it(
-    "adds E*K per link for a rejected candidate, and still returns valid",
+    "adds K per link for a rejected candidate, and still returns valid",
     async () => {
       const events = MAX_KEY_LOG_EVENTS;
       const identities = Array.from({ length: L + 1 }, () => wideIdentity(events));
       const chain = grantChain(identities);
       const digests = chain.map((link) => canonicalDigest(link));
+      const byId = new Map(identities.map((identity) => [identity.id, identity]));
       const stranger = generateKeyPair(nextSeed());
 
-      // One candidate per link, from that link's OWN issuer so it is a requested revoker, signed
-      // by a key in nobody's log so it can never verify. One candidate costs E*K, which is under
-      // the sub-allowance — so this shape is not what R bounds, and R does not change it.
+      // One candidate per link, from that link's OWN issuer so it is a requested revoker, anchored
+      // to a real event of that issuer's log so it reaches the walk, and signed by a key in
+      // nobody's log so it can never verify. One candidate costs `K`, which is under the
+      // sub-allowance — so this shape is not what R bounds, and R does not change it.
       const view = viewOf(identities, (digest) => {
         const index = digests.indexOf(digest);
-        return index >= 0
-          ? [revocationOf(digest, chain[index]!.issuerId as ParticipantId, [stranger.secretKey])]
-          : [];
+        if (index < 0) {
+          return [];
+        }
+        const issuerId = chain[index]!.issuerId as ParticipantId;
+        return [
+          revocationOf(digest, issuerId, [stranger.secretKey], oldestAnchor(byId.get(issuerId)!))
+        ];
       });
 
       const { verdict, spent } = await meter(chain, view);
       expect(verdict.valid).toBe(true);
-      expect(spent).toBe(L * 2 * events * K + L * (events * K));
-      expect(spent).toBeGreaterThan(L * 2 * events * K);
-      // Each lookup stays well inside the sub-allowance, which is why removing R would not change
-      // this number by one verification. The bound is not what limits this shape.
-      expect(events * K).toBeLessThan(R);
+      expect(spent).toBe(L * (events * K) + L * K + L * K);
+      expect(spent).toBeGreaterThan(L * (events * K) + L * K);
+      // Each lookup stays inside the sub-allowance, which is why removing R would not change this
+      // number by one verification. The bound is not what limits this shape.
+      expect(K).toBeLessThan(R);
     },
     TEST_BACKSTOP_MS
   );
@@ -636,11 +709,11 @@ describe("the chain cost arithmetic", () => {
 
       // (1) THE LEAF's pointer is the decoy. The chain is walked leaf first and a link's `proof`
       // is compared only after its PARENT has been accepted, so this is caught at the second
-      // iteration: two links replayed and signature-checked, `2 * 2E * K`.
+      // iteration: two links replayed and signature-checked, `2 * (E * K + K)`.
       const atLeaf = await meter([restamp(honest[0]!, decoy), ...honest.slice(1)], view);
       expect(atLeaf.verdict).toEqual({ valid: false, reason: "grant_proof_mismatch" });
-      expect(atLeaf.spent).toBe(2 * 2 * events * K);
-      expect(atLeaf.spent).toBe(4096);
+      expect(atLeaf.spent).toBe(2 * (events * K + K));
+      expect(atLeaf.spent).toBe(2064);
 
       // (2) THE DEEPEST PAIR: the root's child points at the decoy instead of at the root, and
       // every link below it is re-stamped onto the pointer it now has — so this chain has exactly
@@ -656,8 +729,8 @@ describe("the chain cost arithmetic", () => {
       }
       const atDeepest = await meter(atDeepestChain, view);
       expect(atDeepest.verdict).toEqual({ valid: false, reason: "grant_proof_mismatch" });
-      expect(atDeepest.spent).toBe(L * 2 * events * K);
-      expect(atDeepest.spent).toBe(8192);
+      expect(atDeepest.spent).toBe(L * (events * K + K));
+      expect(atDeepest.spent).toBe(4128);
 
       // (2b) The same pointer re-stamped WITHOUT rebuilding the links below it. Re-signing a link
       // changes its digest, so its own child's pointer goes stale too and the walk rejects at the
@@ -668,15 +741,15 @@ describe("the chain cost arithmetic", () => {
       cascading[L - 2] = restamp(cascading[L - 2]!, decoy);
       const atCascading = await meter(cascading, view);
       expect(atCascading.verdict).toEqual({ valid: false, reason: "grant_proof_mismatch" });
-      expect(atCascading.spent).toBe((L - 1) * 2 * events * K);
-      expect(atCascading.spent).toBe(6144);
+      expect(atCascading.spent).toBe((L - 1) * (events * K + K));
+      expect(atCascading.spent).toBe(3096);
       expect(atCascading.spent).toBeLessThan(atDeepest.spent);
 
       // (3) THE CONTROL, and the whole argument. Correct pointers throughout — recomputed over the
       // root as re-signed — and one signature by a key in nobody's log. The walk verifies three
-      // links, replays the root's log, searches every state it has held, and refuses: the same
-      // `L * 2E * K` the worst mismatch costs, reachable with no key material and reachable
-      // BEFORE the reorder, which is why the reorder raises no ceiling.
+      // links, replays the root's log, checks it against its anchored state, and refuses: the
+      // same `L * (E * K + K)` the worst mismatch costs, reachable with no key material and
+      // reachable BEFORE the reorder, which is why the reorder raises no ceiling.
       const bogus = [...honest];
       bogus[L - 1] = signThresholdRecord(honest[L - 1]!, [stranger.secretKey]) as Grant;
       for (let index = L - 2; index >= 0; index -= 1) {
@@ -684,8 +757,8 @@ describe("the chain cost arithmetic", () => {
       }
       const control = await meter(bogus, view);
       expect(control.verdict).toEqual({ valid: false, reason: "grant_signature_invalid" });
-      expect(control.spent).toBe(L * 2 * events * K);
-      expect(control.spent).toBe(8192);
+      expect(control.spent).toBe(L * (events * K + K));
+      expect(control.spent).toBe(4128);
 
       // The ceiling claim, as an equality rather than as prose: the dearest a broken `proof`
       // pointer can be made is exactly what a bad signature over correct pointers already cost.

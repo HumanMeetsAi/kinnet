@@ -15,6 +15,9 @@ import {
 } from "./budget.js";
 import { assertSignableNumbers, canonicalBytes } from "./jcs.js";
 import { sign, verify } from "./keys.js";
+// Type-only: `log.ts` imports `canonicalDigest` from this module, so a value import here would
+// close a module cycle for one array lookup. The lookup is inlined below instead.
+import type { AnchoredKeyState } from "./log.js";
 import {
   checkKeyState,
   checkMemberCount,
@@ -268,9 +271,9 @@ export function checkSignatureSet(
  * {@link checkSignatureSet} as a boolean — the shape every existing caller wants.
  *
  * Kept as the wide surface because a caller that only needs "is this record validly signed"
- * should not have to destructure a verdict, and because the boolean is what composes into
- * S5's existential over key states (`states.some(...)`). Callers that need to report WHICH
- * rule refused a record use `checkSignatureSet` directly.
+ * should not have to destructure a verdict. Callers that need to report WHICH rule refused a
+ * record use `checkSignatureSet` directly; callers holding a record that carries spec 016's
+ * `anchor` use {@link verifyAnchoredRecord}, which decides the state for them.
  */
 export function verifyThresholdRecord(
   record: Signable & { signature: string[] },
@@ -279,4 +282,80 @@ export function verifyThresholdRecord(
   options: VerifyThresholdOptions = {}
 ): boolean {
   return checkSignatureSet(record, keys, threshold, options).ok;
+}
+
+/**
+ * Spec 016's refusal that is not a signature-set rule: the record's `anchor` names no event of
+ * the issuer's key log, so there is no state to judge the set against.
+ *
+ * Distinct from a {@link SignatureSetRejection} because it is a different finding. Those say
+ * "this set does not satisfy that state"; this one says "the state this record names is not in
+ * this log", which — on a view that may be stale — is the verdict a caller may want to resolve
+ * by refetching the log before concluding (016, _Log freshness_). It carries no `rule`: S0–S3
+ * are rules about a set against a state, and this fires before any state is in hand.
+ */
+export type AnchorRejection = {
+  ok: false;
+  code: "anchor_unknown";
+  /** The anchor the record named, echoed for diagnosis and for a refetch decision. */
+  anchor: string;
+  message: string;
+};
+
+export type CheckAnchoredSignatureSetResult = CheckSignatureSetResult | AnchorRejection;
+
+/**
+ * Decides an anchored signature-set record against spec 016's verification rule: the record is
+ * validly signed by its issuer iff the issuer's key log replays valid (the caller's job — it is
+ * what produced `states`), that log contains an event whose digest equals `record.anchor`, and
+ * the set satisfies 015 S0–S3 against the state that event carries.
+ *
+ * **Exactly one state is tried, and never any other.** A record whose anchor names no event of
+ * the log is refused with `anchor_unknown`; a record whose set fails against the anchored state
+ * is refused even if some other state the log commits would accept it. That is the whole of the
+ * change 016 makes to 015 S5 — the existential over states becomes a lookup — and it is what
+ * makes the keyless cross-state edits (015's routes 3 and 4) impossible rather than merely
+ * unreachable through a conforming log.
+ *
+ * The anchor needs no special handling in the signing input: it is an ordinary field of the
+ * record, so it sits inside the bytes every member signs, and {@link checkSignatureSet} strips
+ * only `signature`. Rewriting the anchor of a signed record therefore invalidates it.
+ *
+ * Anchoring does NOT orphan a record when its issuer rotates: the anchor names a historical
+ * event, the log is append-only, and the named event is still there after any number of later
+ * rotations (015, _Options considered_ (a)).
+ */
+export function checkAnchoredSignatureSet(
+  record: Signable & { signature: string[]; anchor: string },
+  states: readonly AnchoredKeyState[],
+  options: CheckSignatureSetOptions = {}
+): CheckAnchoredSignatureSetResult {
+  const state = states.find((candidate) => candidate.anchor === record.anchor);
+  if (state === undefined) {
+    // Reported before any curve work: with no state there is nothing to verify, and a caller
+    // carrying a verification allowance must not be charged for a lookup miss.
+    return {
+      ok: false,
+      code: "anchor_unknown",
+      anchor: record.anchor,
+      message: `Record anchor ${record.anchor} names no event of the issuer's key log`
+    };
+  }
+  return checkSignatureSet(record, state.keys, state.threshold, options);
+}
+
+/**
+ * {@link checkAnchoredSignatureSet} as a boolean — spec 016's rule for callers that need only
+ * "is this record validly signed by its issuer". An unknown anchor is false, exactly like a
+ * failing set: both mean the record is not validly signed under this log.
+ *
+ * A caller that must distinguish the two — to refetch a possibly stale log, or to report the
+ * reason — uses {@link checkAnchoredSignatureSet}.
+ */
+export function verifyAnchoredRecord(
+  record: Signable & { signature: string[]; anchor: string },
+  states: readonly AnchoredKeyState[],
+  options: CheckSignatureSetOptions = {}
+): boolean {
+  return checkAnchoredSignatureSet(record, states, options).ok;
 }

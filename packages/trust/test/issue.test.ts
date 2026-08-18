@@ -9,6 +9,9 @@ import {
   canonicalDigest,
   createIdentity,
   encodeKeyRef,
+  eventDigest,
+  keyLogAnchor,
+  rotateIdentity,
   type Identity
 } from "@kinnet/crypto";
 import {
@@ -192,6 +195,9 @@ describe("issueGrant", () => {
     expect(grant.issuerId).toBe(org.id);
     expect(grant.subjectId).toBe(org.id);
     expect(grant.proof).toBeNull();
+    // Spec 016: a participant-issued grant names the state it was signed under, and the mint
+    // signs with `currentKeys`, so that state is the log's tip.
+    expect(grant.anchor).toBe(keyLogAnchor(org.log));
 
     const verdict = await verifyGrantChain([grant], makeView([org]), { now: NOW });
     expect(verdict.valid).toBe(true);
@@ -235,6 +241,8 @@ describe("issueRevocation", () => {
 
     expect(revocationSchema.parse(revocation)).toEqual(revocation);
     expect(Array.isArray(revocation.signature)).toBe(true);
+    // Spec 016: required on every revocation, and it is the tip for the same reason.
+    expect(revocation.anchor).toBe(keyLogAnchor(org.log));
     expect("id" in revocation).toBe(false);
     expect("reason" in revocation).toBe(false);
     expect(revocation.revokes).toBe(canonicalDigest(edge));
@@ -245,6 +253,32 @@ describe("issueRevocation", () => {
     const mint = () =>
       issueRevocation(org, digest, { revokedAt: "2026-06-15T00:00:00.000Z", reason: "superseded" });
     expect(canonicalBytes(mint())).toEqual(canonicalBytes(mint()));
+  });
+
+  it("anchors to the state it signs under, so a rotation does not orphan what it minted", async () => {
+    // The two halves of 016's producer rule, from the mint side. A record is anchored at the
+    // state its keys belong to, and because the anchor names a historical event rather than the
+    // current one, appending rotations to the issuer's log leaves it verifying.
+    const rotated = rotateIdentity(org, { nextSeeds: [seed(17)] });
+    const grant = issueGrant(org, agent.id, ["quotes/read"], {
+      issuedAt: ISSUED_AT,
+      expiresAt: EXPIRES_AT
+    });
+    expect(grant.anchor).toBe(eventDigest(org.log[org.log.length - 1]!));
+    expect(grant.anchor).not.toBe(keyLogAnchor(rotated.log));
+
+    // Same grant, and the issuer's log now carries a rotation past the state it names.
+    const verdict = await verifyGrantChain([grant], makeView([rotated]), { now: NOW });
+    expect(verdict.valid).toBe(true);
+
+    // And a revocation minted AFTER the rotation names the new tip, not the old one.
+    const revocation = issueRevocation(rotated, canonicalDigest(grant), {
+      revokedAt: "2026-06-15T00:00:00.000Z"
+    });
+    expect(revocation.anchor).toBe(keyLogAnchor(rotated.log));
+    expect(
+      await verifyGrantChain([grant], makeView([rotated], [revocation]), { now: NOW })
+    ).toEqual({ valid: false, reason: "grant_revoked" });
   });
 
   it("flips a verified grant chain to grant_revoked", async () => {

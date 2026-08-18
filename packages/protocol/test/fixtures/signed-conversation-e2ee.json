@@ -36,9 +36,10 @@
     "createdAt": "2026-08-01T00:00:00.000Z",
     "lane": "e2ee",
     "groupNonce": "zCs8KY3PiWrCMAytMsBRQo8EdGbticVtdvufLnb2UhXh",
+    "anchor": "zQmafweSL8Kv8g4JHsXkbTiCxz3Tka5S6gkFyYiu47ddS3j",
     "signature": [
-      "z2Dzmu1HjFNnhnes3zLwosukD8FzXs9aQQZTjDoci4PaC6V3ffsUYiW3BFZaJHybQEf3H3SgaYyEENA26Mb7EAmQi"
+      "z335n42yXnYMm2MKoF4tfNeXDiV9VeoYRSqH37yDpeAQMWTfyXZKcUR53gzCrW4Lbsr6Mrs1QKfSJk1fTKH8v3vCQ"
     ]
   },
-  "conversationId": "zQmVTchJFKpQSZq48EBpbbKpj146ZimUSZb5bqjPkzwR2rE"
+  "conversationId": "zQma4q8HHWN9up8YHpWPpr3fEqQLxtpsWoPHLhm2KAujcnx"
 }

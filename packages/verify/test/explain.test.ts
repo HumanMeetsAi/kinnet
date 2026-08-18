@@ -11,6 +11,7 @@ import {
   canonicalDigest,
   createIdentity,
   signRecord,
+  keyLogAnchor,
   signThresholdRecord,
   type Identity
 } from "@kinnet/crypto";
@@ -85,6 +86,7 @@ const rootGrant = signThresholdRecord(
     audienceId: agent.id,
     abilities: ["sales/quote"],
     caveats: {},
+    anchor: keyLogAnchor(org.log),
     proof: null,
     issuedAt: ISSUED_AT
   },
@@ -92,7 +94,12 @@ const rootGrant = signThresholdRecord(
 ) as Grant;
 
 const grantRevocation = signThresholdRecord(
-  { revokes: canonicalDigest(rootGrant), issuerId: org.id, revokedAt: ISSUED_AT },
+  {
+    revokes: canonicalDigest(rootGrant),
+    issuerId: org.id,
+    anchor: keyLogAnchor(org.log),
+    revokedAt: ISSUED_AT
+  },
   [org.currentKeys[0]!.secretKey]
 ) as Revocation;
 

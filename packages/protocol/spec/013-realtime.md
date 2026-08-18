@@ -339,9 +339,9 @@ Owner-mode reads verify against the participant's _current_ key state (010, 011)
 owner-mode re-check. A rotation that drops the subscribing key from the current state
 therefore kills that stream, and a routine rotation kills the owner's live streams as a side
 effect. That availability cost is accepted: the client reconnects with a key in the new state,
-and the alternative — honouring any replay-valid state, as 012 rightly does for stored
-records — would mean a rotated-out key keeps streaming, which is precisely the compromise case
-rotation exists to answer.
+and the alternative — honouring a historical state, as 012 rightly does for stored records
+through their anchor (016) — would mean a rotated-out key keeps streaming, which is precisely
+the compromise case rotation exists to answer.
 
 **Rotating the root key does NOT kill delegates' live streams.** A chain link issued by a
 participant verifies against _any_ state that participant's key log replays to (008: a rotation
@@ -1099,6 +1099,9 @@ profile rather than as a property of streams.
   012 as owner, and the `consent`-event rule marked unexercisable until 012 defines the
   reject/discard and block-list routes. The scalar satisfying key recorded in Design notes as a
   consequence of the single-signature request-auth profile.
+- 2026-08-18 — Design notes' contrast with stored records restated for 016: stored records verify
+  at the historical state their anchor names; subscriptions still authorize against the current
+  state only.
 
 ## 9. References
 

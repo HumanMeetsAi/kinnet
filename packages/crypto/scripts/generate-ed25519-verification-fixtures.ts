@@ -220,8 +220,8 @@ for (const [index, hex] of smallOrderHex.entries()) {
         "two must not be conflated. Any single number quoted for that verifier is one sample " +
         "of a distribution, not a property of it. " +
         "This matters beyond interop: the same signature verifying under all 8 keys is " +
-        "exactly the 'one signature verifies under many keys' case that breaks 003's " +
-        "quorum-rule counting argument.",
+        "exactly the 'one signature verifies under many keys' case that makes a signature " +
+        "set's member count meaningless (015 S2's injectivity).",
       false,
       zeroSignature,
       publicKey
@@ -279,13 +279,17 @@ vectors.push(
 );
 
 // ------------------------------------------------------------------------------------------
-// The record-layer consequence, which is the reason this pin blocks 003 and 015 rather than
-// being a tidy-up: one keyless signature satisfying a multi-key quorum.
+// The record-layer consequence, which is the reason this pin blocks 015 rather than being a
+// tidy-up: one keyless signature satisfying a multi-key threshold.
 // ------------------------------------------------------------------------------------------
 
 const QUORUM_RECORD = {
   revokes: "zQmc6UYfYm7JAhahkGriEwatG3MQxULGH1wWJo6xdz9ZtGm",
   issuerId: "pk_zQmXbJDQAmijYmFxknjGFdCoVRC5TqrzUmRFHnWMrgtmJQa",
+  // Spec 016's anchor, required on a Revocation. A stand-in digest: this vector is about the
+  // verification MODE, and it names no key log — what matters is that the record stays
+  // schema-valid, so the rejection below is the mode's doing rather than a malformed shape.
+  anchor: "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
   revokedAt: "2026-06-12T00:00:00.000Z"
 };
 
@@ -304,10 +308,9 @@ const quorumVector = {
   name: "reject — one keyless signature against a 3-key, threshold-3 state of small-order keys",
   why:
     "The record-layer statement of the same defect, and the reason this pin is a PREREQUISITE " +
-    "for spec 003's 'no two states may share a quorum' rule rather than an interop tidy-up. " +
-    "003's soundness argument counts surviving signature-set members against the key " +
-    "intersection, and that counting is only valid if a signature verifies under exactly one " +
-    "key. Here ONE signature — R = identity, S = 0, built with no secret key — is offered " +
+    "for spec 015's signature-set rules rather than an interop tidy-up. S2 counts members " +
+    "against DISTINCT listed keys, and that counting means something only if a signature " +
+    "verifies under exactly one key. Here ONE signature — R = identity, S = 0, built with no secret key — is offered " +
     "against a state listing three DISTINCT small-order keys at threshold 3. Under cofactored " +
     "verification it verifies under each of the three, `verifyThresholdRecord` finds three " +
     "distinct satisfied keys, and the record passes a 3-of-3 quorum with no key at all. Under " +
@@ -371,7 +374,7 @@ writeFileSync(
       vectors,
       quorumNote:
         "The record-layer consequence of the mode, carried as one vector because it is the " +
-        "reason 003 and 015 both name this pin as a prerequisite. `matrix[j]` is whether the " +
+        "reason 015 names this pin as a prerequisite. `matrix[j]` is whether the " +
         "record's single signature verifies under `state.keys[j]` over `signingInput` (the " +
         "spec-001 UTF-8 JCS of the record without its `signature` field). Under the pinned " +
         "mode every entry is false; under the cofactored default every entry is true and one " +

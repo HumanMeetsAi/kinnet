@@ -11,7 +11,13 @@
  * The three spec 011/014 cross-field rules are each exercised alone. Testing them only in
  * combination would hide the case that matters most to a caller — one broken field, named.
  */
-import { createIdentity, encodeKeyRef, generateKeyPair, signThresholdRecord } from "@kinnet/crypto";
+import {
+  createIdentity,
+  encodeKeyRef,
+  generateKeyPair,
+  keyLogAnchor,
+  signThresholdRecord
+} from "@kinnet/crypto";
 import { grantSchema, type Grant } from "@kinnet/protocol";
 import { describe, expect, it } from "vitest";
 
@@ -38,6 +44,8 @@ type GrantFields = {
   proof?: string | null;
   issuedAt?: string;
   expiresAt?: string;
+  /** Spec 016. `null` here means "omit the field", which is what a key-issued link needs. */
+  anchor?: string | null;
 };
 
 /**
@@ -46,6 +54,7 @@ type GrantFields = {
  * would need a cast at each call site to construct the very shapes under test.
  */
 function signGrantLike(fields: GrantFields = {}): unknown {
+  const { anchor = keyLogAnchor(org.log), ...rest } = fields;
   return signThresholdRecord(
     {
       subjectId: org.id,
@@ -55,7 +64,10 @@ function signGrantLike(fields: GrantFields = {}): unknown {
       caveats: {},
       proof: null,
       issuedAt: ISSUED_AT,
-      ...fields
+      // Spec 016: every baseline here is issued by a participant, so the anchor is required.
+      // A case testing the key-issuer branch passes `anchor: null` to drop the field.
+      ...(anchor === null ? {} : { anchor }),
+      ...rest
     },
     [org.currentKeys[0]!.secretKey]
   );

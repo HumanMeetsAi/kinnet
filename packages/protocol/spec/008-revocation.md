@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Blocks:** the trust resolver — "not expired or revoked" needs a checkable meaning
-**Amended by:** 011
+**Amended by:** 011, 016
 
 ## Context
 
@@ -30,6 +30,8 @@ Revocation {
                                 //   record's signature set must be canonical per 015, or the
                                 //   same record has many valid digests and none can be revoked)
   issuerId:  ParticipantId      // who revokes (002)
+  anchor:    Multihash          // 016: the key event whose state signs this record — the
+                                //   003 digest of one event of the issuer's own key log
   revokedAt: string             // RFC 3339
   reason?:   string             // non-normative; for operators and audit, never for logic
   signature: Signature[]        // per the issuer's current threshold (003, 005)
@@ -40,6 +42,10 @@ Revocation {
   **current** key set (003) — not the key that signed the original — so revocation authority
   survives rotation and works _after_ a compromise rotation. For Grants (009), additionally any
   participant upstream in the proof chain may revoke a downstream link.
+  _Amended by 016: a Revocation is verified against the key state its `anchor` names, not against
+  the issuer's current state. The intent is unchanged — the revoker anchors to whatever state it
+  currently holds, so authority still survives rotation and a post-compromise rotation still
+  revokes what the retired key signed._
 - **Permanent and monotonic.** A revocation cannot be undone or itself revoked; authority is
   restored by issuing a fresh record. Verifiers and caches may treat "revoked" as terminal,
   which keeps offline verification sound — a cached revocation never goes stale.
@@ -82,11 +88,19 @@ grants verifying forever.
 
 ## Open questions
 
-- **Sign-time anchoring.** Verifiers accept a record signed by _any_ key state in the
-  issuer's replay-valid log (so rotation does not orphan issued records), which means a
-  stolen key can keep signing "into the past" until its forgeries are revoked. Anchoring
-  records to a log seq at issuance (KERI-style) would close that window; deferred until
-  running code needs it.
+- **Signing into the past.** A stolen key can keep signing until its forgeries are revoked. 016
+  anchors a record to a key **state** — named by the digest of one key event — which narrows the
+  window: a forgery must name a state whose keys the attacker holds, so a key compromised today
+  cannot produce records that appear signed under a state it never had. It does not close the
+  window: a compromised retired state still signs records that verify against it, and withdrawing
+  them still takes a Revocation naming each digest. Two rules anchoring newly makes expressible,
+  both undecided here: **monotonicity** — a Revocation MUST NOT be anchored earlier than the
+  record it revokes, where both anchor in the same log, which would stop a retired state's key
+  holder revoking records issued after the participant rotated away — and **state-scoped
+  revocation**, withdrawing everything anchored to a named state in one record. Both are partial
+  (an upstream chain revoker anchors in another log; a scalar-signed record carries no anchor at
+  all) and both change this spec's semantics, so each needs its own attack analysis before it
+  lands.
 - **Freshness.** "Not revoked" is a statement about the registry queried, as fresh as the
   query. Stapled short-lived status proofs (a signed "unrevoked as of T") for verifiers that
   cannot reach discovery — deferred with the witnessing/duplicity questions of 003.
@@ -95,8 +109,17 @@ grants verifying forever.
   policy of the trust layer. Leaning policy: verifiers that care can require subject
   countersignatures above the protocol.
 
+## History
+
+- 2026-08-18 — Amended by 016: `Revocation` gains a required `anchor` naming the key event whose
+  state signs it, and the record is verified against that state rather than the issuer's current
+  one; the sign-time-anchoring open question was reworded around what anchoring narrows and what
+  it leaves open. Every stored Revocation is re-signed.
+
 ## References
 
-- Spec 003 (digest rule, rotation), 004 (write auth), 005 (signatures), 009 (Grant chains)
+- Spec 003 (digest rule, rotation), 004 (write auth), 005 (signatures), 009 (Grant chains),
+  015 (canonical signature sets — why a revoked record's digest is stable), 016 (record
+  anchoring — the `anchor` field and the state a Revocation is verified against)
 - UCAN revocation — revoke-by-content-address, chain-principal authority
 - W3C Bitstring Status List — the considered-and-not-adopted alternative

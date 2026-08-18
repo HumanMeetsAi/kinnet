@@ -30,6 +30,7 @@ import {
   encodeChainAccessToken,
   encodeGrantsHeader,
   encodeKeyRef,
+  keyLogAnchor,
   signThresholdRecord,
   verifyThresholdRecord,
   type Identity
@@ -49,6 +50,9 @@ function grantFixture(overrides: Partial<Grant> = {}): Grant {
     abilities: ["photos/read"],
     caveats: { aud: "pk_z6MkResource1111" },
     proof: null,
+    // Spec 016: a participant-issued link names the key state it was signed under. Shape-valid
+    // rather than resolvable — the codec under test decodes, it does not verify.
+    anchor: "zQmYwAPJzv5CZsnAzt8auVZRnHEKzKgUEdy3W35nUSpS6kq",
     issuedAt: "2026-08-14T09:00:00.000Z",
     expiresAt: "2026-08-14T10:00:00.000Z",
     signature: ["z2SignatureBytes1111"],
@@ -201,6 +205,7 @@ describe("chain access token codec", () => {
             abilities: ["photos/read"],
             caveats: { aud: resource.id },
             proof: parent === null ? null : canonicalDigest(parent),
+            anchor: keyLogAnchor(issuer.log),
             issuedAt: "2026-08-14T09:00:00.000Z",
             expiresAt: "2026-08-14T10:00:00.000Z"
           },

@@ -15,6 +15,8 @@ import {
   replayKeyLogFor,
   rotateIdentity,
   sign,
+  eventDigest,
+  keyLogAnchor,
   signThresholdRecord,
   VerificationBudgetExceeded,
   type Identity
@@ -177,6 +179,8 @@ describe("reauthorizeStream — delegated mode (spec 013 §2.4.1)", () => {
             audienceId: sessionKeyRef,
             abilities: ["msg/subscribe"],
             caveats: { aud: [node.id] },
+            // Spec 016: the participant-issued link names the state that signs it.
+            anchor: keyLogAnchor(user.log),
             proof: null,
             issuedAt: ISSUED_AT,
             expiresAt: EXPIRES_AT,
@@ -215,7 +219,12 @@ describe("reauthorizeStream — delegated mode (spec 013 §2.4.1)", () => {
     const { user, sessionKeyRef, grant } = makeSessionChain();
     const chain = [grant()];
     const revocation = signThresholdRecord(
-      { revokes: canonicalDigest(chain[0]!), issuerId: user.id, revokedAt: ISSUED_AT },
+      {
+        revokes: canonicalDigest(chain[0]!),
+        issuerId: user.id,
+        anchor: keyLogAnchor(user.log),
+        revokedAt: ISSUED_AT
+      },
       [user.currentKeys[0]!.secretKey]
     ) as Revocation;
     const { view, getKeyState } = makeView({
@@ -398,6 +407,7 @@ describe("delegationTreeDigest — budget accounting key (spec 013 §2.8)", () =
         audienceId: sessionKeyRef,
         abilities: ["msg/subscribe"],
         caveats: { aud: [node.id] },
+        anchor: keyLogAnchor(user.log),
         proof: null,
         issuedAt: ISSUED_AT,
         expiresAt: EXPIRES_AT
@@ -502,6 +512,7 @@ describe("reauthorizeStream — a substituted current key state (spec 013 §2.4.
         audienceId: alice.id,
         abilities: ["msg/subscribe"],
         caveats: {},
+        anchor: keyLogAnchor(org.log),
         proof: null,
         issuedAt: ISSUED_AT,
         expiresAt: EXPIRES_AT
@@ -646,9 +657,9 @@ describe("reauthorizeStream — the shared verification budget", () => {
    * A one-link delegated shape with a PARTICIPANT leaf, so a re-check runs both stages — the
    * chain re-check, and the leaf participant's current-key-state lookup.
    *
-   * The grant is signed under the issuer's INCEPTION state and the issuer then rotates away
-   * from it. That is the honest worst case for the chain stage: "verifies against any state"
-   * has to search, and the search is what makes the chain stage expensive enough to sandwich.
+   * The grant is signed under — and, per spec 016, anchored to — the issuer's INCEPTION state,
+   * which the issuer has since rotated away from. The chain stage's cost is dominated by the
+   * replay either way; the anchored check itself is one walk against the named state.
    */
   function delegatedFixture(): {
     view: TrustView;
@@ -667,6 +678,9 @@ describe("reauthorizeStream — the shared verification budget", () => {
         audienceId: leaf.id,
         abilities: ["msg/subscribe"],
         caveats: {},
+        // Signed under the issuer's INCEPTION state, so spec 016's anchor names that event —
+        // not the tip the issuer has since rotated to.
+        anchor: eventDigest(issuer.log[0]!),
         proof: null,
         issuedAt: ISSUED_AT,
         expiresAt: EXPIRES_AT

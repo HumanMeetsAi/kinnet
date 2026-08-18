@@ -3,7 +3,7 @@
 **Status:** Accepted
 **Blocks:** browser/device session keys and the delegate keys of applications acting for a
 participant — clients that never hold the root key
-**Amended by:** 014
+**Amended by:** 014, 016
 
 ## Context
 
@@ -51,6 +51,9 @@ disposable:
   rule 1 gains a branch — a **participant** issuer's signature resolves through its log
   (003, at threshold), a **key** issuer's signature verifies against the key itself, exactly
   one signature. Attenuation is unchanged: abilities prefix-covered, caveats only narrow.
+  _Amended by 016: a bare-key issuer takes **no** `anchor` — the key `issuerId` names is one key
+  state by construction (`n = 1`, `t = 1`), so there is nothing to select. A participant issuer
+  carries the field and is verified against the state it names._
 - **Keys sign grants and requests, nothing else.** A key principal cannot author a
   Revocation — `Revocation.issuerId` stays a participant id (008 unchanged). A key-issued
   link is revoked by any participant upstream in its chain (the subject at minimum), and
@@ -218,7 +221,7 @@ inbox row for the grant's subject — enrollment has no inverse — at any node 
 and serve deliveries addressed to the subject there. The bound is schema-guaranteed
 (`aud` and `expiresAt` are mandatory on this grant shape), and a subject who never minted
 an enrollment-capable grant is untouchable — the grant must be self-issued at their root,
-by any key state their log has held (003), so a compromised **retired** root key is
+at the key state its `anchor` names (016), so a compromised **retired** root key is
 answered by revocation (008), not by rotation.
 One separation is enforced already and is stated so nobody relies on it accidentally: a
 chain carrying any `e2ee` ability is never request-valid (014), so enrollment authority
@@ -392,11 +395,15 @@ with accept/reject fixtures both ways.
 - 2026-08-03 — Enrollment widened: `PUT /inboxes/:id` accepts a single self-issued
   key-audience grant carrying the exact ability `inbox/enroll`, which enters the inbox
   vocabulary; the open question on delegable enrollment is thereby answered.
+- 2026-08-18 — Amended by 016: a bare-key issuer takes no anchor, and a participant-issued link —
+  the self-issued enrollment grant included — is verified against the state its anchor names
+  rather than against any state its log has held.
 
 ## References
 
 - Spec 002 (participant id), 003 (logs, digest rule), 004 (request auth), 005 (KeyRef),
-  008 (revocation), 009 (grant chains), 010 (inbox surface), 014 (the E2EE lane — MLS leaf
+  008 (revocation), 009 (grant chains), 010 (inbox surface), 016 (record anchoring — a bare-key
+  issuer takes no anchor; a participant issuer is verified at the anchored state), 014 (the E2EE lane — MLS leaf
   credentials as key-audience chains, the `e2ee` `aud` exemption, and the never-request-valid
   rule that pays for it)
 - UCAN delegation 1.0 — principals as keys (`did:key`), delegation and attenuation by

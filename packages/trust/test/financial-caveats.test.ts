@@ -1,6 +1,7 @@
 import {
   canonicalDigest,
   createIdentity,
+  keyLogAnchor,
   signThresholdRecord,
   type Identity
 } from "@kinnet/crypto";
@@ -48,7 +49,9 @@ type GrantFields = {
 };
 
 function makeGrant(signer: Identity, fields: GrantFields): Grant {
-  return signThresholdRecord({ issuedAt: ISSUED_AT, ...fields }, [
+  // Both links here are participant-issued and self-signed, so spec 016's anchor is the
+  // signer's own log tip in every case.
+  return signThresholdRecord({ issuedAt: ISSUED_AT, anchor: keyLogAnchor(signer.log), ...fields }, [
     signer.currentKeys[0]!.secretKey
   ]) as Grant;
 }

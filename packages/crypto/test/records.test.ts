@@ -19,9 +19,11 @@ import {
   encodeKeyRef,
   generateKeyPair,
   replayKeyLog,
+  replayKeyLogStates,
   signRecord,
   signThresholdRecord,
   verifyRecord,
+  verifyAnchoredRecord,
   verifyRecordAgainstAny,
   VerificationBudgetExceeded,
   verifyThresholdRecord
@@ -279,6 +281,20 @@ describe("conversation conformance fixture (spec 012)", () => {
     const state = replayKeyLog(fixture.creatorLog);
     expect(state.id).toBe(fixture.conversation.creator);
     expect(verifyThresholdRecord(fixture.conversation, state.keys, state.threshold)).toBe(true);
+  });
+
+  it("verifies it as an ANCHORED record: the state it names, and no other (spec 016)", () => {
+    // The record is owner mode, so it carries `anchor` and the verifier resolves that one
+    // state rather than searching the log.
+    const { states } = replayKeyLogStates(fixture.creatorLog);
+    const anchored = fixture.conversation as Conversation & { anchor: string };
+    expect(anchored.anchor).toBeDefined();
+    expect(states.some((state) => state.anchor === anchored.anchor)).toBe(true);
+    expect(verifyAnchoredRecord(anchored, states)).toBe(true);
+    // Re-pointing the anchor invalidates it: the field is inside the signed bytes.
+    expect(
+      verifyAnchoredRecord({ ...anchored, anchor: canonicalDigest({ other: "event" }) }, states)
+    ).toBe(false);
   });
 
   it("changes the conversationId when any field is tampered", () => {
