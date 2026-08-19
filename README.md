@@ -304,6 +304,10 @@ from these packages is the point, not the exception — and it is **experimental
 infrastructure**: rate-limited, no SLA, and it may reset before 1.0. Don't build anything you
 can't afford to re-enroll.
 
+Every step below runs straight from npm, with no checkout of this repository. A checkout adds
+one thing — the same checks as short scripts meant to be read — and each step shows that
+variant beside the npm one.
+
 **1. Prove the build.** The commit is stamped at image build time and matches a release tag of
 this repository:
 
@@ -335,17 +339,10 @@ is what the next step shows.
 **3. Verify it yourself, from bytes.** Run the same resolution a relying party performs — replay
 the key log, check the id derives from it, verify the profile's signature against the current
 key, and verify every relationship and claim against the key state of whoever issued it, resolved
-from that issuer's own log. No checkout needed:
+from that issuer's own log:
 
 ```bash
 npx @kinnet/verify pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j
-```
-
-or, from a checkout of this repository after `pnpm install && pnpm build`, the same thing as a
-readable script:
-
-```bash
-pnpm exec tsx examples/verify.mts pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j
 ```
 
 ```
@@ -358,19 +355,35 @@ pnpm exec tsx examples/verify.mts pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntj
 An agent's authority is a grant chain it presents alongside its requests; discovery never stores
 it, only its revocation. The chain the agent above presents is committed here as
 [`examples/records/humanmeetsai-operator-agent.grants.json`](./examples/records/humanmeetsai-operator-agent.grants.json)
-— verify it, and watch what a single flipped byte does to the profile check:
+— verify it (`--grants` takes a file path or an https URL), and watch what a single flipped
+byte does to the profile check:
 
 ```bash
+npx @kinnet/verify pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb \
+  --grants https://raw.githubusercontent.com/HumanMeetsAi/kinnet/main/examples/records/humanmeetsai-operator-agent.grants.json
+npx @kinnet/verify pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb --tamper
+```
+
+From a checkout, after `pnpm install && pnpm build`, the same checks run as a readable script —
+the code behind every ✔ above, short enough to audit:
+
+```bash
+pnpm exec tsx examples/verify.mts pk_zQmTDqHZKz4CyiPYoKFfspD2Y1FFPdWPKEJmWSJqntjbd2j
 pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb --grants examples/records/humanmeetsai-operator-agent.grants.json
 pnpm exec tsx examples/verify.mts pk_zQmUd4qFEDUSjqAfbDuiWp2rcsXwZYLUwGMKtjxJtip9ynb --tamper
 ```
 
-`--discovery <url>` points either at your own instance. Nothing in them phones home: every check
-is a signature or a digest computed locally over the bytes fetched.
+`--discovery <url>` points either command at your own instance. Nothing in them phones home:
+every check is a signature or a digest computed locally over the bytes fetched.
 
-**4. Mint your own.** Self-custodial — the keys never leave your machine. Save this as `me.mts`
-(in a checkout, at the repository root; or anywhere after
-`npm install @kinnet/crypto @kinnet/discovery-client`) and run `npx tsx me.mts`:
+**4. Mint your own.** Self-custodial — the keys never leave your machine:
+
+```bash
+npm install @kinnet/crypto @kinnet/discovery-client
+```
+
+Save this as `me.mts` and run `npx tsx me.mts` (from a checkout: save it at the repository
+root instead, skip the install, and run it the same way):
 
 ```ts
 import { createIdentity } from "@kinnet/crypto";
