@@ -263,6 +263,13 @@ All six are on npm — `npm install @kinnet/verify` (or `crypto`, `trust`, `disc
 `protocol`, `a2a`) — as `0.x` early-adopter releases: the wire freezes at 1.0, not before, so
 record shapes may still change between minors. Track the spec, and pin versions.
 
+There is a seventh package this repository does not carry:
+[`@kinnet/sdk`](https://www.npmjs.com/package/@kinnet/sdk), the application/client SDK —
+identity, discovery reads, conversations, messaging, subscriptions, and the E2EE conversation
+client. It is on npm under a use-only license (free to use, including commercially; no
+modification or redistribution) with full type declarations; its documentation lives on the npm
+package page, and its source is not open yet. The intent is to open it as the network matures.
+
 **For issuers**, the two jobs are two packages: `@kinnet/trust` mints and signs the record
 (`issueGrant`, `issueRelationship`, `issueClaim`, `issueRevocation`), and
 `@kinnet/discovery-client` publishes it — so code that only signs never has to reach for a
